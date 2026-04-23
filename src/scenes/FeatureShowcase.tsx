@@ -36,14 +36,15 @@ const FEATURE_WINDOWS = PRODUCT_FEATURES.map((feat, i) => ({
 }));
 
 const CURSOR_ACTIONS: CursorAction[] = [
-  { at: 0, action: "idle", position: { x: 960, y: 540 } },
-  { at: 8, action: "moveTo", target: "feature-0", anchor: "center", duration: 12 },
+  { at: 0, action: "idle", position: { x: 300, y: 400 } },
+  { at: 8, action: "moveTo", target: "feature-0", anchor: { xPct: 0.5, yPct: 0.35 }, duration: 12 },
   { at: 24, action: "click", target: "feature-0" },
-  { at: 40, action: "moveTo", target: "feature-1", anchor: "center", duration: 12 },
+  { at: 40, action: "moveTo", target: "feature-1", anchor: { xPct: 0.5, yPct: 0.35 }, duration: 12 },
   { at: 56, action: "click", target: "feature-1" },
-  { at: 78, action: "moveTo", target: "feature-2", anchor: "center", duration: 12 },
+  { at: 78, action: "moveTo", target: "feature-2", anchor: { xPct: 0.4, yPct: 0.3 }, duration: 12 },
   { at: 94, action: "click", target: "feature-2" },
   { at: 115, action: "moveTo", target: "feature-2", anchor: "top-bar", duration: 10 },
+  { at: 130, action: "click", target: "feature-2", anchor: "top-bar" },
 ];
 
 // Zoom follows the cursor — targets are element IDs, resolved via getRect

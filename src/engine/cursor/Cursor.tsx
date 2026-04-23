@@ -14,6 +14,8 @@ interface CursorProps {
   size?: number;
   color?: string;
   visible?: boolean;
+  fadeOutDelay?: number;
+  fadeOutDuration?: number;
 }
 
 const DEFAULT_MOVE_DURATION = 20;
@@ -183,9 +185,11 @@ export const Cursor: React.FC<CursorProps> = ({
   getRect: getRectProp,
   sfx,
   canvas = { width: 1920, height: 1080 },
-  size = 36,
+  size = 52,
   color = "#FFFFFF",
   visible = true,
+  fadeOutDelay = 15,
+  fadeOutDuration = 8,
 }) => {
   const frame = useCurrentFrame();
   const getRectRef = useRef(getRectProp);
@@ -195,6 +199,20 @@ export const Cursor: React.FC<CursorProps> = ({
   const segments = buildSegments(actions, getRect);
 
   if (!visible || segments.length === 0) return null;
+
+  const lastAction = actions[actions.length - 1];
+  const lastActionEnd = lastAction
+    ? lastAction.at + ("duration" in lastAction && lastAction.duration ? lastAction.duration : 10)
+    : 0;
+  const fadeStart = lastActionEnd + fadeOutDelay;
+  const cursorOpacity = interpolate(
+    frame,
+    [fadeStart, fadeStart + fadeOutDuration],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+
+  if (cursorOpacity <= 0) return null;
 
   const seg = findSegment(segments, frame);
   if (!seg) return null;
@@ -254,6 +272,7 @@ export const Cursor: React.FC<CursorProps> = ({
           zIndex: 9999,
           pointerEvents: "none",
           willChange: "transform",
+          opacity: cursorOpacity,
         }}
       >
         <CursorSprite

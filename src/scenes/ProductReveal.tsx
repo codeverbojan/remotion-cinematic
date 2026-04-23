@@ -28,7 +28,7 @@ const TOP_PANEL = { left: 30, top: 30, w: 920, h: 440 };
 const LEFT_PANEL = { left: 30, top: 500, w: 920, h: 570 };
 
 const CURSOR_ACTIONS: CursorAction[] = [
-  { at: 0, action: "idle", position: { x: 960, y: 540 } },
+  { at: 0, action: "idle", position: { x: 200, y: 180 } },
   { at: 5, action: "moveTo", target: "product-window", anchor: "corner-top-left", duration: 12 },
   { at: 20, action: "click", target: "product-window", anchor: "corner-top-left" },
   {
@@ -39,9 +39,9 @@ const CURSOR_ACTIONS: CursorAction[] = [
     to: { x: SMALL_LEFT, y: SMALL_TOP },
     duration: RESIZE_END - RESIZE_START,
   },
-  { at: 58, action: "moveTo", target: "top-panel", anchor: "center", duration: 12 },
+  { at: 58, action: "moveTo", target: "top-panel", anchor: { xPct: 0.5, yPct: 0.4 }, duration: 12 },
   { at: 74, action: "click", target: "top-panel" },
-  { at: 84, action: "moveTo", target: "left-panel", anchor: "center", duration: 12 },
+  { at: 84, action: "moveTo", target: "left-panel", anchor: { xPct: 0.5, yPct: 0.4 }, duration: 12 },
   { at: 100, action: "click", target: "left-panel" },
 ];
 

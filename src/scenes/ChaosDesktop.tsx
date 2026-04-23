@@ -56,17 +56,17 @@ const WINDOW_DEFS: WindowDef[] = [
 ];
 
 const CURSOR_ACTIONS: CursorAction[] = [
-  { at: 0, action: "idle", position: { x: 960, y: 540 } },
-  { at: 10, action: "moveTo", target: "spreadsheet", anchor: "center", duration: 12 },
+  { at: 0, action: "idle", position: { x: 1400, y: 300 } },
+  { at: 10, action: "moveTo", target: "spreadsheet", anchor: { xPct: 0.6, yPct: 0.4 }, duration: 12 },
   { at: 26, action: "click", target: "spreadsheet" },
   { at: 34, action: "moveTo", target: "email", anchor: "top-bar", duration: 12 },
   { at: 50, action: "click", target: "email" },
-  { at: 58, action: "moveTo", target: "chat", anchor: "center", duration: 12 },
+  { at: 58, action: "moveTo", target: "chat", anchor: { xPct: 0.4, yPct: 0.3 }, duration: 12 },
   { at: 76, action: "click", target: "chat" },
   { at: 84, action: "moveTo", target: "notification-0", anchor: "center", duration: 12 },
   { at: 100, action: "click", target: "notification-0" },
   { at: 108, action: "moveTo", target: "notification-1", anchor: "center", duration: 10 },
-  { at: 122, action: "idle", position: { x: 960, y: 540 } },
+  { at: 122, action: "click", target: "notification-1" },
 ];
 
 const NOTIFICATION_COLORS = [C.accent, C.error, C.warning];

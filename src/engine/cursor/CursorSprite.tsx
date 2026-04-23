@@ -15,102 +15,106 @@ interface CursorSpriteProps {
   shapeProgress?: number;
 }
 
+const SHADOW_STYLE: React.CSSProperties = {
+  filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.45)) drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
+};
+
 const DefaultArrow: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-  <svg viewBox="0 0 28 28" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#shadow)">
-      <path
-        d="M4 2L4 24L9.5 18.5L14.5 26L18.5 24L13.5 16L21 15L4 2Z"
-        fill={color}
-        stroke="#111"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </g>
-    <defs>
-      <filter id="shadow" x="0" y="0" width="28" height="32" filterUnits="userSpaceOnUse">
-        <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.35" />
-      </filter>
-    </defs>
+  <svg
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={SHADOW_STYLE}
+  >
+    <path
+      d="M12 4L12 82L30 64L44 92L56 86L42 58L64 56L12 4Z"
+      fill={color}
+      stroke="#1a1a2e"
+      strokeWidth="4"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
 const PointerHand: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-  <svg viewBox="0 0 28 28" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#shadow-p)">
-      <path
-        d="M14 2C14 2 15.5 1.5 16.5 2.5C17.5 3.5 17 5 17 5L17 10
-           C17 10 18.5 9.5 19.5 10.5C20.5 11.5 20 13 20 13
-           C20 13 21.5 12.5 22.5 13.5C23.5 14.5 23 16 23 16
-           L23 20C23 23 20 26 16 26L13 26C10 26 7 24 7 20
-           L7 14C7 12.5 8 11.5 9 11.5C10 11.5 11 12.5 11 14
-           L11 10L11 5C11 3.5 12 2 14 2Z"
-        fill={color}
-        stroke="#111"
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-      />
-      <line x1="14" y1="11" x2="14" y2="5" stroke="#ddd" strokeWidth="0.5" opacity="0.3" />
-      <line x1="17" y1="13" x2="17" y2="11" stroke="#ddd" strokeWidth="0.5" opacity="0.3" />
-      <line x1="20" y1="16" x2="20" y2="14" stroke="#ddd" strokeWidth="0.5" opacity="0.3" />
-    </g>
-    <defs>
-      <filter id="shadow-p" x="0" y="0" width="28" height="32" filterUnits="userSpaceOnUse">
-        <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.35" />
-      </filter>
-    </defs>
+  <svg
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={SHADOW_STYLE}
+  >
+    <path
+      d="M42 4C38.5 4 36 7 36 10.5L36 42C36 42 32 40 28 42C24 44 24 48 24 50L24 52
+         C24 52 20 50 16 52.5C13 54.5 13 58 13 60L13 70C13 82 22 94 38 94L48 94
+         C64 94 74 84 74 70L74 44C74 40 71 37 67 37C63 37 60 40 60 44L60 42
+         C60 38 57 35 53 35C49 35 46 38 46 42L46 10.5C46 7 43.5 4 40 4Z"
+      fill={color}
+      stroke="#1a1a2e"
+      strokeWidth="3.5"
+      strokeLinejoin="round"
+    />
+    <line x1="46" y1="42" x2="46" y2="18" stroke="#e0e0e8" strokeWidth="1.5" opacity="0.25" strokeLinecap="round" />
+    <line x1="60" y1="44" x2="60" y2="42" stroke="#e0e0e8" strokeWidth="1.5" opacity="0.25" strokeLinecap="round" />
   </svg>
 );
 
 const GrabHand: React.FC<{ size: number; color: string; closed: boolean }> = ({ size, color, closed }) => (
-  <svg viewBox="0 0 28 28" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#shadow-g)">
-      {closed ? (
-        <path
-          d="M8 15C8 15 8 12 10 11C11 10.3 12 11 12 11
-             L12.5 10C12.5 10 13 9 14.5 9.5C15.5 9.8 15.5 11 15.5 11
-             L16 10.5C16 10.5 16.5 9.5 18 10C19 10.3 19 11.5 19 11.5
-             L19.5 11C19.5 11 20 10 21.5 10.5C22.5 10.8 22.5 12 22.5 12
-             L22.5 18C22.5 22 19.5 25 16 25L13 25C10 25 8 23 8 20Z"
-          fill={color}
-          stroke="#111"
-          strokeWidth="1.1"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M10 14C10 14 10 12 10 11C10 9.5 11 8.5 12 9C12.5 9.2 12.5 10 12.5 10
-             L12.5 7C12.5 5.5 13.5 5 14.5 5.5C15.2 5.8 15.5 7 15.5 7
-             L15.5 6C15.5 4.8 16.5 4 17.5 4.5C18.3 4.9 18.5 6 18.5 6
-             L18.5 6.5C18.5 5.5 19.5 4.8 20.5 5.3C21.3 5.7 21.5 7 21.5 7
-             L21.5 17C21.5 21 18.5 25 15 25L13 25C10 25 8 22 8 19
-             L8 15C8 13.5 9 13 10 14Z"
-          fill={color}
-          stroke="#111"
-          strokeWidth="1.1"
-          strokeLinejoin="round"
-        />
-      )}
-    </g>
-    <defs>
-      <filter id="shadow-g" x="0" y="0" width="28" height="32" filterUnits="userSpaceOnUse">
-        <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.35" />
-      </filter>
-    </defs>
+  <svg
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={SHADOW_STYLE}
+  >
+    {closed ? (
+      <path
+        d="M22 52C22 48 24 44 28 42L28 40C28 36 31 34 35 34L35 34
+           C35 34 36 30 40 30C43 30 44 33 44 33C44 33 45 30 49 30
+           C52 30 54 33 54 33C54 33 56 30 59 30C62 30 64 33 64 36
+           L64 38C68 38 72 42 72 46L72 66C72 80 62 92 48 92L42 92
+           C30 92 22 82 22 70Z"
+        fill={color}
+        stroke="#1a1a2e"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+    ) : (
+      <path
+        d="M28 50C28 50 28 46 28 42C28 36 32 32 36 34L36 34
+           L36 20C36 14 40 10 44 12L44 12L44 16
+           C44 16 44 10 48 8C52 6 56 10 56 14L56 16
+           C56 16 56 10 60 8C64 6 68 10 68 16L68 18
+           C68 18 68 12 72 10C76 8 80 12 80 18L80 56
+           C80 74 68 92 50 92L44 92C30 92 22 80 22 66
+           L22 54C22 48 26 46 28 50Z"
+        fill={color}
+        stroke="#1a1a2e"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+    )}
   </svg>
 );
 
 const TextBeam: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-  <svg viewBox="0 0 28 28" width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g filter="url(#shadow-t)">
-      <line x1="14" y1="4" x2="14" y2="24" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
-      <line x1="10" y1="4" x2="18" y2="4" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      <line x1="10" y1="24" x2="18" y2="24" stroke={color} strokeWidth="2" strokeLinecap="round" />
-    </g>
-    <defs>
-      <filter id="shadow-t" x="0" y="0" width="28" height="32" filterUnits="userSpaceOnUse">
-        <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.35" />
-      </filter>
-    </defs>
+  <svg
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={SHADOW_STYLE}
+  >
+    <line x1="50" y1="14" x2="50" y2="86" stroke={color} strokeWidth="5" strokeLinecap="round" />
+    <path d="M34 14C34 14 42 14 50 14C58 14 66 14 66 14" stroke={color} strokeWidth="5" strokeLinecap="round" />
+    <path d="M34 86C34 86 42 86 50 86C58 86 66 86 66 86" stroke={color} strokeWidth="5" strokeLinecap="round" />
+    <line x1="50" y1="14" x2="50" y2="86" stroke="#1a1a2e" strokeWidth="7" strokeLinecap="round" opacity="0.15" />
   </svg>
 );
 
@@ -128,7 +132,7 @@ export function getCursorShape(
 }
 
 export const CursorSprite: React.FC<CursorSpriteProps> = ({
-  size = 36,
+  size = 52,
   color = "#FFFFFF",
   scale = 1,
   rotation = 0,
@@ -140,7 +144,7 @@ export const CursorSprite: React.FC<CursorSpriteProps> = ({
   const morphScale = interpolate(shapeProgress, [0, 1], [0.85, 1], EASE.smooth);
   const morphOpacity = interpolate(shapeProgress, [0, 1], [0.5, 1], EASE.smooth);
 
-  const originX = shape === "default" ? 2 : size / 2;
+  const originX = shape === "default" ? 6 : size / 2;
   const originY = shape === "default" ? 2 : 2;
 
   return (
@@ -164,12 +168,12 @@ export const CursorSprite: React.FC<CursorSpriteProps> = ({
         <div
           style={{
             position: "absolute",
-            left: -6,
-            top: -6,
-            width: size + 12,
-            height: size + 12,
+            left: -8,
+            top: -8,
+            width: size + 16,
+            height: size + 16,
             borderRadius: "50%",
-            backgroundColor: "rgba(255,255,255,0.3)",
+            backgroundColor: "rgba(255,255,255,0.25)",
             transform: `scale(${pulseScale}) translateZ(0)`,
             opacity: pulseOpacity,
             pointerEvents: "none",
