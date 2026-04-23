@@ -32,8 +32,9 @@ export const CameraRig: React.FC<CameraRigProps> = ({
   return (
     <AbsoluteFill
       style={{
-        transform: `translate(${pose.x}px, ${pose.y}px) scale(${pose.scale})`,
+        transform: `translate(${Math.round(pose.x)}px, ${Math.round(pose.y)}px) scale(${pose.scale}) translateZ(0)`,
         transformOrigin: "center center",
+        willChange: "transform",
       }}
     >
       {children}

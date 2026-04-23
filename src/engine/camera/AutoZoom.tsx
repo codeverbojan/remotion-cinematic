@@ -53,8 +53,9 @@ export const AutoZoom: React.FC<AutoZoomProps> = ({ keyframes, getRect, children
     return (
       <AbsoluteFill
         style={{
-          transform: `scale(${fromKf.scale})`,
-          transformOrigin: `${fromOrigin.x}px ${fromOrigin.y}px`,
+          transform: `scale(${fromKf.scale}) translateZ(0)`,
+          transformOrigin: `${Math.round(fromOrigin.x)}px ${Math.round(fromOrigin.y)}px`,
+          willChange: "transform",
         }}
       >
         {children}
@@ -73,8 +74,9 @@ export const AutoZoom: React.FC<AutoZoomProps> = ({ keyframes, getRect, children
   return (
     <AbsoluteFill
       style={{
-        transform: `scale(${scale})`,
-        transformOrigin: `${originX}px ${originY}px`,
+        transform: `scale(${scale}) translateZ(0)`,
+        transformOrigin: `${Math.round(originX)}px ${Math.round(originY)}px`,
+        willChange: "transform",
       }}
     >
       {children}

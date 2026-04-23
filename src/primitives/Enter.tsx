@@ -58,7 +58,8 @@ export const Enter: React.FC<EnterProps> = ({
     <div
       style={{
         opacity: pose.opacity,
-        transform: `translate(${pose.translateX}px, ${pose.translateY}px) rotate(${pose.rotate}deg) scale(${pose.scale})`,
+        transform: `translate(${Math.round(pose.translateX)}px, ${Math.round(pose.translateY)}px) rotate(${pose.rotate}deg) scale(${pose.scale}) translateZ(0)`,
+        willChange: "transform",
         ...style,
       }}
     >

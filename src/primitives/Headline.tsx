@@ -147,7 +147,8 @@ export const Headline: React.FC<HeadlineProps> = ({
                         style={{
                           display: "inline-block",
                           opacity: wOpacity,
-                          transform: `translateY(${wTy}px)`,
+                          transform: `translateY(${Math.round(wTy)}px) translateZ(0)`,
+                          willChange: "transform",
                         }}
                       >
                         {word}
@@ -166,7 +167,8 @@ export const Headline: React.FC<HeadlineProps> = ({
               style={{
                 ...commonStyle,
                 opacity: linePose.opacity,
-                transform: `translateY(${linePose.translateY}px)`,
+                transform: `translateY(${Math.round(linePose.translateY)}px) translateZ(0)`,
+                willChange: "transform",
               }}
             >
               {line}

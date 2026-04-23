@@ -23,8 +23,9 @@ export const CursorSprite: React.FC<CursorSpriteProps> = ({
         width: size,
         height: size,
         position: "relative",
-        transform: `scale(${scale}) rotate(${rotation}deg)`,
+        transform: `scale(${scale}) rotate(${rotation}deg) translateZ(0)`,
         transformOrigin: "2px 2px",
+        willChange: "transform",
         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
       }}
     >
@@ -53,7 +54,7 @@ export const CursorSprite: React.FC<CursorSpriteProps> = ({
             height: size + 8,
             borderRadius: "50%",
             backgroundColor: "rgba(255,255,255,0.4)",
-            transform: `scale(${pulseScale})`,
+            transform: `scale(${pulseScale}) translateZ(0)`,
             opacity: pulseOpacity,
             pointerEvents: "none",
           }}

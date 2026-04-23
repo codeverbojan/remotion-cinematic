@@ -140,10 +140,11 @@ export const ChaosDesktop: React.FC = () => {
             key={i}
             style={{
               position: "absolute",
-              left: sX, top: sY,
+              left: Math.round(sX), top: Math.round(sY),
               opacity: enterProg,
-              transform: `scale(${enterScale}) translateY(${enterTY}px)`,
+              transform: `scale(${enterScale}) translateY(${Math.round(enterTY)}px) translateZ(0)`,
               transformOrigin: "top left",
+              willChange: "transform",
             }}
           >
             <div
@@ -175,11 +176,12 @@ export const ChaosDesktop: React.FC = () => {
             data-cursor-target={def.id}
             style={{
               position: "absolute",
-              left: x, top: y,
+              left: Math.round(x), top: Math.round(y),
               width: def.w, height: def.h,
               opacity: enterProg,
-              transform: `translateY(${enterTY}px) scale(${enterScale})`,
+              transform: `translateY(${Math.round(enterTY)}px) scale(${enterScale}) translateZ(0)`,
               transformOrigin: "top left",
+              willChange: "transform",
             }}
           >
             <Window id={def.id} title={def.title}>
@@ -202,7 +204,8 @@ export const ChaosDesktop: React.FC = () => {
               position: "absolute",
               right: 30, top: 30 + i * 102,
               opacity: enterProg,
-              transform: `translateX(${enterSlide + mcSlide}px)`,
+              transform: `translateX(${Math.round(enterSlide + mcSlide)}px) translateZ(0)`,
+              willChange: "transform",
             }}
           >
             <NotificationToast

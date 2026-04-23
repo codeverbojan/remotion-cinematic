@@ -58,7 +58,10 @@ export const ScenePush: React.FC<ScenePushProps> = ({
 
   return (
     <AbsoluteFill
-      style={hasTransform ? { transform: `translate(${tx}px, ${ty}px)` } : undefined}
+      style={hasTransform ? {
+        transform: `translate(${Math.round(tx)}px, ${Math.round(ty)}px) translateZ(0)`,
+        willChange: "transform",
+      } : undefined}
     >
       {background !== "none" && <Wallpaper variant={background} />}
       {enterSfx && (

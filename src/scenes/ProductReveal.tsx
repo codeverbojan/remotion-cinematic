@@ -105,7 +105,10 @@ export const ProductReveal: React.FC = () => {
         data-cursor-target="product-window"
         style={{
           position: "absolute",
-          left, top, width: w, height: h,
+          left: Math.round(left), top: Math.round(top),
+          width: Math.round(w), height: Math.round(h),
+          willChange: "transform",
+          transform: "translateZ(0)",
         }}
       >
         <Window id="product-window" title="Dashboard — Overview">
@@ -122,7 +125,8 @@ export const ProductReveal: React.FC = () => {
             left: TOP_PANEL.left, top: TOP_PANEL.top,
             width: TOP_PANEL.w, height: TOP_PANEL.h,
             opacity: topPanelProg,
-            transform: `translateY(${topPanelTY}px)`,
+            transform: `translateY(${Math.round(topPanelTY)}px) translateZ(0)`,
+            willChange: "transform",
           }}
         >
           <Window id="top-panel" title="Request Manager">
@@ -140,7 +144,8 @@ export const ProductReveal: React.FC = () => {
             left: LEFT_PANEL.left, top: LEFT_PANEL.top,
             width: LEFT_PANEL.w, height: LEFT_PANEL.h,
             opacity: leftPanelProg,
-            transform: `translateY(${leftPanelTY}px)`,
+            transform: `translateY(${Math.round(leftPanelTY)}px) translateZ(0)`,
+            willChange: "transform",
           }}
         >
           <Window id="left-panel" title="Smart Alerts">

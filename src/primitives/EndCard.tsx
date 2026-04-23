@@ -40,7 +40,8 @@ export const EndCard: React.FC<EndCardProps> = ({
           justifyContent: "center",
           gap: 32,
           opacity,
-          transform: `scale(${scale})`,
+          transform: `scale(${scale}) translateZ(0)`,
+          willChange: "transform",
         }}
       >
         {logo && <div style={{ marginBottom: 16 }}>{logo}</div>}

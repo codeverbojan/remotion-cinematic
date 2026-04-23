@@ -213,8 +213,8 @@ export const Cursor: React.FC<CursorProps> = ({
       <div
         style={{
           position: "absolute",
-          left: pos.x,
-          top: pos.y,
+          left: Math.round(pos.x),
+          top: Math.round(pos.y),
           zIndex: 9999,
           pointerEvents: "none",
           willChange: "transform",
