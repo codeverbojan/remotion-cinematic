@@ -66,17 +66,15 @@ export const PRODUCT_FEATURES = [
 
 export const CAMERA_TIMELINE: CameraKeyframe[] = [
   { scene: "chaos", at: "start", x: 0, y: 0, scale: 1.0 },
-  { scene: "chaos", at: 0.4, x: 8, y: -5, scale: 1.0 },
-  { scene: "chaos", at: 0.7, x: -6, y: 4, scale: 1.0 },
   { scene: "chaos", at: "end", x: 0, y: 0, scale: 1.0 },
   { scene: "product-reveal", at: "start", x: 0, y: 0, scale: 1.0 },
   { scene: "product-reveal", at: "end", x: 0, y: 0, scale: 1.0 },
   { scene: "feature-showcase", at: "start", x: 0, y: 0, scale: 1.0 },
   { scene: "feature-showcase", at: "end", x: 0, y: 0, scale: 1.0 },
   { scene: "headline-resolution", at: "start", x: 0, y: 0, scale: 1.0 },
-  { scene: "headline-resolution", at: "end", x: 5, y: -3, scale: 1.0 },
+  { scene: "headline-resolution", at: "end", x: 0, y: 0, scale: 1.0 },
   { scene: "closer", at: "start", x: 0, y: 0, scale: 1.0 },
-  { scene: "closer", at: "end", x: 0, y: 0, scale: 1.02 },
+  { scene: "closer", at: "end", x: 0, y: 0, scale: 1.0 },
 ];
 
 // --- SFX Configuration ---

@@ -257,6 +257,14 @@ const CURSOR_ACTIONS: CursorAction[] = [
   // Return { left, top, width, height } or undefined
 }} sfx={CURSOR_SFX} />
 
+// Smart cursor shapes — derived automatically from action context:
+// idle / moveTo (no click next) → default arrow
+// moveTo (click next) / click   → pointer hand
+// drag                          → grabbing hand
+// No manual annotation needed — the cursor reads ahead in the action list.
+// Shape transitions are smoothly morphed over 5 frames.
+// Available shapes: "default" | "pointer" | "grab" | "grabbing" | "text"
+
 // CURSOR_SFX is defined once in content.ts:
 // export const CURSOR_SFX: CursorSFXMap = {
 //   click: { src: "sfx/ui/click.mp3", volume: 0.4 },

@@ -1,7 +1,8 @@
 import React, { useRef } from "react";
 import { Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { computeClickPulse, computeCursorRotation, interpolateArc } from "./arc";
-import { CursorSprite } from "./CursorSprite";
+import { CursorSprite, getCursorShape } from "./CursorSprite";
+import type { CursorShape } from "./CursorSprite";
 import { resolveAnchorFromRect } from "./resolveAnchor";
 import type { CursorAction, CursorSFXMap, ResolvedPosition } from "./types";
 
@@ -24,6 +25,9 @@ interface ResolvedSegment {
   from: ResolvedPosition;
   to: ResolvedPosition;
   clickFrame: number | null;
+  actionType: CursorAction["action"];
+  isMovingToClick: boolean;
+  isDragging: boolean;
 }
 
 const warnedTargets = new Set<string>();
@@ -66,6 +70,8 @@ function buildSegments(
     const nextAction = actions[i + 1];
     const endFrame = nextAction ? nextAction.at : action.at + 60;
 
+    const nextIsClick = nextAction?.action === "click";
+
     if (action.action === "idle") {
       segments.push({
         startFrame: action.at,
@@ -73,6 +79,9 @@ function buildSegments(
         from: action.position,
         to: action.position,
         clickFrame: null,
+        actionType: "idle",
+        isMovingToClick: false,
+        isDragging: false,
       });
       currentPos = action.position;
     } else if (action.action === "moveTo") {
@@ -85,6 +94,9 @@ function buildSegments(
         from: currentPos,
         to: target,
         clickFrame: null,
+        actionType: "moveTo",
+        isMovingToClick: nextIsClick,
+        isDragging: false,
       });
       if (moveEnd < endFrame) {
         segments.push({
@@ -93,6 +105,9 @@ function buildSegments(
           from: target,
           to: target,
           clickFrame: null,
+          actionType: "moveTo",
+          isMovingToClick: nextIsClick,
+          isDragging: false,
         });
       }
       currentPos = target;
@@ -104,6 +119,9 @@ function buildSegments(
         from: target,
         to: target,
         clickFrame: action.at,
+        actionType: "click",
+        isMovingToClick: false,
+        isDragging: false,
       });
       currentPos = target;
     } else if (action.action === "drag") {
@@ -118,6 +136,9 @@ function buildSegments(
         from: currentPos,
         to: grabPos,
         clickFrame: null,
+        actionType: "drag",
+        isMovingToClick: false,
+        isDragging: false,
       });
 
       segments.push({
@@ -126,6 +147,9 @@ function buildSegments(
         from: grabPos,
         to: action.to,
         clickFrame: action.at + moveDur,
+        actionType: "drag",
+        isMovingToClick: false,
+        isDragging: true,
       });
 
       if (dragEnd < endFrame) {
@@ -135,6 +159,9 @@ function buildSegments(
           from: action.to,
           to: action.to,
           clickFrame: null,
+          actionType: "idle",
+          isMovingToClick: false,
+          isDragging: false,
         });
       }
       currentPos = action.to;
@@ -156,7 +183,7 @@ export const Cursor: React.FC<CursorProps> = ({
   getRect: getRectProp,
   sfx,
   canvas = { width: 1920, height: 1080 },
-  size = 28,
+  size = 36,
   color = "#FFFFFF",
   visible = true,
 }) => {
@@ -194,6 +221,15 @@ export const Cursor: React.FC<CursorProps> = ({
     pulseScale = pulse.scale;
   }
 
+  const shape: CursorShape = getCursorShape(seg.actionType, seg.isMovingToClick, seg.isDragging);
+  const SHAPE_TRANSITION = 5;
+  const shapeProgress = interpolate(
+    frame - seg.startFrame,
+    [0, SHAPE_TRANSITION],
+    [0, 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+
   return (
     <>
       {sfx && actions.map((action, i) => {
@@ -223,9 +259,11 @@ export const Cursor: React.FC<CursorProps> = ({
         <CursorSprite
           size={size}
           color={color}
-          rotation={rotation}
+          rotation={shape === "default" ? rotation : 0}
           pulseOpacity={pulseOpacity}
           pulseScale={pulseScale}
+          shape={shape}
+          shapeProgress={shapeProgress}
         />
       </div>
     </>
