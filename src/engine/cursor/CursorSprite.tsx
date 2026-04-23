@@ -48,18 +48,24 @@ const PointerHand: React.FC<{ size: number; color: string }> = ({ size, color })
     xmlns="http://www.w3.org/2000/svg"
     style={SHADOW_STYLE}
   >
+    {/* Index finger pointing up, fist curled below — classic link cursor */}
     <path
-      d="M42 4C38.5 4 36 7 36 10.5L36 42C36 42 32 40 28 42C24 44 24 48 24 50L24 52
-         C24 52 20 50 16 52.5C13 54.5 13 58 13 60L13 70C13 82 22 94 38 94L48 94
-         C64 94 74 84 74 70L74 44C74 40 71 37 67 37C63 37 60 40 60 44L60 42
-         C60 38 57 35 53 35C49 35 46 38 46 42L46 10.5C46 7 43.5 4 40 4Z"
+      d="M44 6C40 6 37 10 37 14L37 38
+         C33 36 28 37 26 40C23 44 24 48 24 50
+         L24 68C24 82 34 94 50 94
+         C66 94 76 82 76 68L76 50
+         C76 46 73 42 68 42L68 48L68 42
+         C64 42 61 42 58 44L58 48L58 44
+         C55 42 52 42 49 44L49 14
+         C49 10 46 6 42 6Z"
       fill={color}
       stroke="#1a1a2e"
       strokeWidth="3.5"
       strokeLinejoin="round"
     />
-    <line x1="46" y1="42" x2="46" y2="18" stroke="#e0e0e8" strokeWidth="1.5" opacity="0.25" strokeLinecap="round" />
-    <line x1="60" y1="44" x2="60" y2="42" stroke="#e0e0e8" strokeWidth="1.5" opacity="0.25" strokeLinecap="round" />
+    {/* Finger separators */}
+    <line x1="58" y1="48" x2="58" y2="58" stroke="#1a1a2e" strokeWidth="1.5" opacity="0.15" strokeLinecap="round" />
+    <line x1="68" y1="48" x2="68" y2="58" stroke="#1a1a2e" strokeWidth="1.5" opacity="0.15" strokeLinecap="round" />
   </svg>
 );
 
