@@ -18,7 +18,16 @@ src/
 │   ├── EndCard.tsx      # Logo + CTA end card
 │   ├── Enter.tsx        # Generic entrance animation
 │   ├── Wallpaper.tsx    # Background (dark/light/gradient)
-│   └── ScenePush.tsx    # Push transition wrapper (handles enter/exit slides + wallpaper)
+│   ├── ScenePush.tsx    # Push transition wrapper (handles enter/exit slides + wallpaper)
+│   └── app-ui/          # App UI building blocks (for recreating real app interfaces)
+│       ├── AppShell     # Sidebar + topbar + content layout
+│       ├── SidebarNav   # Vertical navigation list
+│       ├── DataTable    # Spreadsheet/table with status colors
+│       ├── MessageList  # Chat or email thread
+│       ├── StatCard     # Metric card with delta
+│       └── ...          # Panel, PanelGrid, TopNav, TabBar, ListItems,
+│                        # Placeholder, NotificationToast, Avatar, Badge,
+│                        # Button, SearchBar (16 total)
 ├── scenes/              # Scene components (users add/edit these)
 │   ├── ChaosDesktop.tsx
 │   ├── ProductReveal.tsx
@@ -405,6 +414,142 @@ const prog = interpolate(frame, [0, 30], [0, 1], EASE.smooth);
 // Last scene: exitTo="none" (no exit)
 // Uses EASE.snappy for animations
 ```
+
+## App UI primitives (screenshot-to-component)
+
+These primitives let you recreate any SaaS app interface inside a `<Window>`. When a user provides a screenshot of their app, compose these to build a matching React component.
+
+```
+import { AppShell, SidebarNav, TopNav, DataTable, ... } from "../primitives/app-ui";
+```
+
+### Composition hierarchy
+
+```
+Window (macOS chrome)
+  └── AppShell (optional — adds sidebar + topbar layout)
+        ├── sidebar: SidebarNav (with Avatar, Badge in items)
+        ├── topBar: TopNav (with SearchBar, Button, TabBar)
+        └── children (main content area)
+              └── PanelGrid (arrange panels)
+                    └── Panel (bordered card)
+                          └── DataTable | MessageList | StatCard | ListItems | Placeholder
+```
+
+### Layout shells
+
+```tsx
+// AppShell — standard SaaS layout (sidebar + topbar + content)
+<AppShell
+  sidebar={<SidebarNav items={[...]} />}
+  sidebarWidth={220}            // default 220
+  topBar={<TopNav left={...} right={...} />}
+  topBarHeight={48}             // default 48
+>
+  {main content}
+</AppShell>
+
+// PanelGrid — CSS grid for arranging panels
+<PanelGrid columns={3} gap={16}>{children}</PanelGrid>
+
+// Panel — bordered card container
+<Panel title="Section" subtitle="Description" accent={C.brandLight}>
+  {content}
+</Panel>
+```
+
+### Navigation
+
+```tsx
+// SidebarNav — vertical nav list
+<SidebarNav
+  items={[
+    { label: "Dashboard", icon: "📊", active: true },
+    { label: "Orders", icon: "📦", badge: "3" },
+    { label: "Settings", icon: "⚙" },
+  ]}
+  header={<div>Logo</div>}
+  footer={<Avatar name="User" />}
+/>
+
+// TopNav — horizontal bar with slots
+<TopNav
+  left={<span style={{ fontWeight: 600 }}>Dashboard</span>}
+  right={<><SearchBar /><Button label="New" /></>}
+/>
+
+// TabBar — horizontal tabs
+<TabBar
+  tabs={[{ label: "Overview", active: true }, { label: "Details" }]}
+  variant="underline"   // or "pill"
+/>
+```
+
+### Content
+
+```tsx
+// DataTable — spreadsheet/table with status colors
+<DataTable
+  columns={["Name", "Email", "Status"]}
+  rows={[["Alex", "alex@co", "Active"], ["Sam", "sam@co", "Pending"]]}
+  statusColumn={2}      // which column gets colored
+  statusColors={{ Active: C.success, Pending: C.warning }}  // optional overrides
+  compact={false}
+/>
+// Built-in colors: Pending=warning, Shipped/Approved/Active=success, Review=accent, Error/Overdue=error
+
+// MessageList — chat or email thread
+<MessageList
+  messages={[{ from: "Alex", text: "Hey!", timestamp: "2:30 PM" }]}
+  variant="chat"        // or "email" (shows subject, separator lines)
+/>
+
+// StatCard — metric with delta
+<StatCard label="Revenue" value="$12,400" delta="+12%" />
+// Auto-colors: "+" = green, "-" = red
+
+// ListItems — generic list rows
+<ListItems items={[{ label: "API Keys", description: "Manage access", badge: "2", badgeColor: C.warning }]} />
+
+// Placeholder — screenshot/chart placeholder
+<Placeholder label="Product screenshot placeholder" height={280} />
+// Or use aspectRatio="16/9" instead of height
+
+// NotificationToast — floating notification
+<NotificationToast title="New order" body="Alex placed order #142" accent={C.success} id="notif-0" />
+```
+
+### Micro atoms
+
+```tsx
+<Avatar name="Alex" size={28} color={C.brand} />     // circle with initial
+<Badge label="Active" color={C.success} />            // colored pill
+<Button label="Save" variant="primary" size="md" />   // primary | secondary | ghost
+<SearchBar placeholder="Search..." value="query" />   // search input appearance
+```
+
+### Screenshot-to-component workflow
+
+When a user provides a screenshot of their app, follow this process:
+
+1. **Identify layout** — Does it have a sidebar? Top navigation? Tabs?
+2. **Map content areas** — Is the main content a data table? List? Dashboard with metrics? Chat?
+3. **Compose the hierarchy** — Build from outside in: `Window > AppShell > nav > content`
+4. **Generate placeholder data** — Create realistic data in `content.ts` matching the screenshot
+5. **Wire into a scene** — Place inside a `Window` component in the scene file
+
+**Common app patterns:**
+
+| App type | Primitives |
+|----------|-----------|
+| CRM / Admin | `AppShell` + `SidebarNav` + `TabBar` + `DataTable` |
+| Dashboard | `AppShell` + `TopNav` + `PanelGrid` + `StatCard` + `Placeholder` |
+| Email client | `AppShell` + `SidebarNav` + `MessageList(email)` + `ListItems` |
+| Chat app | `AppShell` + `SidebarNav` + `MessageList(chat)` + `SearchBar` |
+| Settings | `AppShell` + `SidebarNav` + `Panel` + `ListItems` + `Button` |
+| Analytics | `AppShell` + `TopNav` + `TabBar` + `PanelGrid` + `StatCard` |
+
+All primitives accept `id?: string` for cursor targeting and `style?: React.CSSProperties` for overrides.
 
 ## `content.ts` schema
 

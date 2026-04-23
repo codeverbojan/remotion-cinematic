@@ -2,9 +2,9 @@ import React from "react";
 import { Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Cursor } from "../engine";
 import type { CursorAction } from "../engine";
-import { ScenePush, Window } from "../primitives";
+import { ScenePush, Window, Panel, PanelGrid, Placeholder } from "../primitives";
 import { CURSOR_SFX, PRODUCT_FEATURES, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
-import { C, EASE, F } from "../tokens";
+import { EASE } from "../tokens";
 
 const DURATION = 150;
 
@@ -46,76 +46,34 @@ const CURSOR_ACTIONS: CursorAction[] = [
 ];
 
 const DashboardContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, fontSize: 14, color: C.text, padding: 20 }}>
-    <div style={{ display: "flex", gap: 20, marginBottom: 24 }}>
+  <div style={{ padding: 20 }}>
+    <PanelGrid columns={3} gap={20} style={{ marginBottom: 24 }}>
       {PRODUCT_FEATURES.map((feat, i) => (
-        <div
-          key={i}
-          style={{
-            flex: 1, padding: 16, borderRadius: 8,
-            backgroundColor: C.bgLight,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.brandLight, marginBottom: 6 }}>
-            {feat.title}
-          </div>
-          <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.4 }}>
-            {feat.description}
-          </div>
-        </div>
+        <Panel key={i} title={feat.title} subtitle={feat.description} />
       ))}
-    </div>
-    <div
-      style={{
-        flex: 1, minHeight: 120, borderRadius: 8,
-        backgroundColor: C.bgLight,
-        border: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: C.textDim, fontSize: 16, fontFamily: F.mono,
-      }}
-    >
-      Drop your product screenshot here
-    </div>
+    </PanelGrid>
+    <Placeholder label="Drop your product screenshot here" height={120} />
   </div>
 );
 
 const TopPanelContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, fontSize: 13, color: C.text, padding: 16 }}>
-    <div style={{ fontSize: 16, fontWeight: 600, color: C.brandLight, marginBottom: 12 }}>
-      {PRODUCT_FEATURES[1].title}
-    </div>
-    <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.5, marginBottom: 16 }}>
-      {PRODUCT_FEATURES[1].description}
-    </div>
-    <div style={{
-      height: 200, borderRadius: 8, backgroundColor: C.bgLight,
-      border: `1px solid ${C.border}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      color: C.textDim, fontSize: 14, fontFamily: F.mono,
-    }}>
-      Product screenshot placeholder
-    </div>
-  </div>
+  <Panel
+    title={PRODUCT_FEATURES[1].title}
+    subtitle={PRODUCT_FEATURES[1].description}
+    style={{ border: "none", borderRadius: 0 }}
+  >
+    <Placeholder height={200} />
+  </Panel>
 );
 
 const LeftPanelContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, fontSize: 13, color: C.text, padding: 16 }}>
-    <div style={{ fontSize: 16, fontWeight: 600, color: C.brandLight, marginBottom: 12 }}>
-      {PRODUCT_FEATURES[2].title}
-    </div>
-    <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.5, marginBottom: 16 }}>
-      {PRODUCT_FEATURES[2].description}
-    </div>
-    <div style={{
-      height: 180, borderRadius: 8, backgroundColor: C.bgLight,
-      border: `1px solid ${C.border}`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      color: C.textDim, fontSize: 14, fontFamily: F.mono,
-    }}>
-      Product screenshot placeholder
-    </div>
-  </div>
+  <Panel
+    title={PRODUCT_FEATURES[2].title}
+    subtitle={PRODUCT_FEATURES[2].description}
+    style={{ border: "none", borderRadius: 0 }}
+  >
+    <Placeholder height={180} />
+  </Panel>
 );
 
 export const ProductReveal: React.FC = () => {

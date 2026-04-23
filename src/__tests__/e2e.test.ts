@@ -157,3 +157,19 @@ describe("e2e: scene component wiring", () => {
     expect(scenes.Closer).toBeDefined();
   });
 });
+
+describe("e2e: app-ui primitives", () => {
+  it("all 16 primitives are importable", async () => {
+    const appUi = await import("../primitives/app-ui");
+    const expected = [
+      "AppShell", "Panel", "PanelGrid",
+      "SidebarNav", "TopNav", "TabBar",
+      "DataTable", "MessageList", "StatCard",
+      "ListItems", "Placeholder", "NotificationToast",
+      "Avatar", "Badge", "Button", "SearchBar",
+    ];
+    for (const name of expected) {
+      expect((appUi as Record<string, unknown>)[name]).toBeDefined();
+    }
+  });
+});

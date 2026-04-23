@@ -8,9 +8,8 @@ import {
   LayoutWindow,
 } from "../engine";
 import type { CursorAction, ZoomKeyframe, ZoneConfig } from "../engine";
-import { Enter, ScenePush, Window } from "../primitives";
+import { Enter, ScenePush, Window, Panel, Placeholder } from "../primitives";
 import { CURSOR_SFX, PRODUCT_FEATURES, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
-import { C, F } from "../tokens";
 
 const DURATION = 200;
 
@@ -65,25 +64,14 @@ const FeatureContent: React.FC<{ title: string; description: string }> = ({
   title,
   description,
 }) => (
-  <div style={{ fontFamily: F.sans, fontSize: 14, color: C.text, padding: 24 }}>
-    <div style={{ fontSize: 20, fontWeight: 600, color: C.brandLight, marginBottom: 12 }}>
-      {title}
-    </div>
-    <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.5, marginBottom: 20 }}>
-      {description}
-    </div>
-    <div
-      style={{
-        height: 280, borderRadius: 8,
-        backgroundColor: C.bgLight,
-        border: `1px solid ${C.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: C.textDim, fontSize: 14, fontFamily: F.mono,
-      }}
-    >
-      Product screenshot placeholder
-    </div>
-  </div>
+  <Panel
+    title={title}
+    subtitle={description}
+    padding={24}
+    style={{ border: "none", borderRadius: 0, backgroundColor: "transparent" }}
+  >
+    <Placeholder height={280} />
+  </Panel>
 );
 
 export const FeatureShowcase: React.FC = () => {

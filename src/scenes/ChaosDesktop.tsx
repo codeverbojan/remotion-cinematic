@@ -2,7 +2,7 @@ import React from "react";
 import { Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Cursor } from "../engine";
 import type { CursorAction } from "../engine";
-import { Headline, ScenePush, Window } from "../primitives";
+import { Headline, ScenePush, Window, DataTable, MessageList, NotificationToast } from "../primitives";
 import {
   CHAT_MESSAGES,
   CURSOR_SFX,
@@ -83,59 +83,29 @@ const STICKY_MC = [
   { left: -60, top: -160 },
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  Pending: C.warning,
-  Shipped: C.success,
-  Approved: C.success,
-  Review: C.accent,
-};
-
-const SpreadsheetContent: React.FC = () => (
-  <div style={{ fontFamily: F.mono, fontSize: 12, color: C.text, padding: 8 }}>
-    <div style={{ display: "flex", borderBottom: `1px solid ${C.border}`, paddingBottom: 6, marginBottom: 4 }}>
-      {SPREADSHEET_COLUMNS.map((col) => (
-        <div key={col} style={{ flex: 1, fontWeight: 700, color: C.textMuted }}>{col}</div>
-      ))}
-    </div>
-    {SPREADSHEET_ROWS.map((row, i) => (
-      <div key={i} style={{ display: "flex", padding: "4px 0", borderBottom: `1px solid ${C.border}22` }}>
-        {row.map((cell, j) => (
-          <div key={j} style={{ flex: 1, color: j === 2 ? (STATUS_COLORS[cell] ?? C.textMuted) : C.text }}>{cell}</div>
-        ))}
-      </div>
-    ))}
-  </div>
-);
-
-const EmailContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, fontSize: 13, color: C.text, padding: 12 }}>
-    <div style={{ fontSize: 14, fontWeight: 600, color: C.textMuted, marginBottom: 8 }}>
-      {EMAIL_THREAD[0].subject}
-    </div>
-    {EMAIL_THREAD.map((msg, i) => (
-      <div key={i} style={{ marginBottom: 10, padding: "8px 0", borderBottom: `1px solid ${C.border}22` }}>
-        <div style={{ fontSize: 12, color: C.accent, marginBottom: 4 }}>{msg.from}</div>
-        <div style={{ color: C.textMuted }}>{msg.body}</div>
-      </div>
-    ))}
-  </div>
-);
-
-const ChatContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, fontSize: 13, color: C.text, padding: 12 }}>
-    {CHAT_MESSAGES.map((msg, i) => (
-      <div key={i} style={{ marginBottom: 8 }}>
-        <span style={{ fontWeight: 600, color: C.brandLight, marginRight: 8 }}>{msg.from}</span>
-        <span style={{ color: C.textMuted }}>{msg.text}</span>
-      </div>
-    ))}
-  </div>
-);
-
-const CONTENT_MAP: Record<string, React.FC> = {
-  spreadsheet: SpreadsheetContent,
-  email: EmailContent,
-  chat: ChatContent,
+const WINDOW_CONTENT: Record<string, React.ReactNode> = {
+  spreadsheet: (
+    <DataTable
+      columns={[...SPREADSHEET_COLUMNS]}
+      rows={SPREADSHEET_ROWS.map((r) => [...r])}
+      statusColumn={2}
+      style={{ padding: 8 }}
+    />
+  ),
+  email: (
+    <MessageList
+      messages={EMAIL_THREAD.map((e) => ({ from: e.from, text: e.body, subject: e.subject }))}
+      variant="email"
+      style={{ padding: 12 }}
+    />
+  ),
+  chat: (
+    <MessageList
+      messages={CHAT_MESSAGES.map((m) => ({ from: m.from, text: m.text }))}
+      variant="chat"
+      style={{ padding: 12 }}
+    />
+  ),
 };
 
 export const ChaosDesktop: React.FC = () => {
@@ -199,8 +169,6 @@ export const ChaosDesktop: React.FC = () => {
         const y = interpolate(mcProg, [0, 1], [def.y, def.mcY], EASE.snappy);
         const enterScale = interpolate(enterProg, [0, 1], [0.92, 1], EASE.snappy);
         const enterTY = interpolate(enterProg, [0, 1], [30, 0], EASE.snappy);
-        const Content = CONTENT_MAP[def.id];
-
         return (
           <div
             key={def.id}
@@ -215,7 +183,7 @@ export const ChaosDesktop: React.FC = () => {
             }}
           >
             <Window id={def.id} title={def.title}>
-              {Content && <Content />}
+              {WINDOW_CONTENT[def.id]}
             </Window>
           </div>
         );
@@ -230,24 +198,19 @@ export const ChaosDesktop: React.FC = () => {
         return (
           <div
             key={i}
-            data-cursor-target={`notification-${i}`}
             style={{
               position: "absolute",
               right: 30, top: 30 + i * 102,
-              width: 360, padding: "14px 18px",
-              borderRadius: 10, backgroundColor: C.surface,
-              border: `1px solid ${C.windowBorder}`,
-              boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
               opacity: enterProg,
               transform: `translateX(${enterSlide + mcSlide}px)`,
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 600, color: NOTIFICATION_COLORS[i] ?? C.text, fontFamily: F.sans }}>
-              {note.title}
-            </div>
-            <div style={{ fontSize: 12, color: C.textMuted, fontFamily: F.sans, marginTop: 4 }}>
-              {note.body}
-            </div>
+            <NotificationToast
+              id={`notification-${i}`}
+              title={note.title}
+              body={note.body}
+              accent={NOTIFICATION_COLORS[i]}
+            />
           </div>
         );
       })}
