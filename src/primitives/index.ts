@@ -6,6 +6,18 @@ export { EndCard } from "./EndCard";
 export { Wallpaper } from "./Wallpaper";
 export { Enter, getEnterPose } from "./Enter";
 export type { EnterPose } from "./Enter";
+export { Exit, getExitPose } from "./Exit";
+export type { ExitPose } from "./Exit";
+export { TypeWriter, getTypeWriterPose } from "./TypeWriter";
+export type { TypeWriterPose } from "./TypeWriter";
+export { Highlight, getHighlightPose } from "./Highlight";
+export type { HighlightPose, HighlightVariant } from "./Highlight";
+export { Pulse, getPulsePose } from "./Pulse";
+export type { PulsePose } from "./Pulse";
+export { CountUp, getCountUpPose } from "./CountUp";
+export type { CountUpPose } from "./CountUp";
+export { Stagger, getStaggerItemPose } from "./Stagger";
+export type { StaggerItemPose } from "./Stagger";
 export { ScenePush } from "./ScenePush";
 export type { ScenePushProps, PushDirection } from "./ScenePush";
 

@@ -380,6 +380,48 @@ const prog = interpolate(frame, [0, 30], [0, 1], EASE.smooth);
   {children}
 </Enter>
 
+// Exit — generic exit animation wrapper (counterpart to Enter)
+<Exit startAt={90} duration={12} translateY={-20} scaleTo={0.95}>
+  {children}
+</Exit>
+// Props: startAt (required), duration=12, translateY=-20, translateX=0, rotate=0, scaleTo=1
+// Pure fn: getExitPose(frame, startAt, duration, translateY, scaleTo, translateX?, rotate?)
+
+// TypeWriter — deterministic character-by-character text reveal
+<TypeWriter text="Hello, world!" delay={10} speed={2} cursor={true} />
+// speed = frames per character (deterministic, no randomness)
+// cursor blinks after done via modulo on frame (cursorBlinkRate=8)
+// Pure fn: getTypeWriterPose(frame, delay, textLength, speed, cursorBlinkRate)
+
+// Highlight — animated attention-drawing overlay
+<Highlight delay={10} duration={8} holdFrames={30} fadeOutDuration={10} variant="border" color={C.brand}>
+  {children}
+</Highlight>
+// Variants: "border" (animated inset border), "glow" (box-shadow glow), "background" (bg flash)
+// holdFrames=0 means hold forever after fade-in
+// Pure fn: getHighlightPose(frame, delay, duration, holdFrames, fadeOutDuration)
+
+// Pulse — rhythmic scale animation for CTAs
+<Pulse delay={0} period={20} intensity={1.06} count={3}>
+  {children}
+</Pulse>
+// period = frames per cycle, intensity = max scale, count=0 means infinite
+// Uses cosine wave — deterministic, no randomness
+// Pure fn: getPulsePose(frame, delay, period, intensity, count)
+
+// CountUp — animated number with formatting
+<CountUp from={0} to={12400} delay={5} duration={30} prefix="$" separator="," />
+// decimals=0, suffix="", separator="," (thousand separator)
+// Uses tabular-nums for stable digit width
+// Pure fn: getCountUpPose(frame, delay, duration, from, to, decimals, prefix, suffix, separator)
+
+// Stagger — wraps children with staggered entrance delays
+<Stagger interval={4} delay={0} duration={12} translateY={20}>
+  <Card /><Card /><Card />
+</Stagger>
+// Reuses getEnterPose internally — each child enters interval frames after the previous
+// Pure fn: getStaggerItemPose(frame, index, interval, baseDelay, duration, translateY, translateX, scaleFrom)
+
 // EndCard — closing card with tagline + CTA
 <EndCard
   tagline="Your Product"
