@@ -4,6 +4,8 @@ A Remotion template for building cinematic product demo videos. Smart layout eng
 
 Clone it, drop in your product screenshots, and use Claude to build your video.
 
+![Demo preview](docs/assets/demo-preview.gif)
+
 ## What you get
 
 - **Zone-based layout engine** — declare named regions, windows auto-position and avoid reserved areas
