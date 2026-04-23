@@ -1,0 +1,27 @@
+{
+  "name": "remotion-cinematic",
+  "version": "0.1.0",
+  "private": false,
+  "description": "A Remotion template for cinematic product demo videos with smart layout, geometry-aware cursor, and scene-relative camera.",
+  "license": "MIT",
+  "scripts": {
+    "studio": "npx remotion studio src/index.ts",
+    "build": "npx remotion render src/index.ts CinematicDemo",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.428",
+    "@remotion/google-fonts": "^4.0.428",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.428"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,198 @@
+# Customization
+
+## Colors
+
+Edit `src/tokens.ts` to change your brand colors. Every component references these tokens.
+
+```ts
+export const C = {
+  // Backgrounds
+  bg: "#0F0F14",           // primary background
+  bgLight: "#1A1A24",      // lighter background
+  surface: "#24243A",      // card/window surface
+  surfaceLight: "#2E2E48", // hover state surface
+
+  // Text
+  text: "#F5F5FF",         // primary text
+  textMuted: "#A0A0C0",    // secondary text
+  textDim: "#6B6B8D",      // tertiary text
+
+  // Brand
+  brand: "#6366F1",        // primary brand color (buttons, accents)
+  brandLight: "#818CF8",   // lighter variant
+  brandDim: "#4F46E5",     // darker variant
+
+  // Accent
+  accent: "#22D3EE",       // secondary accent (highlights, links)
+  accentDim: "#0891B2",    // darker variant
+
+  // Status
+  success: "#34D399",
+  warning: "#FBBF24",
+  error: "#F87171",
+
+  // Window chrome
+  windowChrome: "#2A2A3E", // title bar background
+  windowBorder: "#3A3A5C", // window borders
+  border: "#3A3A5C",       // general borders
+  trafficRed: "#FF5F57",   // close button
+  trafficYellow: "#FEBC2E", // minimize button
+  trafficGreen: "#28C840", // maximize button
+} as const;
+```
+
+## Fonts
+
+Three font families are loaded via `@remotion/google-fonts`:
+
+| Token | Default | Usage |
+|-------|---------|-------|
+| `F.sans` | Inter | UI text, window content, labels |
+| `F.serif` | Fraunces | Headlines, taglines |
+| `F.mono` | JetBrains Mono | Code, data tables |
+
+### Changing fonts
+
+1. Edit `src/fonts.ts` to load different Google Fonts:
+
+```ts
+import { loadFont as loadMyFont } from "@remotion/google-fonts/MyFont";
+loadMyFont();
+```
+
+2. Update `src/tokens.ts`:
+
+```ts
+export const F = {
+  sans: "'MyFont', system-ui, sans-serif",
+  // ...
+} as const;
+```
+
+Available fonts: see the [@remotion/google-fonts](https://www.remotion.dev/docs/google-fonts/load-font) docs.
+
+## Screenshots
+
+Product screenshots go in `public/screenshots/`.
+
+### Requirements
+
+- **Format**: PNG (recommended) or JPEG
+- **Resolution**: 2x recommended (3840x2160 for full-screen shots, or proportional for cropped areas)
+- **Naming**: descriptive kebab-case — `dashboard.png`, `feature-catalog.png`, `settings-page.png`
+
+### Using in scenes
+
+```tsx
+import { Img, staticFile } from "remotion";
+
+<Img
+  src={staticFile("screenshots/dashboard.png")}
+  style={{ width: "100%", height: "auto", borderRadius: 6 }}
+/>
+```
+
+Place the `<Img>` inside a `<Window>` component as the content slot.
+
+## Music
+
+Background music goes in `public/music/`.
+
+### Requirements
+
+- **Format**: MP3 or WAV, 44.1kHz+
+- **Style**: loop-friendly ambient tracks work best
+- **Licensing**: include only royalty-free or properly licensed tracks
+
+### Adding music
+
+Pass the `music` prop to `AudioManager` in `src/CinematicDemo.tsx`:
+
+```tsx
+<AudioManager
+  music={{
+    src: "music/your-track.mp3",  // relative to public/
+    volume: 0.4,
+    fadeInFrames: 30,   // ~1 second fade in
+    fadeOutFrames: 60,  // ~2 second fade out
+  }}
+  sfxTimeline={SFX_TIMELINE}
+  scenes={SCENES}
+  overlap={SCENE_OVERLAP}
+/>
+```
+
+### Volume ducking
+
+If you add narration, duck the music during speech:
+
+```tsx
+<AudioManager
+  music={...}
+  duckMusicDuring={[
+    { startFrame: 100, endFrame: 250, duckedVolume: 0.15 },
+  ]}
+/>
+```
+
+## Sound effects
+
+SFX go in `public/sfx/`, organized by category:
+
+```
+public/sfx/
+  ui/                   # UI interaction sounds
+    click.mp3
+    window-open.mp3
+    window-resize.mp3
+    keyboard-clack.mp3
+    notification-pop.mp3
+  transitions/          # Scene transition sounds
+    whoosh.mp3
+    reveal.mp3
+    impact-soft.mp3
+```
+
+### Adding SFX cues
+
+Add entries to `SFX_TIMELINE` in `src/content.ts`:
+
+```ts
+export const SFX_TIMELINE: AudioCue[] = [
+  { scene: "chaos", at: 10, sfx: "sfx/ui/keyboard-clack.mp3", volume: 0.6 },
+  { scene: "chaos", at: 30, sfx: "sfx/ui/notification-pop.mp3", volume: 0.4 },
+  { scene: "product-reveal", at: 0, sfx: "sfx/transitions/reveal.mp3", volume: 0.7, durationInFrames: 45 },
+];
+```
+
+The `at` value is the frame number relative to the start of the scene.
+
+## Scene order and timing
+
+Edit the `SCENES` array in `src/content.ts` to change order or duration:
+
+```ts
+export const SCENES: SceneTiming[] = [
+  { id: "chaos", durationInFrames: 260 },
+  { id: "product-reveal", durationInFrames: 150 },
+  { id: "feature-showcase", durationInFrames: 200 },
+  { id: "headline-resolution", durationInFrames: 120 },
+  { id: "closer", durationInFrames: 90 },
+];
+```
+
+- Duration is in frames (30 frames = 1 second)
+- Order in the array = order in the video
+- Camera and SFX cues are scene-relative, so they adjust when you change durations
+- To remove a scene, delete it from `SCENES`, `CAMERA_TIMELINE`, and `SCENE_COMPONENTS` in `CinematicDemo.tsx`
+
+## Canvas and framerate
+
+Defined in `src/tokens.ts`:
+
+```ts
+export const CANVAS = { width: 1920, height: 1080 } as const;
+export const FPS = 30;
+```
+
+Changing these affects all layout zones, so you'd need to update zone configs in each scene.

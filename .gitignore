@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+.remotion/
+*.tsbuildinfo
+.DS_Store
+*.mp4
