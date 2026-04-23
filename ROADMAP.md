@@ -296,41 +296,162 @@ User selects a frame in Figma → exports JSON → pastes into Remotion Studio �
 
 ---
 
-## Phase 5: Visual Studio Panels
+## Phase 5: Visual Editor
 
-**Goal**: Custom Remotion Studio panels for drag-and-drop editing of positions, paths, and timing.
+**Goal**: Turn Remotion Studio into a full visual motion design editor — click elements to select, drag to reposition, floating panels to edit properties.
 
-### 5.1 — Canvas Overlay
+### Architecture
 
-A transparent overlay on the Remotion preview where users can:
-- Drag windows to reposition them
-- Drag corners to resize
-- See cursor path as a dotted line
-- Click to add cursor waypoints
-- Drag waypoints to adjust the path
+```
+┌──────────────────────────────────────────────┐
+│  Editor Shell                                │
+│  ┌──────────────────────────────┬───────────┐│
+│  │                              │ Inspector ││
+│  │   Canvas Overlay             │ Panel     ││
+│  │   (interactive layer)        │           ││
+│  │   ┌──────────────────────┐   │ • Position││
+│  │   │                      │   │ • Size    ││
+│  │   │   Composition        │   │ • Text    ││
+│  │   │   (read-only render) │   │ • Color   ││
+│  │   │                      │   │ • Motion  ││
+│  │   │   [Window]  [Headline│   │ • Easing  ││
+│  │   │                      │   │ • Timing  ││
+│  │   └──────────────────────┘   │           ││
+│  │                              │           ││
+│  │   ┌─────────────┐           │           ││
+│  │   │ Float Panel │           │           ││
+│  │   │ (on-canvas) │           │           ││
+│  │   └─────────────┘           │           ││
+│  ├──────────────────────────────┴───────────┤│
+│  │  Timeline                                ││
+│  │  [scene1][scene2][scene3]  ▶ ■ ◀       ││
+│  │  ──●────●──●─────●── cursor keyframes   ││
+│  │  ──■────■──────── ui state keyframes     ││
+│  └──────────────────────────────────────────┘│
+└──────────────────────────────────────────────┘
+```
 
-Position changes write back to input props in real time.
+### 5.1 — Element Selection & Identification
 
-### 5.2 — Timeline Editor
+Every renderable element gets a `data-editor-id` and `data-editor-type` attribute:
 
-A custom panel below the preview:
-- Horizontal timeline with scene blocks
-- Drag edges to adjust scene duration
-- Drag cursor action markers along the timeline
-- Drag UI state keyframes
-- Visual easing curve preview per segment
+```tsx
+<div data-editor-id="window-dashboard" data-editor-type="window">
+  <Window ... />
+</div>
+```
 
-### 5.3 — Animation Preview Toolbar
+The editor overlay listens for clicks, finds the nearest `data-editor-id`, and selects it. Selection shows:
+- Blue bounding box around the element
+- Resize handles on corners and edges
+- A small label showing the element type
 
-Quick controls:
-- Easing preset dropdown with live preview
-- Enter/exit animation type selector with thumbnail previews
-- Speed multiplier for the whole video
-- Per-scene animation intensity slider
+### 5.2 — Floating Property Panel
 
-### 5.4 — Deliverable
+When an element is selected, a floating panel appears near it (or docked to the right) with context-aware controls:
 
-Remotion Studio becomes a full visual editor. Drag windows, draw cursor paths, adjust timing on a timeline — all without code. Claude builds the initial structure, Studio handles all refinement.
+**For a Window:**
+| Property | Control | Maps to |
+|----------|---------|---------|
+| Position X, Y | Number input + drag | `windowLayout[i].startX/Y` |
+| Size W, H | Number input + drag | `windowLayout[i].startW/H` |
+| Title | Text input | `windowLayout[i].title` |
+| Enter at | Frame scrubber | `windowLayout[i].enterAt` |
+| Enter style | Dropdown (fade/scale/slide) | `windowLayout[i].enterFrom` |
+| Easing | Dropdown + curve preview | `windowLayout[i].easing` |
+| Exit at | Frame scrubber | `windowLayout[i].exitAt` |
+
+**For a Headline:**
+| Property | Control |
+|----------|---------|
+| Text lines | Multi-line text input |
+| Font size | Slider (48–144px) |
+| Color | Color picker |
+| Line delay | Frame slider |
+| Word stream | Toggle + stagger/duration controls |
+| Entrance | Dropdown (fade/rise/typewriter) |
+
+**For a Button / Interactive element:**
+| Property | Control |
+|----------|---------|
+| Label | Text input |
+| Variant | Dropdown (primary/secondary/ghost) |
+| Click reaction | Dropdown (press/highlight/none) |
+| Click at frame | Frame scrubber (auto-linked to cursor) |
+
+### 5.3 — Canvas Drag & Drop
+
+Direct manipulation on the preview canvas:
+
+- **Drag to move**: click and drag any selected element to reposition. Snapping guides appear (center, edges, grid). Position writes back to props.
+- **Drag to resize**: corner handles resize the element. Aspect ratio lock with Shift.
+- **Cursor path drawing**: toggle "cursor path" mode. Click on the canvas to add waypoints. Drag waypoints to adjust. The path renders as a dotted line with action icons (click = circle, drag = arrows).
+- **Add elements**: drag from a sidebar palette (Window, Headline, Button, Panel) onto the canvas. Creates a new entry in the props array.
+
+### 5.4 — Timeline Editor
+
+A horizontal panel below the canvas:
+
+```
+0s        5s        10s       15s       20s       25s
+├─────────┼─────────┼─────────┼─────────┼─────────┤
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│░░░░░░░░│▓▓▓▓▓▓▓▓▓▓│░░░░│▓▓▓▓│  scenes
+│  chaos          │ reveal │ showcase  │head│close│
+├─────────────────┼────────┼──────────┼────┼─────┤
+│ ●→  ●⊕  ●→ ●⊕  │●→ ●⊕ ●↔│ ●→ ●⊕    │    │     │  cursor
+├─────────────────┼────────┼──────────┼────┼─────┤
+│          ■  ■   │   ■    │  ■  ■    │    │     │  ui states
+└─────────────────┴────────┴──────────┴────┴─────┘
+
+●→ = moveTo   ●⊕ = click   ●↔ = drag   ■ = state change
+```
+
+- Drag scene edges to adjust duration
+- Drag keyframe markers to retime actions
+- Right-click a marker to edit its properties
+- Drag between markers to adjust easing curves
+- Add new keyframes by double-clicking the timeline
+
+### 5.5 — Animation Controls
+
+A toolbar for quick animation adjustments:
+
+- **Easing curve editor**: visual bezier curve with draggable control points. Presets dropdown (cinematic, snappy, elastic, bounce, spring). Click a preset to apply, or customize the curve.
+- **Motion path preview**: when a moveTo or drag is selected, the path renders on canvas with velocity visualization (thicker = slower, thinner = faster).
+- **Onion skinning**: toggle ghost frames showing previous/next positions — see the motion arc.
+- **Speed ramping**: select a time range, apply slow-mo or speed-up. Useful for emphasizing a click moment.
+
+### 5.6 — Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `V` | Select tool (click to select elements) |
+| `M` | Move tool (drag to reposition) |
+| `C` | Cursor path tool (click to add waypoints) |
+| `T` | Text edit (click element to edit text inline) |
+| `Space` | Play/pause preview |
+| `←` `→` | Step one frame back/forward |
+| `Delete` | Remove selected element |
+| `Cmd+D` | Duplicate selected element |
+| `Cmd+Z` | Undo |
+| `Cmd+G` | Toggle grid/snapping |
+
+### 5.7 — Technical Implementation
+
+The editor is a **Remotion Studio extension** using:
+
+- `@remotion/studio` API for custom panels and overlays
+- React portal for the floating panel (renders outside composition iframe)
+- `postMessage` bridge between overlay and composition for element detection
+- Zustand store for editor state (selection, tool mode, drag state)
+- All changes write to Remotion input props → composition re-renders
+- Undo/redo via props history stack
+
+The composition itself never knows about the editor — it's pure. The editor is a separate layer that reads/writes props.
+
+### 5.8 — Deliverable
+
+Click any element in the video preview → see its properties → edit text, colors, position, animation directly. Drag windows around the canvas. Draw cursor paths by clicking. Adjust timing on a visual timeline. Full visual editor — no code for any customization.
 
 ---
 
@@ -369,19 +490,25 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4
   Props      Interact     Choreo      Figma
   (1 week)   (1 week)    (3 days)    (1 week)
 
-Phase 5 and 6 can start after Phase 1:
-  Phase 5 (Visual panels) — 2 weeks, independent after Phase 3
-  Phase 6 (Scene templates) — ongoing, can start after Phase 2
+Phase 5 depends on Phase 1–3 being solid:
+  Phase 5a (Selection + float panel) — 1 week, after Phase 3
+  Phase 5b (Canvas drag & drop) — 1 week, after 5a
+  Phase 5c (Timeline editor) — 2 weeks, after 5b
+  Phase 5d (Animation controls) — 1 week, after 5c
+
+Phase 6 can start after Phase 2:
+  Phase 6 (Scene templates) — ongoing
 ```
 
 ### Priority
 
 1. **Phase 1** — Input props. Unlocks Studio editing immediately. Foundation for everything else.
 2. **Phase 2** — Interaction layer. Makes the video feel real, not a slideshow.
-3. **Phase 4** — Figma bridge (Path B: Claude from screenshot is already partially working, formalize it).
-4. **Phase 3** — Window choreography props. Power users who want full control.
-5. **Phase 6** — Scene templates. Grows the library, makes the template more versatile.
-6. **Phase 5** — Visual panels. Polish layer, biggest engineering investment.
+3. **Phase 3** — Window choreography props. Power users who want full control.
+4. **Phase 4** — Figma bridge (Path B: Claude from screenshot is already partially working, formalize it).
+5. **Phase 5a–b** — Selection + drag. The "click to edit" moment that changes everything.
+6. **Phase 6** — Scene templates. Grows the library, makes the template more versatile.
+7. **Phase 5c–d** — Timeline + animation controls. Full motion design editor.
 
 ---
 
