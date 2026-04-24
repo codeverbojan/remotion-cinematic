@@ -25,7 +25,7 @@ Clone it, drop in your product screenshots, and use Claude to build your video.
 ## Quickstart
 
 ```bash
-npx degit your-org/remotion-cinematic my-video
+npx degit codeverbojan/remotion-cinematic my-video
 cd my-video
 npm install
 npm run studio

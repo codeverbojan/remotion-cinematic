@@ -10,7 +10,7 @@ Get a cinematic product demo video running in 5 minutes.
 ## 1. Clone and install
 
 ```bash
-npx degit your-org/remotion-cinematic my-video
+npx degit codeverbojan/remotion-cinematic my-video
 cd my-video
 npm install
 ```
