@@ -51,8 +51,8 @@ Change the defaults in `src/schema.ts` under `HeadlinesSchema`:
 
 ```ts
 const HeadlinesSchema = z.object({
-  pain: z.array(z.string().max(200)).default(["Your pain point", "question?"]),
-  resolution: z.array(z.string().max(200)).default(["Your solution.", "Statement."]),
+  pain: z.array(z.string().max(200)).default(["Where did that", "request go?"]),
+  resolution: z.array(z.string().max(200)).default(["Every request.", "Tracked."]),
   closer: z.array(z.string().max(200)).default(["Try it free."]),
   // ...
 });

@@ -200,7 +200,7 @@ Headlines are defined in `src/schema.ts` (`HeadlinesSchema`) and editable in the
 
 | Field | Default | Scene |
 |-------|---------|-------|
-| `pain` | `["Where did that", "request go?"]` | HeadlineResolution |
+| `pain` | `["Where did that", "request go?"]` | ChaosDesktop |
 | `resolution` | `["Every request.", "Tracked."]` | HeadlineResolution |
 | `closer` | `["Try it free."]` | Closer |
 
@@ -243,12 +243,13 @@ export const SCENES: SceneTiming[] = [
 
 ### Removing a scene
 
-To fully remove a scene, update all four locations:
+To fully remove a scene, update all locations:
 
-1. `src/schema.ts` — remove from `DEFAULT_SCENES`
+1. `src/schema.ts` — remove from `DEFAULT_SCENES` and optionally remove related `windowLayout` entries
 2. `src/content.ts` — remove from `SCENES` and `CAMERA_TIMELINE`
 3. `src/CinematicDemo.tsx` — remove from `SCENE_COMPONENTS`
-4. `src/schema.ts` — optionally remove related `windowLayout` entries
+4. `src/scenes/index.ts` — remove the barrel export
+5. Delete the scene file from `src/scenes/`
 
 ## Canvas and framerate
 

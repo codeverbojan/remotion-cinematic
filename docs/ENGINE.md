@@ -181,6 +181,12 @@ Geometry-aware cursor that targets elements by ID. Movements use arc interpolati
 | `actions` | `CursorAction[]` | required | Choreography timeline (scene-relative frames) |
 | `getRect` | `(id: string) => { left, top, width, height } \| undefined` | — | Position resolver (optional) |
 | `sfx` | `CursorSFXMap` | — | Maps action types to sounds — fires automatically |
+| `canvas` | `{ width: number; height: number }` | — | Canvas dimensions (for clamp/defaults) |
+| `size` | `number` | — | Cursor size in px |
+| `color` | `string` | — | Cursor color |
+| `visible` | `boolean` | — | Show/hide cursor |
+| `fadeOutDelay` | `number` | — | Frames after last action before fade-out starts |
+| `fadeOutDuration` | `number` | — | Fade-out duration in frames |
 
 ### Cursor SFX
 

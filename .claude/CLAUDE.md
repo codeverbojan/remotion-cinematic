@@ -86,13 +86,16 @@ schema.ts (Zod) → Root.tsx (Composition + defaultProps) → CinematicDemo.tsx 
 ### Context hooks
 
 ```tsx
-import { useVideoProps, useHeadlines, useBrand, useProductFeatures, useEasing } from "../VideoPropsContext";
+import { useVideoProps, useHeadlines, useBrand, useProductFeatures, useEasing, useWindowLayout, useCursorPath, useAppDescriptor } from "../VideoPropsContext";
 
 const props = useVideoProps();          // full CinematicProps
-const headlines = useHeadlines();       // { pain, resolution, closer }
+const headlines = useHeadlines();       // { pain, resolution, closer, painFontSize?, ... }
 const brand = useBrand();               // { name, colors, fontSans, ... }
 const features = useProductFeatures();  // [{ title, description }, ...]
 const easing = useEasing();             // resolved easing options object (for interpolate)
+const windows = useWindowLayout();      // WindowLayout[] — all window definitions
+const cursorPath = useCursorPath();     // CursorPathEntry[] — Studio-editable cursor path
+const descriptor = useAppDescriptor();  // LayoutDescriptor — JSON-driven app UI
 ```
 
 ### What's in the schema
@@ -660,6 +663,8 @@ EditorOverlay (gates on isStudio)
 | `src/editor/SelectionBox.tsx` | Blue border + label + 8 resize handles (corners + edges) + move area |
 | `src/editor/SnapGuides.tsx` | Snap guide computation (pure functions) + visual guide lines |
 | `src/editor/PropertyPanel.tsx` | Floating property panel — context-aware for windows/headlines/buttons |
+| `src/editor/InlineEdit.tsx` | Double-click-to-edit text wrapper (used by Window, Headline, EndCard) |
+| `src/editor/TextToolbar.tsx` | Floating toolbar — font size +/-, weight cycling, color picker |
 | `src/editor/index.ts` | Barrel exports |
 
 **Selection:** Click any element with `data-editor-id` to select it. A blue bounding box with resize handles appears. Click empty area to deselect.
