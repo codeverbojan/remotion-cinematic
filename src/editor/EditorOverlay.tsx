@@ -323,7 +323,7 @@ const EditorOverlayInner: React.FC<{
         />
       )}
 
-      {showCursorPath && <CursorPathOverlay props={props} frame={frame} interactive={!selection && !dragState} />}
+      {showCursorPath && <CursorPathOverlay props={props} frame={frame} interactive={!dragState} />}
       <CursorPathEditor props={props} frame={frame} containerRef={containerRef} showCursorPath={showCursorPath} onTogglePath={setShowCursorPath} />
       <ElementPalette props={props} frame={frame} />
 

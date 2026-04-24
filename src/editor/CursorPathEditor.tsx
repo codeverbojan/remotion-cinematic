@@ -234,7 +234,11 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
         </button>
 
         <button
-          onClick={() => setDrawMode((d) => !d)}
+          onClick={() => {
+            const next = !drawMode;
+            setDrawMode(next);
+            if (next && !showCursorPath) onTogglePath(true);
+          }}
           style={{
             padding: "4px 10px",
             fontSize: 11,
