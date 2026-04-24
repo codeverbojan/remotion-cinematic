@@ -12,6 +12,9 @@ export {
   CursorSprite,
   resolveAnchorFromRect,
   interpolateArc,
+  interpolateLinear,
+  interpolateEase,
+  interpolateCurve,
   computeClickPulse,
   computeCursorRotation,
 } from "./cursor";
@@ -39,10 +42,11 @@ export {
 
 export {
   getSceneStartFrame,
+  getSceneAtFrame,
   getTotalFrames,
 } from "./types";
 
-export type { SceneTiming, SceneTimingMap, Rect, CanvasSize, SFXEntry } from "./types";
+export type { SceneTiming, SceneTimingMap, SceneRange, Rect, CanvasSize, SFXEntry } from "./types";
 
 export type {
   ComputedRect,
@@ -61,6 +65,7 @@ export type {
   CursorActionIdle,
   CursorActionMoveTo,
   CursorSFXMap,
+  CurveType,
   ResolvedPosition,
   CanvasBounds,
 } from "./cursor";
@@ -85,6 +90,7 @@ export type { UIKeyframe } from "./ui-state";
 export {
   resolveWindowPose,
   mapCursorPath,
+  filterCursorPath,
 } from "./choreography";
 
 export type { WindowPose } from "./choreography";

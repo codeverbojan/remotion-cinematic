@@ -1,11 +1,15 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getRemotionEnvironment, useCurrentFrame } from "remotion";
 import { updateDefaultProps } from "@remotion/studio";
 import { useVideoProps } from "../VideoPropsContext";
+import { CursorInteractionProvider } from "../CursorInteractionContext";
 import { useEditorState } from "./useEditorState";
 import { SelectionBox } from "./SelectionBox";
 import { SnapGuides, computeSnapGuides, applySnap } from "./SnapGuides";
 import { PropertyPanel } from "./PropertyPanel";
+import { CursorPathOverlay } from "./CursorPathOverlay";
+import { CursorPathEditor } from "./CursorPathEditor";
+import { ElementPalette } from "./ElementPalette";
 import type { HandleDirection } from "./SelectionBox";
 import type { CinematicProps, WindowLayout } from "../schema";
 import type { Guides } from "./SnapGuides";
@@ -60,6 +64,14 @@ const EditorOverlayInner: React.FC<{
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const [guides, setGuides] = useState<Guides>({ x: [], y: [] });
+  const [showCursorPath, setShowCursorPath] = useState(false);
+  const handleCursorClick = useCallback(() => {
+    setShowCursorPath((prev) => !prev);
+  }, []);
+  const cursorInteraction = useMemo(
+    () => ({ onCursorClick: handleCursorClick }),
+    [handleCursorClick],
+  );
   const didDragRef = useRef(false);
   const editingEndRef = useRef(false);
   const dragOverrideRef = useRef<{ id: string; x: number; y: number; w: number; h: number; editingEnd: boolean } | null>(null);
@@ -294,7 +306,9 @@ const EditorOverlayInner: React.FC<{
       onClick={wrappedHandleClick}
       style={{ position: "relative", width: "100%", height: "100%" }}
     >
-      {children}
+      <CursorInteractionProvider value={cursorInteraction}>
+        {children}
+      </CursorInteractionProvider>
 
       {selection && (
         <SelectionBox
@@ -304,6 +318,10 @@ const EditorOverlayInner: React.FC<{
           onMoveStart={isEditableWindow ? handleMoveStart : undefined}
         />
       )}
+
+      {showCursorPath && <CursorPathOverlay props={props} frame={frame} />}
+      <CursorPathEditor props={props} frame={frame} containerRef={containerRef} showCursorPath={showCursorPath} onTogglePath={setShowCursorPath} />
+      <ElementPalette props={props} frame={frame} />
 
       {dragState && <SnapGuides guides={guides} canvasW={CANVAS_W} canvasH={CANVAS_H} />}
 

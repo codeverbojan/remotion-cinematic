@@ -32,6 +32,7 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
             target: entry.target,
             anchor: resolveAnchor(entry),
             duration: entry.duration,
+            curve: entry.curve,
           });
         }
         break;
@@ -56,6 +57,7 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
             anchor: resolveAnchor(entry),
             to: { x: entry.toX, y: entry.toY },
             duration: entry.duration,
+            curve: entry.curve,
           });
         }
         break;

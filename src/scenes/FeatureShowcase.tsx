@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
 import { Audio, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { AutoZoom, Cursor, resolveWindowPose } from "../engine";
+import { AutoZoom, Cursor, resolveWindowPose, mapCursorPath, filterCursorPath, getSceneStartFrame } from "../engine";
 import type { CursorAction, ZoomKeyframe } from "../engine";
 import { ScenePush, Window, Panel, Placeholder } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
-import { useProductFeatures, useWindowLayout } from "../VideoPropsContext";
+import { useProductFeatures, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
 
 const DURATION = 200;
 
@@ -51,9 +51,18 @@ const FeatureContent: React.FC<{ title: string; description: string }> = ({
 
 export const FeatureShowcase: React.FC = () => {
   const frame = useCurrentFrame();
+  const props = useVideoProps();
   const features = useProductFeatures();
   const allWindows = useWindowLayout();
   const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+  const cursorPathRaw = useCursorPath();
+  const cursorStyle = useCursorStyle();
+  const enabledScenes = useMemo(() => props.scenes.filter((s) => s.enabled), [props.scenes]);
+  const cursorActions = useMemo(() => {
+    const offset = getSceneStartFrame(enabledScenes, "feature-showcase", props.overlap);
+    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    return sceneEntries.length > 0 ? mapCursorPath(sceneEntries) : CURSOR_ACTIONS;
+  }, [cursorPathRaw, enabledScenes, props.overlap]);
 
   const sortedWindows = useMemo(
     () => [...windows].sort((a, b) => a.zIndex - b.zIndex),
@@ -108,7 +117,7 @@ export const FeatureShowcase: React.FC = () => {
           </Sequence>
         ))}
 
-        <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
+        <Cursor actions={cursorActions} getRect={getRect} sfx={CURSOR_SFX} size={Math.round(52 * cursorStyle.scale)} baseRotation={cursorStyle.rotation} />
       </AutoZoom>
     </ScenePush>
   );

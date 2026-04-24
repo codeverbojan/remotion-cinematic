@@ -16,6 +16,7 @@ import {
   HeadlineResolution,
   Closer,
 } from "./scenes";
+import { DynamicWindows } from "./scenes/DynamicWindows";
 
 const SCENE_COMPONENTS: Record<string, React.FC> = {
   "chaos": ChaosDesktop,
@@ -77,6 +78,7 @@ export const CinematicDemo: React.FC<CinematicProps> = (props) => {
                 layout="none"
               >
                 <Component />
+                <DynamicWindows />
               </Sequence>
             );
           })}

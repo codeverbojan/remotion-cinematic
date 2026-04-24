@@ -4,6 +4,9 @@
   "private": false,
   "description": "A Remotion template for cinematic product demo videos with smart layout, geometry-aware cursor, and scene-relative camera.",
   "license": "MIT",
+  "bin": {
+    "cinematic-import": "./src/cli/index.ts"
+  },
   "scripts": {
     "studio": "npx remotion studio src/index.ts",
     "build": "npx remotion render src/index.ts CinematicDemo",

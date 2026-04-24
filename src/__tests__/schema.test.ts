@@ -185,4 +185,55 @@ describe("CinematicSchema", () => {
     expect(result.brand.colors.text).toBe("#F5F5FF");
     expect(result.brand.colors.background).toBe("#0F0F14");
   });
+
+  it("cursorScale defaults to 1", () => {
+    const result = CinematicSchema.parse({});
+    expect(result.cursorScale).toBe(1);
+  });
+
+  it("cursorScale validates range 0.5-3", () => {
+    expect(CinematicSchema.parse({ cursorScale: 0.5 }).cursorScale).toBe(0.5);
+    expect(CinematicSchema.parse({ cursorScale: 3 }).cursorScale).toBe(3);
+    expect(() => CinematicSchema.parse({ cursorScale: 0.3 })).toThrow();
+    expect(() => CinematicSchema.parse({ cursorScale: 4 })).toThrow();
+  });
+
+  it("cursorRotation defaults to 0", () => {
+    const result = CinematicSchema.parse({});
+    expect(result.cursorRotation).toBe(0);
+  });
+
+  it("cursorRotation validates range -180 to 180", () => {
+    expect(CinematicSchema.parse({ cursorRotation: -180 }).cursorRotation).toBe(-180);
+    expect(CinematicSchema.parse({ cursorRotation: 180 }).cursorRotation).toBe(180);
+    expect(() => CinematicSchema.parse({ cursorRotation: -200 })).toThrow();
+    expect(() => CinematicSchema.parse({ cursorRotation: 200 })).toThrow();
+  });
+
+  it("cursorPath entry curve field is optional, defaults to undefined", () => {
+    const result = CinematicSchema.parse({});
+    const entry = result.cursorPath[0];
+    expect(entry.curve).toBeUndefined();
+  });
+
+  it("cursorPath entry accepts valid curve values", () => {
+    const result = CinematicSchema.parse({
+      cursorPath: [
+        { at: 0, action: "idle", positionX: 100, positionY: 100, curve: "arc" },
+        { at: 10, action: "moveTo", target: "win", curve: "linear", duration: 10 },
+        { at: 30, action: "click", target: "win", curve: "ease" },
+      ],
+    });
+    expect(result.cursorPath[0].curve).toBe("arc");
+    expect(result.cursorPath[1].curve).toBe("linear");
+    expect(result.cursorPath[2].curve).toBe("ease");
+  });
+
+  it("cursorPath entry rejects invalid curve value", () => {
+    expect(() =>
+      CinematicSchema.parse({
+        cursorPath: [{ at: 0, action: "idle", curve: "bounce" }],
+      }),
+    ).toThrow();
+  });
 });

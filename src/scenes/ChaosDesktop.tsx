@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { Cursor, resolveWindowPose } from "../engine";
+import { Cursor, resolveWindowPose, mapCursorPath, filterCursorPath, getSceneStartFrame } from "../engine";
 import type { CursorAction } from "../engine";
 import { Headline, ScenePush, Window, DataTable, MessageList, NotificationToast } from "../primitives";
 import {
@@ -14,12 +14,12 @@ import {
   SPREADSHEET_ROWS,
   STICKY_NOTES,
 } from "../content";
-import { useHeadlines, useWindowLayout } from "../VideoPropsContext";
+import { useHeadlines, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
 import { C, EASE, F } from "../tokens";
 
 const DURATION = 260;
 
-const SCENE_WINDOW_IDS = ["spreadsheet", "email", "chat"];
+const SCENE_WINDOW_IDS = ["spreadsheet", "email", "chat", "notification-0", "notification-1", "notification-2"];
 
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 1400, y: 300 } },
@@ -77,8 +77,17 @@ const WINDOW_CONTENT: Record<string, React.ReactNode> = {
 export const ChaosDesktop: React.FC = () => {
   const frame = useCurrentFrame();
   const headlines = useHeadlines();
+  const props = useVideoProps();
   const allWindows = useWindowLayout();
   const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+  const cursorPathRaw = useCursorPath();
+  const cursorStyle = useCursorStyle();
+  const enabledScenes = useMemo(() => props.scenes.filter((s) => s.enabled), [props.scenes]);
+  const cursorActions = useMemo(() => {
+    const offset = getSceneStartFrame(enabledScenes, "chaos", props.overlap);
+    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    return sceneEntries.length > 0 ? mapCursorPath(sceneEntries) : CURSOR_ACTIONS;
+  }, [cursorPathRaw, enabledScenes, props.overlap]);
 
   const mcStart = windows[0]?.animateAt ?? 150;
   const mcDur = windows[0]?.animateDuration ?? 25;
@@ -215,7 +224,7 @@ export const ChaosDesktop: React.FC = () => {
         />
       </Sequence>
 
-      <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
+      <Cursor actions={cursorActions} getRect={getRect} sfx={CURSOR_SFX} size={Math.round(52 * cursorStyle.scale)} baseRotation={cursorStyle.rotation} />
     </ScenePush>
   );
 };

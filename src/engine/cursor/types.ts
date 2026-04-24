@@ -14,12 +14,15 @@ export interface CursorActionIdle {
   position: { x: number; y: number };
 }
 
+export type CurveType = "arc" | "linear" | "ease";
+
 export interface CursorActionMoveTo {
   at: number;
   action: "moveTo";
   target: string;
   anchor: AnchorPoint;
   duration?: number;
+  curve?: CurveType;
 }
 
 export interface CursorActionClick {
@@ -36,6 +39,7 @@ export interface CursorActionDrag {
   anchor: AnchorPoint;
   to: { x: number; y: number };
   duration?: number;
+  curve?: CurveType;
 }
 
 export type CursorAction =

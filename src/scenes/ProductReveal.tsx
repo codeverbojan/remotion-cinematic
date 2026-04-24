@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
 import { Audio, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { Cursor, UIStateProvider, generatePressKeyframes, resolveWindowPose } from "../engine";
+import { Cursor, UIStateProvider, generatePressKeyframes, resolveWindowPose, mapCursorPath, filterCursorPath, getSceneStartFrame } from "../engine";
 import type { CursorAction, UIKeyframe } from "../engine";
 import { ScenePush, Window, Panel, PanelGrid, Placeholder } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
-import { useProductFeatures, useWindowLayout } from "../VideoPropsContext";
+import { useProductFeatures, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
 
 const DURATION = 150;
 
@@ -87,6 +87,7 @@ const WINDOW_CONTENT: Record<string, React.ReactNode> = {
 
 export const ProductReveal: React.FC = () => {
   const frame = useCurrentFrame();
+  const videoProps = useVideoProps();
   const allWindows = useWindowLayout();
   const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
 
@@ -94,12 +95,17 @@ export const ProductReveal: React.FC = () => {
   const topPanelDef = windows.find((w) => w.id === "top-panel");
   const leftPanelDef = windows.find((w) => w.id === "left-panel");
 
+  const cursorPathRaw = useCursorPath();
+  const cursorStyle = useCursorStyle();
+  const enabledScenes = useMemo(() => videoProps.scenes.filter((s) => s.enabled), [videoProps.scenes]);
   const dragToX = productWin?.endX ?? productWin?.startX ?? 980;
   const dragToY = productWin?.endY ?? productWin?.startY ?? 500;
-  const cursorActions = useMemo(
-    () => buildCursorActions({ x: dragToX, y: dragToY }),
-    [dragToX, dragToY],
-  );
+  const cursorActions = useMemo(() => {
+    const offset = getSceneStartFrame(enabledScenes, "product-reveal", videoProps.overlap);
+    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    if (sceneEntries.length > 0) return mapCursorPath(sceneEntries);
+    return buildCursorActions({ x: dragToX, y: dragToY });
+  }, [cursorPathRaw, enabledScenes, videoProps.overlap, dragToX, dragToY]);
 
   const pressKeyframes = useMemo(() => generatePressKeyframes(cursorActions), [cursorActions]);
   const allKeyframes = useMemo(
@@ -160,7 +166,7 @@ export const ProductReveal: React.FC = () => {
           <Audio src={staticFile(SFX.pop.src)} volume={SFX.pop.volume} />
         </Sequence>
 
-        <Cursor actions={cursorActions} getRect={getRect} sfx={CURSOR_SFX} />
+        <Cursor actions={cursorActions} getRect={getRect} sfx={CURSOR_SFX} size={Math.round(52 * cursorStyle.scale)} baseRotation={cursorStyle.rotation} />
       </UIStateProvider>
     </ScenePush>
   );

@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { computeClickPulse, computeCursorRotation, interpolateArc } from "./arc";
+import { computeClickPulse, computeCursorRotation, interpolateCurve } from "./arc";
 import { CursorSprite, getCursorShape } from "./CursorSprite";
 import type { CursorShape } from "./CursorSprite";
 import { resolveAnchorFromRect } from "./resolveAnchor";
-import type { CursorAction, CursorSFXMap, ResolvedPosition } from "./types";
+import type { CursorAction, CursorSFXMap, CurveType, ResolvedPosition } from "./types";
+import { useCursorInteraction } from "../../CursorInteractionContext";
 
 interface CursorProps {
   actions: CursorAction[];
@@ -16,6 +17,7 @@ interface CursorProps {
   visible?: boolean;
   fadeOutDelay?: number;
   fadeOutDuration?: number;
+  baseRotation?: number;
 }
 
 const DEFAULT_MOVE_DURATION = 20;
@@ -30,6 +32,7 @@ interface ResolvedSegment {
   actionType: CursorAction["action"];
   isMovingToClick: boolean;
   isDragging: boolean;
+  curve?: CurveType;
 }
 
 const warnedTargets = new Set<string>();
@@ -99,6 +102,7 @@ function buildSegments(
         actionType: "moveTo",
         isMovingToClick: nextIsClick,
         isDragging: false,
+        curve: action.curve,
       });
       if (moveEnd < endFrame) {
         segments.push({
@@ -143,6 +147,7 @@ function buildSegments(
         actionType: "drag",
         isMovingToClick: false,
         isDragging: false,
+        curve: action.curve,
       });
 
       segments.push({
@@ -154,6 +159,7 @@ function buildSegments(
         actionType: "drag",
         isMovingToClick: false,
         isDragging: true,
+        curve: action.curve,
       });
 
       if (dragEnd < endFrame) {
@@ -192,8 +198,10 @@ export const Cursor: React.FC<CursorProps> = ({
   visible = true,
   fadeOutDelay = 15,
   fadeOutDuration = 8,
+  baseRotation = 0,
 }) => {
   const frame = useCurrentFrame();
+  const { onCursorClick } = useCursorInteraction();
   const getRectRef = useRef(getRectProp);
   getRectRef.current = getRectProp;
 
@@ -223,15 +231,14 @@ export const Cursor: React.FC<CursorProps> = ({
   const rawProgress = segDuration > 0
     ? (frame - seg.startFrame) / segDuration
     : 1;
-  const progress = interpolate(
-    Math.max(0, Math.min(1, rawProgress)),
-    [0, 1],
-    [0, 1],
-    { easing: Easing.bezier(0.22, 0.61, 0.36, 1) },
-  );
+  const clamped = Math.max(0, Math.min(1, rawProgress));
+  const useArcEasing = !seg.curve || seg.curve === "arc";
+  const progress = useArcEasing
+    ? interpolate(clamped, [0, 1], [0, 1], { easing: Easing.bezier(0.22, 0.61, 0.36, 1) })
+    : clamped;
 
-  const pos = interpolateArc(seg.from, seg.to, progress, { canvas });
-  const rotation = computeCursorRotation(seg.from, seg.to, progress);
+  const pos = interpolateCurve(seg.from, seg.to, progress, seg.curve, { canvas });
+  const rotation = computeCursorRotation(seg.from, seg.to, progress) + baseRotation;
 
   let pulseOpacity = 0;
   let pulseScale = 1;
@@ -267,14 +274,22 @@ export const Cursor: React.FC<CursorProps> = ({
         );
       })}
       <div
+        onClick={onCursorClick ? (e) => {
+          e.stopPropagation();
+          onCursorClick();
+        } : undefined}
         style={{
           position: "absolute",
           left: Math.round(pos.x),
           top: Math.round(pos.y),
           zIndex: 9999,
-          pointerEvents: "none",
+          pointerEvents: onCursorClick ? "auto" : "none",
           willChange: "transform",
           opacity: cursorOpacity,
+          cursor: onCursorClick ? "pointer" : undefined,
+          userSelect: onCursorClick ? "none" : undefined,
+          padding: onCursorClick ? 12 : 0,
+          margin: onCursorClick ? -12 : 0,
         }}
       >
         <CursorSprite

@@ -1,4 +1,7 @@
 export { EditorOverlay } from "./EditorOverlay";
+export { CursorPathOverlay, resolveWaypointPosition } from "./CursorPathOverlay";
+export { CursorPathEditor } from "./CursorPathEditor";
+export { ElementPalette } from "./ElementPalette";
 export { useEditorState } from "./useEditorState";
 export { InlineEdit } from "./InlineEdit";
 export { TextToolbar } from "./TextToolbar";

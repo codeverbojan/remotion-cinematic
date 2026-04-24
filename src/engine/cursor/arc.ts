@@ -1,4 +1,4 @@
-import type { CanvasBounds, ResolvedPosition } from "./types";
+import type { CanvasBounds, CurveType, ResolvedPosition } from "./types";
 
 const DEFAULT_BULGE = 0.22;
 const DEFAULT_ROTATION_AMPLITUDE = 10;
@@ -51,6 +51,49 @@ export function interpolateArc(
     x: quadBezier(t, from.x, cx, to.x),
     y: quadBezier(t, from.y, cy, to.y),
   };
+}
+
+export function interpolateLinear(
+  from: ResolvedPosition,
+  to: ResolvedPosition,
+  progress: number,
+): ResolvedPosition {
+  const t = Math.max(0, Math.min(1, progress));
+  return {
+    x: from.x + (to.x - from.x) * t,
+    y: from.y + (to.y - from.y) * t,
+  };
+}
+
+export function interpolateEase(
+  from: ResolvedPosition,
+  to: ResolvedPosition,
+  progress: number,
+): ResolvedPosition {
+  const t = Math.max(0, Math.min(1, progress));
+  const eased = t * t * (3 - 2 * t);
+  return {
+    x: from.x + (to.x - from.x) * eased,
+    y: from.y + (to.y - from.y) * eased,
+  };
+}
+
+export function interpolateCurve(
+  from: ResolvedPosition,
+  to: ResolvedPosition,
+  progress: number,
+  curve: CurveType = "arc",
+  config: ArcConfig = {},
+): ResolvedPosition {
+  switch (curve) {
+    case "linear":
+      return interpolateLinear(from, to, progress);
+    case "ease":
+      return interpolateEase(from, to, progress);
+    case "arc":
+    default:
+      return interpolateArc(from, to, progress, config);
+  }
 }
 
 export function computeClickPulse(

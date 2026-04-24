@@ -97,6 +97,8 @@ const AnchorPreset = z.enum([
   "corner-bottom-right",
 ]);
 
+const CurveType = z.enum(["arc", "linear", "ease"]);
+
 const CursorPathEntrySchema = z.object({
   at: z.number().int().min(0),
   action: z.enum(["idle", "moveTo", "click", "drag"]),
@@ -109,6 +111,7 @@ const CursorPathEntrySchema = z.object({
   toX: z.number().optional(),
   toY: z.number().optional(),
   duration: z.number().int().min(1).optional(),
+  curve: CurveType.optional(),
 }).refine(
   (e) => (e.anchorXPct === undefined) === (e.anchorYPct === undefined),
   { message: "anchorXPct and anchorYPct must both be set or both be unset" },
@@ -180,7 +183,39 @@ const DEFAULT_WINDOW_LAYOUT = z.array(WindowLayoutSchema).parse([
   },
 ]);
 
-const DEFAULT_CURSOR_PATH = z.array(CursorPathEntrySchema).parse([]);
+const DEFAULT_CURSOR_PATH = z.array(CursorPathEntrySchema).parse([
+  // ChaosDesktop (offset 0)
+  { at: 0, action: "idle", positionX: 1400, positionY: 300 },
+  { at: 10, action: "moveTo", target: "spreadsheet", anchorXPct: 60, anchorYPct: 40, duration: 12 },
+  { at: 26, action: "click", target: "spreadsheet" },
+  { at: 34, action: "moveTo", target: "email", anchor: "top-bar", duration: 12 },
+  { at: 50, action: "click", target: "email" },
+  { at: 58, action: "moveTo", target: "chat", anchorXPct: 40, anchorYPct: 30, duration: 12 },
+  { at: 76, action: "click", target: "chat" },
+  { at: 84, action: "moveTo", target: "notification-0", duration: 12 },
+  { at: 100, action: "click", target: "notification-0" },
+  { at: 108, action: "moveTo", target: "notification-1", duration: 10 },
+  { at: 122, action: "click", target: "notification-1" },
+  // ProductReveal (offset 245)
+  { at: 245, action: "idle", positionX: 200, positionY: 180 },
+  { at: 250, action: "moveTo", target: "product-window", anchor: "corner-top-left", duration: 12 },
+  { at: 265, action: "click", target: "product-window", anchor: "corner-top-left" },
+  { at: 275, action: "drag", target: "product-window", anchor: "corner-top-left", toX: 980, toY: 500, duration: 18 },
+  { at: 303, action: "moveTo", target: "top-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
+  { at: 319, action: "click", target: "top-panel" },
+  { at: 329, action: "moveTo", target: "left-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
+  { at: 345, action: "click", target: "left-panel" },
+  // FeatureShowcase (offset 380)
+  { at: 380, action: "idle", positionX: 300, positionY: 400 },
+  { at: 388, action: "moveTo", target: "feature-0", anchorXPct: 50, anchorYPct: 35, duration: 12 },
+  { at: 404, action: "click", target: "feature-0" },
+  { at: 420, action: "moveTo", target: "feature-1", anchorXPct: 50, anchorYPct: 35, duration: 12 },
+  { at: 436, action: "click", target: "feature-1" },
+  { at: 458, action: "moveTo", target: "feature-2", anchorXPct: 40, anchorYPct: 30, duration: 12 },
+  { at: 474, action: "click", target: "feature-2" },
+  { at: 495, action: "moveTo", target: "feature-2", anchor: "top-bar", duration: 10 },
+  { at: 510, action: "click", target: "feature-2", anchor: "top-bar" },
+]);
 
 // --- Layout Descriptor (Figma Bridge) ---
 
@@ -365,6 +400,8 @@ export const CinematicSchema = z.object({
 
   windowLayout: z.array(WindowLayoutSchema).default(DEFAULT_WINDOW_LAYOUT),
   cursorPath: z.array(CursorPathEntrySchema).default(DEFAULT_CURSOR_PATH),
+  cursorScale: z.number().min(0.5).max(3).default(1),
+  cursorRotation: z.number().min(-180).max(180).default(0),
 
   appDescriptor: LayoutDescriptorSchema.default(DEFAULT_DESCRIPTOR),
 
@@ -387,6 +424,7 @@ export type WindowLayout = z.infer<typeof WindowLayoutSchema>;
 export type WindowEntranceStyleType = z.infer<typeof WindowEntranceStyle>;
 export type CursorPathEntry = z.infer<typeof CursorPathEntrySchema>;
 export type AnchorPresetType = z.infer<typeof AnchorPreset>;
+export type CurveTypeValue = z.infer<typeof CurveType>;
 export type LayoutDescriptor = z.infer<typeof LayoutDescriptorSchema>;
 export type ContentPanel = z.infer<typeof ContentPanelSchema>;
 export type SidebarItem = z.infer<typeof SidebarItemSchema>;

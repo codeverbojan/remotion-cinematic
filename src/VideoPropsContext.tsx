@@ -50,6 +50,11 @@ export function useAppDescriptor() {
   return useContext(VideoPropsContext).appDescriptor;
 }
 
+export function useCursorStyle() {
+  const ctx = useContext(VideoPropsContext);
+  return { scale: ctx.cursorScale, rotation: ctx.cursorRotation };
+}
+
 export function updateProp(
   updater: (prev: CinematicProps) => CinematicProps,
 ) {

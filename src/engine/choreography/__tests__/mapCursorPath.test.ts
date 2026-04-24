@@ -152,4 +152,44 @@ describe("mapCursorPath", () => {
     expect(result[2].action).toBe("click");
     expect(result[3].action).toBe("drag");
   });
+
+  it("passes curve through on moveTo", () => {
+    const entries = [makeEntry({
+      at: 10, action: "moveTo", target: "win", duration: 12, curve: "linear",
+    })];
+    const result = mapCursorPath(entries);
+    expect(result[0]).toHaveProperty("curve", "linear");
+  });
+
+  it("passes curve through on drag", () => {
+    const entries = [makeEntry({
+      at: 30, action: "drag", target: "win", toX: 500, toY: 300, duration: 18, curve: "ease",
+    })];
+    const result = mapCursorPath(entries);
+    expect(result[0]).toHaveProperty("curve", "ease");
+  });
+
+  it("curve defaults to undefined when not set", () => {
+    const entries = [makeEntry({
+      at: 10, action: "moveTo", target: "win", duration: 12,
+    })];
+    const result = mapCursorPath(entries);
+    expect(result[0]).toHaveProperty("curve", undefined);
+  });
+
+  it("passes curve 'arc' through on moveTo", () => {
+    const entries = [makeEntry({
+      at: 10, action: "moveTo", target: "win", duration: 12, curve: "arc",
+    })];
+    const result = mapCursorPath(entries);
+    expect(result[0]).toHaveProperty("curve", "arc");
+  });
+
+  it("click action does not carry curve field", () => {
+    const entries = [makeEntry({
+      at: 20, action: "click", target: "win", curve: "ease",
+    })];
+    const result = mapCursorPath(entries);
+    expect(result[0]).not.toHaveProperty("curve");
+  });
 });
