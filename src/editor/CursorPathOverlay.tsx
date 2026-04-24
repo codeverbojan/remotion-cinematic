@@ -369,8 +369,21 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const propsRef = useRef(props);
   propsRef.current = props;
+  const pendingDrags = useRef<Record<number, { x: number; y: number }>>({});
+
+  useEffect(() => {
+    for (const key of Object.keys(pendingDrags.current)) {
+      const idx = Number(key);
+      const pos = pendingDrags.current[idx];
+      const entry = cursorPath[idx];
+      if (entry && entry.positionX === pos.x && entry.positionY === pos.y) {
+        delete pendingDrags.current[idx];
+      }
+    }
+  }, [cursorPath]);
 
   const persistDrag = useCallback((index: number, pos: { x: number; y: number }) => {
+    pendingDrags.current[index] = pos;
     persistUpdate((prev) => {
       const entry = prev.cursorPath[index];
       if (!entry) return prev;
@@ -509,6 +522,10 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   const displayWaypoints = waypoints.map((wp) => {
     if (dragIndex === wp.index && dragPos) {
       return { ...wp, x: dragPos.x, y: dragPos.y };
+    }
+    const pending = pendingDrags.current[wp.index];
+    if (pending) {
+      return { ...wp, x: pending.x, y: pending.y };
     }
     return wp;
   });
