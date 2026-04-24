@@ -36,8 +36,14 @@ src/
 │   ├── ProductReveal.tsx
 │   ├── FeatureShowcase.tsx
 │   ├── HeadlineResolution.tsx
-│   ├── ChoreographedDemo.tsx
 │   └── Closer.tsx
+├── editor/              # Visual editor overlay (Studio-only)
+│   ├── EditorOverlay.tsx  # Selection, drag, resize, keyboard shortcuts
+│   ├── InlineEdit.tsx     # Double-click-to-edit text wrapper
+│   ├── TextToolbar.tsx    # Floating font size/weight/color toolbar
+│   ├── PropertyPanel.tsx  # Context-aware floating property panel
+│   ├── SelectionBox.tsx   # Blue bounding box + resize handles
+│   └── SnapGuides.tsx     # Alignment snap guides
 ├── schema.ts            # Zod schema for Remotion input props (brand, scenes, easing, etc.)
 ├── VideoPropsContext.tsx # React context + hooks for passing props to scenes
 ├── content.ts           # Static demo data (spreadsheet rows, SFX config, camera timeline)
@@ -99,7 +105,6 @@ const easing = useEasing();             // resolved easing options object (for i
 | `productFeatures` | title + description array | Text fields |
 | `scenes` | id, enabled, durationInFrames, enterFrom, exitTo, background | Toggles + dropdowns |
 | `overlap` | scene transition overlap (0-30 frames) | Slider |
-| `fps` | 24-60 | Slider |
 | `easing` | cinematic, snappy, smooth, elastic, bounce, spring | Dropdown |
 | `music` | enabled, volume, fadeInFrames, fadeOutFrames | Toggle + sliders |
 | `sfxEnabled` / `sfxVolume` | global SFX toggle + volume | Toggle + slider |
@@ -117,60 +122,78 @@ EASE.bounce     // Easing.bounce — physical impacts
 EASE.spring     // Bezier(0.34, 1.56, 0.64, 1) — overshoot, organic feel
 ```
 
-## Scene positioning: two patterns
+## Scene positioning
 
-Scenes use one of two positioning approaches depending on their needs:
-
-### Layout engine (auto-placement)
-Use for scenes with **static windows in predictable slots** — the engine handles positioning, avoidance, and alignment. See FeatureShowcase for a working example.
+All 5 scenes use **prop-driven choreography** via `resolveWindowPose`. Windows are defined in `schema.ts` `DEFAULT_WINDOW_LAYOUT` and are editable in Studio. Each scene filters windows by its own `SCENE_WINDOW_IDS` and renders them using `resolveWindowPose(def, frame)`.
 
 ```tsx
-const ZONES: ZoneConfig = { canvas: { width: 1920, height: 1080 }, slots: [...], reserved: [...] };
-const zoneSystem = defineZones(ZONES);
-<LayoutProvider zones={zoneSystem}><LayoutWindow id="win" zone="center" ... /></LayoutProvider>
-```
+import { resolveWindowPose } from "../engine";
+import { useWindowLayout } from "../VideoPropsContext";
 
-### Choreographed positioning (manual)
-Use for scenes with **animated windows, overlapping elements, or complex choreography** — staggered entrances, drag-to-resize, mission-control scatter. See ChaosDesktop and ProductReveal.
+const SCENE_WINDOW_IDS = ["my-window-1", "my-window-2"];
 
-```tsx
-const WINDOW_DEFS = [{ id: "win", x: 500, y: 30, w: 1100, h: 500 }];
+const allWindows = useWindowLayout();
+const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
 // Provide getRect for cursor/zoom targeting:
-const getRect = (id: string) => { ... return { left, top, width, height }; };
+const getRect = (id: string) => {
+  const def = windows.find((w) => w.id === id);
+  if (!def) return undefined;
+  const pose = resolveWindowPose(def, frame);
+  if (!pose.visible) return undefined;
+  return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
+};
 ```
 
-Both patterns work with Cursor and AutoZoom via `getRect`. Choose the right one for your scene — don't force the layout engine on choreographed motion.
+The zone-based layout engine (`defineZones`, `LayoutProvider`, `LayoutWindow`) still exists in `src/engine/layout/` but is not used by any current scene. Use it if you need auto-placement with avoidance zones for a new scene.
 
 ## How to add a new scene
 
-### Step 1: Add timing to `content.ts`
+### Step 1: Register in `schema.ts` and `content.ts`
+
+Add scene config to `DEFAULT_SCENES` in `schema.ts`:
+
+```ts
+const DEFAULT_SCENES: z.infer<typeof SceneConfigSchema>[] = [
+  // ... existing scenes
+  { id: "my-new-scene", enabled: true, durationInFrames: 150, enterFrom: "bottom", exitTo: "top", background: "dark" },
+];
+```
+
+If the scene has windows, add them to `DEFAULT_WINDOW_LAYOUT` in `schema.ts`:
+
+```ts
+{ id: "my-window", title: "My Window", startX: 460, startY: 240, startW: 1000, startH: 600, enterAt: 0, enterDuration: 12, enterFrom: "scale", zIndex: 1 },
+```
+
+Add camera timing to `content.ts`:
 
 ```ts
 export const SCENES: SceneTiming[] = [
-  // ... existing scenes
-  { id: "my-new-scene", durationInFrames: 150 },  // 5 seconds at 30fps
+  // ... existing
+  { id: "my-new-scene", durationInFrames: 150 },
+];
+
+export const CAMERA_TIMELINE: CameraKeyframe[] = [
+  // ... existing
+  { scene: "my-new-scene", at: "start", x: 0, y: 0, scale: 1.0 },
+  { scene: "my-new-scene", at: "end", x: 0, y: 0, scale: 1.0 },
 ];
 ```
 
-### Step 2: Add any needed content data to `content.ts`
-
-```ts
-export const MY_FEATURE_DATA = [
-  { title: "Feature A", description: "Does something cool" },
-];
-```
-
-### Step 3: Create the scene file in `src/scenes/`
+### Step 2: Create the scene file in `src/scenes/`
 
 ```tsx
-import React from "react";
-import { Cursor } from "../engine";
+import React, { useMemo } from "react";
+import { useCurrentFrame } from "remotion";
+import { Cursor, resolveWindowPose } from "../engine";
 import type { CursorAction } from "../engine";
 import { ScenePush, Window } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP } from "../content";
-import { C, EASE, F } from "../tokens";
+import { useWindowLayout } from "../VideoPropsContext";
 
 const DURATION = 150;
+const SCENE_WINDOW_IDS = ["my-window"];
 
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 960, y: 540 } },
@@ -178,43 +201,60 @@ const CURSOR_ACTIONS: CursorAction[] = [
   { at: 45, action: "click", target: "my-window" },
 ];
 
-const MyContent: React.FC = () => (
-  <div style={{ fontFamily: F.sans, color: C.text, padding: 20 }}>
-    Your content here
-  </div>
-);
-
 export const MyNewScene: React.FC = () => {
+  const frame = useCurrentFrame();
+  const allWindows = useWindowLayout();
+  const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
   const getRect = (id: string) => {
-    if (id === "my-window") return { left: 460, top: 240, width: 1000, height: 600 };
-    return undefined;
+    const def = windows.find((w) => w.id === id);
+    if (!def) return undefined;
+    const pose = resolveWindowPose(def, frame);
+    if (!pose.visible) return undefined;
+    return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
   return (
     <ScenePush duration={DURATION} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="top">
-      <div
-        data-cursor-target="my-window"
-        style={{ position: "absolute", left: 460, top: 240, width: 1000, height: 600 }}
-      >
-        <Window id="my-window" title="My Window">
-          <MyContent />
-        </Window>
-      </div>
+      {windows.map((def) => {
+        const pose = resolveWindowPose(def, frame);
+        if (!pose.visible) return null;
+        return (
+          <div
+            key={def.id}
+            data-cursor-target={def.id}
+            style={{
+              position: "absolute",
+              left: pose.left, top: pose.top,
+              width: pose.width, height: pose.height,
+              opacity: pose.opacity,
+              transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
+              transformOrigin: "top left",
+              zIndex: def.zIndex,
+              willChange: "transform",
+            }}
+          >
+            <Window id={def.id} title={def.title}>
+              {/* your content */}
+            </Window>
+          </div>
+        );
+      })}
       <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
     </ScenePush>
   );
 };
 ```
 
-For auto-placed windows, use `LayoutProvider` + `LayoutWindow` instead of manual positioning (see FeatureShowcase).
+Window titles are inline-editable in Studio automatically. Headlines with `headlineKey` prop get inline editing + formatting toolbar for free.
 
-### Step 4: Register in `src/scenes/index.ts`
+### Step 3: Register in `src/scenes/index.ts`
 
 ```ts
 export { MyNewScene } from "./MyNewScene";
 ```
 
-### Step 5: Wire into `src/CinematicDemo.tsx`
+### Step 4: Wire into `src/CinematicDemo.tsx`
 
 Add to the `SCENE_COMPONENTS` map:
 
@@ -225,17 +265,7 @@ const SCENE_COMPONENTS: Record<string, React.FC> = {
 };
 ```
 
-### Step 6: Add camera keyframes to `content.ts`
-
-```ts
-export const CAMERA_TIMELINE: CameraKeyframe[] = [
-  // ... existing
-  { scene: "my-new-scene", at: "start", x: 0, y: 0, scale: 1.0 },
-  { scene: "my-new-scene", at: "end", x: 0, y: 0, scale: 1.0 },
-];
-```
-
-### Step 7: Verify
+### Step 5: Verify
 
 ```bash
 npm run typecheck
@@ -470,7 +500,7 @@ const MyComponent: React.FC<{ id?: string }> = ({ id }) => {
 
 ### Window choreography props
 
-Window positions, sizes, entrances, and cursor paths can be defined as Studio-editable props instead of hardcoded in scene code. The `choreographed-demo` scene demonstrates this pattern.
+Window positions, sizes, entrances, and cursor paths are defined as Studio-editable props. All 5 scenes use this pattern.
 
 ```tsx
 import { resolveWindowPose, mapCursorPath } from "../engine";
@@ -587,7 +617,7 @@ appDescriptor.content.gap     — 0-40px panel gap (default 16)
 appDescriptor.content.panels[] — array of content panels
 ```
 
-The `ChoreographedDemo` scene renders `AppFromDescriptor` inside each prop-driven window, so the entire demo UI is editable from Studio props.
+Use `AppFromDescriptor` inside a `Window` to render a full app interface from Studio-editable JSON props.
 
 ### Visual Editor (Studio)
 
@@ -596,29 +626,6 @@ Remotion Studio has experimental visual editing enabled via `remotion.config.ts`
 ```ts
 Config.setExperimentalVisualMode(true); // click-to-select, drag, resize in preview
 ```
-
-**Visual controls** — sidebar knobs for hardcoded constants in scene code:
-
-```tsx
-import { visualControl } from "@remotion/studio";
-
-// Inside a component (it's a React hook):
-const fontSize = visualControl("Scene: Font Size", 110);
-const resizeStart = visualControl("Scene: Resize Start", 30);
-```
-
-- Returns default value during render/test (non-Studio environments)
-- Key naming convention: `"SceneName: Control Name"`
-- Only for hardcoded constants — props are already editable in Studio's right panel
-- Values are ephemeral unless user clicks "Save" in Studio
-
-**Scenes with visual controls:**
-
-| Scene | Controls |
-|-------|----------|
-| ProductReveal | Small X/Y/W/H, Resize Start/End |
-| ChaosDesktop | MC Start, MC Duration |
-| HeadlineResolution | Font Size, Line Delay, Y Rise |
 
 **Editor attributes** — all primitives with `id` have:
 
@@ -657,9 +664,13 @@ EditorOverlay (gates on isStudio)
 
 **Selection:** Click any element with `data-editor-id` to select it. A blue bounding box with resize handles appears. Click empty area to deselect.
 
-**Drag-to-move:** Click and drag the interior of a selected window to reposition. Writes `startX`/`startY` to `windowLayout` props. Clamped to canvas bounds (1920x1080). Red snap guides appear when aligned with other windows or canvas center.
+**Drag-to-move:** Click and drag the interior of a selected window to reposition. Writes `startX`/`startY` (or `endX`/`endY` when scrubbed past animateAt) to `windowLayout` props. Windows can be positioned outside the canvas bounds. Red snap guides appear when aligned with other windows or canvas center.
 
-**Drag-to-resize:** Drag any of the 8 handles (4 corners + 4 edges) to resize. Each handle constrains which dimensions change. Minimum size: 50px. Writes `startX`/`startY`/`startW`/`startH` to props.
+**Drag-to-resize:** Drag any of the 8 handles (4 corners + 4 edges) to resize. Each handle constrains which dimensions change. Minimum size: 50px. Writes `startX`/`startY`/`startW`/`startH` (or end equivalents when scrubbed past animateAt) to props.
+
+**Frame-aware editing:** The editor detects whether the timeline is scrubbed past a window's `animateAt` frame. When it is, drag/resize/nudge operations target end position fields (`endX`/`endY`/`endW`/`endH`) instead of start fields. This lets you edit both the initial and final positions of animated windows.
+
+**Inline text editing:** Window titles, headlines, and CTA text are self-wiring — the components handle their own persistence via `updateProp()`. Double-click text to edit, blur/Enter to save, Escape to cancel. Headlines show a formatting toolbar (font size, color). No callback props needed from parent scenes.
 
 **Snap guides:** During move, red lines appear at alignment points — other window edges, centers, and canvas center. Snap threshold: 6px. Guide computation is in `computeSnapGuides()` and `applySnap()` (pure functions, exported for testing).
 
@@ -709,7 +720,7 @@ const prog = interpolate(frame, [0, 12], [0, 1], easing);
 ### Primitives
 
 ```tsx
-// Window — macOS-style chrome with traffic lights
+// Window — macOS-style chrome with traffic lights (self-wiring: title is inline-editable in Studio when window is in windowLayout)
 <Window
   id="my-window"           // required, also used as data-cursor-target
   title="Window Title"     // optional title in chrome bar
@@ -720,7 +731,7 @@ const prog = interpolate(frame, [0, 12], [0, 1], easing);
   {content}
 </Window>
 
-// Headline — serif text with word-stream entrance
+// Headline — serif text with word-stream entrance (self-wiring: inline-editable in Studio when headlineKey is set)
 // Defaults: fontSize=88, lineDelay=24, entranceDuration=10, yRise=20, exitDuration=10
 <Headline
   lines={["First line", "Second line"]}
@@ -733,6 +744,7 @@ const prog = interpolate(frame, [0, 12], [0, 1], easing);
   exitAt={90}                // frame to start fading out (optional)
   exitDuration={15}
   wordStream={{ stagger: 4, duration: 8, yRise: 16 }}  // per-word animation (optional)
+  headlineKey="pain"         // enables self-wiring editing: "pain" | "resolution" | "closer"
 />
 
 // Enter — generic entrance animation wrapper
@@ -782,7 +794,8 @@ const prog = interpolate(frame, [0, 12], [0, 1], easing);
 // Reuses getEnterPose internally — each child enters interval frames after the previous
 // Pure fn: getStaggerItemPose(frame, index, interval, baseDelay, duration, translateY, translateX, scaleFrom)
 
-// EndCard — closing card with tagline + CTA
+// EndCard — closing card with tagline + CTA (self-wiring: tagline and CTA are inline-editable in Studio)
+// Tagline edits write to brand.name, CTA edits write to headlines.closer[0]
 <EndCard
   tagline="Your Product"
   cta="Try it free"
@@ -1041,7 +1054,7 @@ import { Img, staticFile } from "remotion";
 
 ### Change brand colors
 
-Edit `src/tokens.ts` — all components reference `C.brand`, `C.accent`, etc.
+Edit via Studio props (brand.colors) or as code fallbacks in `src/tokens.ts`. Components use `useBrand()` for prop overrides, falling back to `C.*` tokens.
 
 ### Change fonts
 
@@ -1050,7 +1063,7 @@ Edit `src/tokens.ts` — all components reference `C.brand`, `C.accent`, etc.
 
 ### Adjust scene timing
 
-Edit the `durationInFrames` in `content.ts` SCENES array. All camera/audio cues use scene-relative timing, so they adjust automatically.
+Edit `durationInFrames` in `schema.ts` `DEFAULT_SCENES` (for scene config) and keep `content.ts` `SCENES` in sync (for camera timeline). All camera/audio cues use scene-relative timing, so they adjust automatically. Scene durations are also editable via Studio props.
 
 ### Add background music
 

@@ -12,6 +12,8 @@ Scenes are the building blocks of your video. Each scene is a React component wr
 | Headline Resolution | `HeadlineResolution.tsx` | 120 frames (4s) | Clean resolution headline on dark background |
 | Closer | `Closer.tsx` | 90 frames (3s) | End card with tagline and CTA |
 
+All five scenes use **prop-driven choreography** via `resolveWindowPose` for window positioning (see Pattern A below). Window definitions live in `schema.ts` `DEFAULT_WINDOW_LAYOUT` and are editable in Studio. Scene config (enabled, duration, transitions) is in `schema.ts` `DEFAULT_SCENES`. The `content.ts` `SCENES` array is only used for camera timeline timing.
+
 ## Scene transitions
 
 Scenes use **push transitions** — no fades or cuts. The incoming scene slides in and pushes the outgoing scene off-canvas during a 15-frame overlap (`SCENE_OVERLAP` in content.ts).
@@ -31,125 +33,124 @@ Every scene wraps its content in `ScenePush`, which handles:
 
 Scenes follow one of two patterns depending on their positioning needs.
 
-### Pattern A: Choreographed positioning (animated/overlapping windows)
+### Pattern A: Prop-driven choreography (all current scenes)
 
-Used by ChaosDesktop and ProductReveal. Windows have explicit positions with animated transitions.
+Used by **all five current scenes**: ChaosDesktop, ProductReveal, FeatureShowcase, HeadlineResolution, and Closer. Window positions, sizes, entrances, and animations are defined as Studio-editable props in `schema.ts` `DEFAULT_WINDOW_LAYOUT`. Each scene filters windows by ID, then uses `resolveWindowPose()` to compute position/visibility/opacity for any given frame.
 
 ```tsx
 import React from "react";
-import { interpolate, useCurrentFrame } from "remotion";
-import { Cursor } from "../engine";
+import { useCurrentFrame } from "remotion";
+import { Cursor, resolveWindowPose } from "../engine";
 import type { CursorAction } from "../engine";
 import { ScenePush, Window } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP } from "../content";
-import { C, EASE, F } from "../tokens";
+import { useWindowLayout } from "../VideoPropsContext";
 
 const DURATION = 150;
 
+const SCENE_WINDOW_IDS = ["my-window-1", "my-window-2"];
+
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 960, y: 540 } },
-  { at: 15, action: "moveTo", target: "my-window", anchor: "center", duration: 12 },
-  { at: 35, action: "click", target: "my-window" },
+  { at: 15, action: "moveTo", target: "my-window-1", anchor: "center", duration: 12 },
+  { at: 35, action: "click", target: "my-window-1" },
 ];
 
 export const MyScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const enterProg = interpolate(frame, [0, 14], [0, 1], EASE.snappy);
+  const allWindows = useWindowLayout();
+  const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
 
   const getRect = (id: string) => {
-    if (id === "my-window") return { left: 460, top: 240, width: 1000, height: 600 };
-    return undefined;
+    const def = windows.find((w) => w.id === id);
+    if (!def) return undefined;
+    const pose = resolveWindowPose(def, frame);
+    if (!pose.visible) return undefined;
+    return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
   return (
     <ScenePush duration={DURATION} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="top">
-      <div
-        data-cursor-target="my-window"
-        style={{
-          position: "absolute", left: 460, top: 240, width: 1000, height: 600,
-          opacity: enterProg,
-        }}
-      >
-        <Window id="my-window" title="My Window">
-          {/* content */}
-        </Window>
-      </div>
+      {windows.map((def) => {
+        const pose = resolveWindowPose(def, frame);
+        if (!pose.visible) return null;
+        return (
+          <div key={def.id} data-cursor-target={def.id} style={{
+            position: "absolute",
+            left: pose.left, top: pose.top, width: pose.width, height: pose.height,
+            opacity: pose.opacity,
+            transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
+            transformOrigin: "top left", zIndex: def.zIndex,
+          }}>
+            <Window id={def.id} title={def.title}>{/* content */}</Window>
+          </div>
+        );
+      })}
       <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
     </ScenePush>
   );
 };
 ```
 
-### Pattern B: Layout engine (auto-placed windows)
+### Pattern B: Headline only (no windows)
 
-Used by FeatureShowcase. The layout engine handles positioning and avoidance.
-
-```tsx
-import React from "react";
-import { Cursor, AutoZoom, defineZones, LayoutProvider, LayoutWindow, useWindowRect } from "../engine";
-import type { CursorAction, ZoneConfig, ZoomKeyframe } from "../engine";
-import { ScenePush, Window } from "../primitives";
-import { CURSOR_SFX, SCENE_OVERLAP } from "../content";
-
-const ZONES: ZoneConfig = {
-  canvas: { width: 1920, height: 1080 },
-  slots: [{ id: "center", region: { x: 240, y: 100, w: 1440, h: 880 } }],
-  reserved: [],
-};
-const zoneSystem = defineZones(ZONES);
-
-export const MyScene: React.FC = () => {
-  const getRect = (id: string) => {
-    try {
-      return zoneSystem.placeWindow({ id, slotId: "center", width: 1000, height: 600, margin: 30, avoidZones: [] });
-    } catch { return undefined; }
-  };
-
-  return (
-    <ScenePush duration={200} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="top">
-      <AutoZoom keyframes={ZOOM_KEYFRAMES} getRect={getRect}>
-        <LayoutProvider zones={zoneSystem}>
-          <LayoutWindow id="win" zone="center" width={1000} height={600} margin={30}>
-            <Window id="win" title="Window">{/* content */}</Window>
-          </LayoutWindow>
-        </LayoutProvider>
-      </AutoZoom>
-      <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
-    </ScenePush>
-  );
-};
-```
-
-### Pattern C: Headline only (no windows)
-
-Used by HeadlineResolution and Closer. No cursor, no layout engine.
+Used by HeadlineResolution and Closer. No cursor, no window layout. Headlines flow through schema props via `useHeadlines()`. The `Headline` component accepts a `headlineKey` prop for self-wiring Studio editing — no callback props needed.
 
 ```tsx
 import React from "react";
 import { Headline, ScenePush } from "../primitives";
-import { HEADLINES, SCENE_OVERLAP } from "../content";
+import { SCENE_OVERLAP } from "../content";
+import { useHeadlines } from "../VideoPropsContext";
 
-export const MyHeadline: React.FC = () => (
-  <ScenePush duration={120} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="top">
-    <Headline
-      lines={HEADLINES.resolution}
-      fontSize={110}
-      wordStream={{ stagger: 3, duration: 5, yRise: 50 }}
-    />
-  </ScenePush>
-);
+export const MyHeadline: React.FC = () => {
+  const headlines = useHeadlines();
+
+  return (
+    <ScenePush duration={120} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="top">
+      <Headline
+        lines={headlines.resolution}
+        fontSize={headlines.resolutionFontSize ?? 110}
+        color={headlines.color}
+        wordStream={{ stagger: 3, duration: 5, yRise: 50 }}
+        headlineKey="resolution"
+      />
+    </ScenePush>
+  );
+};
 ```
+
+### Pattern C: Layout engine (available but unused)
+
+The zone-based layout engine (`defineZones`, `LayoutProvider`, `LayoutWindow`) still exists in `src/engine/layout/` but is **not used by any current scene**. All scenes were refactored to use prop-driven choreography (Pattern A). The layout engine remains available if you need auto-placed windows with collision avoidance.
 
 ## Adding a new scene
 
-### 1. Register in `content.ts`
+### 1. Register in `schema.ts` and `content.ts`
 
-Add your scene to the `SCENES` array. Order matters — scenes play sequentially.
+Add your scene config to `DEFAULT_SCENES` in `schema.ts` (controls enabled state, duration, transitions, background):
+
+```ts
+export const DEFAULT_SCENES: SceneConfig[] = [
+  // ... existing scenes
+  { id: "my-scene", enabled: true, durationInFrames: 180, enterFrom: "bottom", exitTo: "top", background: "dark" },
+];
+```
+
+If your scene has windows, add their definitions to `DEFAULT_WINDOW_LAYOUT` in `schema.ts`:
+
+```ts
+export const DEFAULT_WINDOW_LAYOUT: WindowLayout[] = [
+  // ... existing windows
+  { id: "my-window", title: "My Window", startX: 460, startY: 240, startW: 1000, startH: 600, enterAt: 5, enterDuration: 12, enterFrom: "scale", zIndex: 1 },
+];
+```
+
+Add camera timeline timing to `content.ts` `SCENES` array (used only for camera keyframe resolution):
 
 ```ts
 export const SCENES: SceneTiming[] = [
   // ... existing scenes
-  { id: "my-scene", durationInFrames: 180 },  // 6 seconds
+  { id: "my-scene", durationInFrames: 180 },
 ];
 ```
 
@@ -165,7 +166,7 @@ export const CAMERA_TIMELINE: CameraKeyframe[] = [
 
 ### 2. Create the scene file
 
-Create `src/scenes/MyScene.tsx` using one of the patterns above.
+Create `src/scenes/MyScene.tsx` using Pattern A (prop-driven choreography) or Pattern B (headline only) above.
 
 ### 3. Export from barrel
 
@@ -186,7 +187,7 @@ const SCENE_COMPONENTS: Record<string, React.FC> = {
 };
 ```
 
-The key must match the `id` in `content.ts`.
+The key must match the `id` in `schema.ts` `DEFAULT_SCENES`.
 
 ### 5. Verify
 
@@ -223,3 +224,4 @@ Keep zoom subtle (1.04–1.06x). The global CameraRig should stay at scale 1.0 �
 - Use `Enter` to stagger window appearances for a more dynamic feel
 - Deterministic only — no `Math.random()`, no mutable state outside React
 - ScenePush directions: first scene uses `enterFrom="none"`, last scene uses `exitTo="none"`
+- Window, Headline, and EndCard are self-wiring — they handle their own Studio editing, no callback props needed

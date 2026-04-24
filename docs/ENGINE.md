@@ -1,6 +1,92 @@
 # Engine API Reference
 
-The engine provides four systems: **layout**, **cursor**, **camera**, and **audio**. All are imported from `../engine`.
+The engine provides five systems: **choreography**, **layout**, **cursor**, **camera**, and **audio**. All are imported from `../engine`.
+
+## Choreography
+
+Prop-driven window positioning. All 5 scenes use this system. Window definitions are Studio-editable props defined in `schema.ts` `DEFAULT_WINDOW_LAYOUT`.
+
+### `resolveWindowPose(def: WindowLayout, frame: number): WindowPose`
+
+Pure function — computes a window's position, size, opacity, and visibility for any frame. Handles entrance animations, position/size transitions, and exit fades.
+
+```ts
+import { resolveWindowPose } from "../engine";
+
+const pose = resolveWindowPose(windowDef, frame);
+// Returns:
+// {
+//   left: number, top: number, width: number, height: number,
+//   opacity: number, scale: number,
+//   translateX: number, translateY: number,
+//   visible: boolean
+// }
+```
+
+### `mapCursorPath(entries: CursorPathEntry[]): CursorAction[]`
+
+Converts Studio-friendly flat cursor path entries (from schema props) to internal `CursorAction[]` format. Handles anchor type conversion (named presets vs. percentage anchors).
+
+```ts
+import { mapCursorPath } from "../engine";
+import { useCursorPath } from "../VideoPropsContext";
+
+const cursorPath = useCursorPath();
+const actions = useMemo(() => mapCursorPath(cursorPath), [cursorPath]);
+```
+
+### Usage pattern (all scenes follow this)
+
+```tsx
+const frame = useCurrentFrame();
+const allWindows = useWindowLayout();
+const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
+const getRect = (id: string) => {
+  const def = windows.find((w) => w.id === id);
+  if (!def) return undefined;
+  const pose = resolveWindowPose(def, frame);
+  if (!pose.visible) return undefined;
+  return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
+};
+
+{windows.map((def) => {
+  const pose = resolveWindowPose(def, frame);
+  if (!pose.visible) return null;
+  return (
+    <div style={{
+      position: "absolute",
+      left: pose.left, top: pose.top,
+      width: pose.width, height: pose.height,
+      opacity: pose.opacity,
+      transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
+      transformOrigin: "top left", zIndex: def.zIndex,
+    }}>
+      <Window id={def.id} title={def.title}>{content}</Window>
+    </div>
+  );
+})}
+```
+
+### WindowLayout fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | string | — | Unique window ID (cursor target) |
+| `title` | string | `"Window"` | Window title bar text (inline-editable in Studio) |
+| `startX/Y` | int | — | Initial position |
+| `startW/H` | int | — | Initial size |
+| `endX/Y/W/H` | int? | — | Animate to position/size |
+| `enterAt` | int | — | Frame to appear |
+| `enterDuration` | int | `12` | Entrance animation length |
+| `enterFrom` | enum | `"scale"` | `"fade"` \| `"scale"` \| `"slide-up"` \| `"slide-left"` \| `"slide-right"` |
+| `animateAt` | int? | `enterAt+enterDuration` | Frame to start position/size animation |
+| `animateDuration` | int | `18` | Position/size animation length |
+| `exitAt` | int? | — | Frame to start exit fade |
+| `exitDuration` | int | `12` | Exit fade length |
+| `zIndex` | int | `1` | Stacking order |
+
+---
 
 ## Layout
 

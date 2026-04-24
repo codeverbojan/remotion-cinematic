@@ -1,8 +1,35 @@
 # Customization
 
+> **Primary method: Remotion Studio props.** Most customization (colors, headlines, scenes, layout) is editable directly in Remotion Studio via the props panel. Code editing is the secondary approach for deeper changes.
+
 ## Colors
 
-Edit `src/tokens.ts` to change your brand colors. Every component references these tokens.
+### Studio props (recommended)
+
+Brand colors are defined in `src/schema.ts` (`BrandColorsSchema`) and editable in the Studio props panel. The schema exposes 10 color fields:
+
+| Field | Default | Usage |
+|-------|---------|-------|
+| `primary` | `#6366F1` | Buttons, accents |
+| `accent` | `#22D3EE` | Highlights, links |
+| `background` | `#0F0F14` | Primary background |
+| `backgroundLight` | `#1A1A24` | Lighter background |
+| `surface` | `#24243A` | Card/window surface |
+| `text` | `#F5F5FF` | Primary text |
+| `textMuted` | `#A0A0C0` | Secondary text |
+| `success` | `#34D399` | Success status |
+| `warning` | `#FBBF24` | Warning status |
+| `error` | `#F87171` | Error status |
+
+Components read brand colors via the `useBrand()` hook:
+
+```tsx
+const brand = useBrand(); // { name, colors: { primary, accent, ... }, fontSans, ... }
+```
+
+### Code fallback
+
+The `C` object in `src/tokens.ts` provides the full set of design tokens, including values not exposed in the Studio (window chrome, borders, traffic-light buttons, etc.). Components fall back to `C.*` tokens when no brand override applies.
 
 ```ts
 export const C = {
@@ -167,9 +194,40 @@ export const SFX_TIMELINE: AudioCue[] = [
 
 The `at` value is the frame number relative to the start of the scene.
 
+## Headlines
+
+Headlines are defined in `src/schema.ts` (`HeadlinesSchema`) and editable in the Studio props panel or inline in the video preview. Components read them via the `useHeadlines()` hook.
+
+| Field | Default | Scene |
+|-------|---------|-------|
+| `pain` | `["Where did that", "request go?"]` | HeadlineResolution |
+| `resolution` | `["Every request.", "Tracked."]` | HeadlineResolution |
+| `closer` | `["Try it free."]` | Closer |
+
+Each headline also has an optional `*FontSize` field and a shared `color` override.
+
 ## Scene order and timing
 
-Edit the `SCENES` array in `src/content.ts` to change order or duration:
+### Scene config (Studio props)
+
+Scene configuration — enabled/disabled, duration, enter/exit directions, and background variant — is defined in `src/schema.ts` (`DEFAULT_SCENES`) and editable in the Studio props panel. Each scene entry has:
+
+```ts
+{ id: "chaos", enabled: true, durationInFrames: 260, enterFrom: "none", exitTo: "top", background: "dark" }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Scene identifier |
+| `enabled` | boolean | Toggle scene on/off |
+| `durationInFrames` | number | Duration in frames (30 = 1 second) |
+| `enterFrom` | direction | `"top"` / `"bottom"` / `"left"` / `"right"` / `"none"` |
+| `exitTo` | direction | Same options as `enterFrom` |
+| `background` | variant | `"dark"` / `"light"` / `"gradient"` / `"none"` |
+
+### Camera timeline (code)
+
+The `SCENES` array in `src/content.ts` provides the camera timeline timing (`SceneTiming[]` with `id` and `durationInFrames`). Keep its durations in sync with the schema config:
 
 ```ts
 export const SCENES: SceneTiming[] = [
@@ -181,10 +239,16 @@ export const SCENES: SceneTiming[] = [
 ];
 ```
 
-- Duration is in frames (30 frames = 1 second)
-- Order in the array = order in the video
 - Camera and SFX cues are scene-relative, so they adjust when you change durations
-- To remove a scene, delete it from `SCENES`, `CAMERA_TIMELINE`, and `SCENE_COMPONENTS` in `CinematicDemo.tsx`
+
+### Removing a scene
+
+To fully remove a scene, update all four locations:
+
+1. `src/schema.ts` — remove from `DEFAULT_SCENES`
+2. `src/content.ts` — remove from `SCENES` and `CAMERA_TIMELINE`
+3. `src/CinematicDemo.tsx` — remove from `SCENE_COMPONENTS`
+4. `src/schema.ts` — optionally remove related `windowLayout` entries
 
 ## Canvas and framerate
 
@@ -195,4 +259,4 @@ export const CANVAS = { width: 1920, height: 1080 } as const;
 export const FPS = 30;
 ```
 
-Changing these affects all layout zones, so you'd need to update zone configs in each scene.
+Changing these affects all layout. Scenes use `resolveWindowPose` with `windowLayout` props for positioning, so you would need to adjust the window layout entries in `schema.ts` to fit the new canvas dimensions.
