@@ -6,7 +6,7 @@ Scenes are the building blocks of your video. Each scene is a React component wr
 
 | Scene | File | Duration | What it does |
 |-------|------|----------|--------------|
-| Chaos Desktop | `ChaosDesktop.tsx` | 260 frames (~8.7s) | Windows pile up (spreadsheet, email, chat), notifications appear, then headline pushes everything away |
+| Chaos Desktop | `ChaosDesktop.tsx` | 260 frames (~8.7s) | Sticky notes, windows (spreadsheet, email, chat), and notifications pile up — all as editable WindowLayout entries with rotation support — then headline pushes everything away |
 | Product Reveal | `ProductReveal.tsx` | 150 frames (5s) | Full-screen product window, cursor drags corner to resize, side panels appear |
 | Feature Showcase | `FeatureShowcase.tsx` | 200 frames (~6.7s) | Three feature windows with AutoZoom focus on each |
 | Headline Resolution | `HeadlineResolution.tsx` | 120 frames (4s) | Clean resolution headline on dark background |

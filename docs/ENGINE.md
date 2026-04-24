@@ -85,6 +85,7 @@ const getRect = (id: string) => {
 | `exitAt` | int? | — | Frame to start exit fade |
 | `exitDuration` | int | `12` | Exit fade length |
 | `zIndex` | int | `1` | Stacking order |
+| `rotation` | number? | — | CSS rotation in degrees (-180 to 180) |
 
 ---
 

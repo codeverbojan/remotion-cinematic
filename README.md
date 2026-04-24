@@ -2,13 +2,15 @@
 
 A Remotion template for building cinematic product demo videos. Prop-driven choreography, visual editor, geometry-aware cursor, scene-relative camera — all wired up and ready to customize.
 
+Built by [Bojan Josifoski](https://bojanjosifoski.com) while building [SampleHQ](https://samplehq.io). Instead of outsourcing product demo videos, this framework produces them programmatically with React and Remotion — full creative control, version-controlled, infinitely iterable.
+
 Clone it, drop in your product screenshots, and use Claude to build your video.
 
 ![Demo preview](docs/assets/demo-preview.gif)
 
 ## What you get
 
-- **Prop-driven choreography** — window positions, sizes, entrances, and animations are Studio-editable props, not hardcoded values
+- **Prop-driven choreography** — window positions, sizes, rotation, entrances, and animations are Studio-editable props, not hardcoded values
 - **Visual editor** — drag-to-move, drag-to-resize, snap guides, floating property panels, inline text editing — all inside Remotion Studio
 - **Self-wiring editing** — Window titles, headlines, and CTA text are inline-editable in Studio automatically. New scenes get editing for free
 - **Geometry-aware cursor** — targets real elements by ID, arc/linear/ease curve interpolation, click/drag/resize with smart shape switching
@@ -21,6 +23,7 @@ Clone it, drop in your product screenshots, and use Claude to build your video.
 - **App UI from JSON** — render full app interfaces from a JSON descriptor (sidebar, topbar, tables, stats, chat)
 - **Dynamic windows** — add windows via Element Palette at any frame, rendered across all scenes automatically
 - **Figma CLI import** — `cinematic-import` CLI converts Figma frames or screenshots into app descriptors
+- **Editable scene elements** — sticky notes, notifications, and all window types are WindowLayout entries, fully editable in Studio (position, timing, rotation, z-index)
 - **5 example scenes** — chaos desktop, product reveal, feature showcase, headline, end card
 - **509 tests** — engine, primitives, editor, CLI, schema, and end-to-end wiring
 - **Claude skill** — `.claude/CLAUDE.md` teaches Claude how to build scenes with this template
@@ -47,7 +50,7 @@ Open Remotion Studio and edit directly in the right panel:
 - **CTA** — call-to-action button text
 - **Product features** — title + description array
 - **Scenes** — enable/disable, duration, enter/exit directions, backgrounds
-- **Window layout** — position, size, entrance style, animation timing, z-index for every window
+- **Window layout** — position, size, rotation, entrance style, animation timing, z-index for every window
 - **Cursor path** — waypoint-based cursor choreography with per-segment curve type
 - **Cursor style** — global cursor scale and rotation
 - **App descriptor** — full JSON-driven app UI (sidebar items, topbar, content panels)
@@ -168,6 +171,10 @@ npx tsx src/cli/index.ts --screenshot=./app.png --out=descriptor.json
 - Zod for input prop validation
 - 1920x1080 @ 30fps
 - Vitest for testing
+
+## Author
+
+Made by [Bojan Josifoski](https://bojanjosifoski.com) while building [SampleHQ](https://samplehq.io).
 
 ## License
 
