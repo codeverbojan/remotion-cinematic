@@ -166,7 +166,12 @@ const EditorOverlayInner: React.FC<{
     }
   }, [props.windowLayout]);
 
+  // Only register window-level mousemove/mouseup while a window drag is active.
+  // Previously these were always registered, which meant every mousemove/mouseup
+  // event on the page went through the drag handler even when no drag was in progress.
   useEffect(() => {
+    if (!dragState) return;
+
     const onMouseMove = (e: MouseEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
@@ -251,7 +256,7 @@ const EditorOverlayInner: React.FC<{
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [dragRef, endDrag, getScaleFactor, applyDragToDOM]);
+  }, [dragState, dragRef, endDrag, getScaleFactor, applyDragToDOM]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -318,7 +323,7 @@ const EditorOverlayInner: React.FC<{
         />
       )}
 
-      {showCursorPath && <CursorPathOverlay props={props} frame={frame} />}
+      {showCursorPath && <CursorPathOverlay props={props} frame={frame} interactive={!selection && !dragState} />}
       <CursorPathEditor props={props} frame={frame} containerRef={containerRef} showCursorPath={showCursorPath} onTogglePath={setShowCursorPath} />
       <ElementPalette props={props} frame={frame} />
 

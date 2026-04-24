@@ -12,6 +12,7 @@ const CANVAS_H = 1080;
 interface CursorPathOverlayProps {
   props: CinematicProps;
   frame: number;
+  interactive?: boolean;
 }
 
 interface ResolvedWaypoint {
@@ -366,6 +367,7 @@ const WaypointEditor: React.FC<{
 export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   props,
   frame,
+  interactive = true,
 }) => {
   const { cursorPath, windowLayout = [] } = props;
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -374,6 +376,8 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   const dragPosRef = useRef(dragPos);
   dragPosRef.current = dragPos;
   const didDragRef = useRef(false);
+  const [pendingDragStart, setPendingDragStart] = useState<{ index: number; mouseX: number; mouseY: number; wpX: number; wpY: number } | null>(null);
+  const DRAG_THRESHOLD = 4; // pixels of mouse movement before committing to a drag
   const overlayRef = useRef<HTMLDivElement>(null);
   const propsRef = useRef(props);
   propsRef.current = props;
@@ -408,6 +412,40 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
     });
   }, []);
 
+  // Phase 1: pending drag — listen for mousemove to see if threshold is exceeded
+  useEffect(() => {
+    if (!pendingDragStart) return;
+    const pending = pendingDragStart;
+
+    const handleMove = (e: MouseEvent) => {
+      const dx = e.clientX - pending.mouseX;
+      const dy = e.clientY - pending.mouseY;
+      if (Math.abs(dx) >= DRAG_THRESHOLD || Math.abs(dy) >= DRAG_THRESHOLD) {
+        // Commit to drag
+        const idx = pending.index;
+        const wpPos = { x: pending.wpX, y: pending.wpY };
+        setPendingDragStart(null);
+        didDragRef.current = false;
+        setDragIndex(idx);
+        setDragPos(wpPos);
+        dragPosRef.current = wpPos;
+      }
+    };
+
+    const handleUp = () => {
+      // Mouse released before threshold — this was a click, not a drag
+      setPendingDragStart(null);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, [pendingDragStart]);
+
+  // Phase 2: active drag — track mouse position and persist on release
   useEffect(() => {
     if (dragIndex === null) return;
     const capturedIndex = dragIndex;
@@ -590,7 +628,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
               flexDirection: "column",
               alignItems: "center",
               gap: 2,
-              pointerEvents: "auto",
+              pointerEvents: interactive ? "auto" : "none",
               cursor: isDragging ? "grabbing" : "grab",
               userSelect: "none",
             }}
@@ -599,9 +637,15 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
               e.preventDefault();
               e.stopPropagation();
               didDragRef.current = false;
-              setDragIndex(wp.index);
-              setDragPos({ x: wp.x, y: wp.y });
-              dragPosRef.current = { x: wp.x, y: wp.y };
+              // Don't immediately start dragging — wait for mouse movement
+              // past the threshold to distinguish click from drag
+              setPendingDragStart({
+                index: wp.index,
+                mouseX: e.clientX,
+                mouseY: e.clientY,
+                wpX: wp.x,
+                wpY: wp.y,
+              });
             }}
             onClick={(e) => {
               e.stopPropagation();
