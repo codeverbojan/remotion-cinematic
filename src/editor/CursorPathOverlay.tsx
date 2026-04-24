@@ -52,6 +52,10 @@ export function resolveWaypointPosition(
     }
   }
 
+  if (entry.positionX !== undefined && entry.positionY !== undefined) {
+    return { x: entry.positionX, y: entry.positionY };
+  }
+
   return null;
 }
 
@@ -372,14 +376,9 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       if (!entry) return prev;
       return {
         ...prev,
-        cursorPath: prev.cursorPath.map((e, i) => {
-          if (i !== index) return e;
-          if (e.target) {
-            const { target: _, ...rest } = e;
-            return { ...rest, positionX: pos.x, positionY: pos.y };
-          }
-          return { ...e, positionX: pos.x, positionY: pos.y };
-        }),
+        cursorPath: prev.cursorPath.map((e, i) =>
+          i === index ? { ...e, positionX: pos.x, positionY: pos.y } : e,
+        ),
       };
     });
   }, []);

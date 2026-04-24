@@ -88,9 +88,13 @@ export const ChaosDesktop: React.FC = () => {
   const allWindows = useWindowLayout();
 
   const windows = useMemo(() => {
-    const existingIds = new Set(allWindows.map((w) => w.id));
-    const missing = ELEMENT_DEFAULTS.filter((d) => !existingIds.has(d.id));
-    const merged = missing.length > 0 ? [...allWindows, ...missing] : allWindows;
+    const seen = new Set<string>();
+    const deduped: typeof allWindows = [];
+    for (const w of allWindows) {
+      if (!seen.has(w.id)) { seen.add(w.id); deduped.push(w); }
+    }
+    const missing = ELEMENT_DEFAULTS.filter((d) => !seen.has(d.id));
+    const merged = missing.length > 0 ? [...deduped, ...missing] : deduped;
     return merged.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
   }, [allWindows]);
 
@@ -101,10 +105,12 @@ export const ChaosDesktop: React.FC = () => {
     const missing = ELEMENT_DEFAULTS.filter((d) => !existingIds.has(d.id));
     if (missing.length > 0) {
       migrated.current = true;
-      persistUpdate((prev) => ({
-        ...prev,
-        windowLayout: [...prev.windowLayout, ...missing],
-      }));
+      persistUpdate((prev) => {
+        const prevIds = new Set(prev.windowLayout.map((w) => w.id));
+        const toAdd = missing.filter((d) => !prevIds.has(d.id));
+        if (toAdd.length === 0) return prev;
+        return { ...prev, windowLayout: [...prev.windowLayout, ...toAdd] };
+      });
     }
   }, [allWindows]);
   const cursorPathRaw = useCursorPath();
