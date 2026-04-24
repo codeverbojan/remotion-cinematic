@@ -16,6 +16,7 @@ import {
 } from "../content";
 import { useHeadlines, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
 import { persistUpdate } from "../editor/updateProps";
+import { applyPendingEdits, getPendingRevision } from "../editor/pendingCursorEdits";
 import type { WindowLayout } from "../schema";
 import { C, F } from "../tokens";
 
@@ -116,11 +117,14 @@ export const ChaosDesktop: React.FC = () => {
   const cursorPathRaw = useCursorPath();
   const cursorStyle = useCursorStyle();
   const enabledScenes = useMemo(() => props.scenes.filter((s) => s.enabled), [props.scenes]);
+  const pendingRev = getPendingRevision();
   const cursorActions = useMemo(() => {
+    const merged = applyPendingEdits(cursorPathRaw);
     const offset = getSceneStartFrame(enabledScenes, "chaos", props.overlap);
-    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    const sceneEntries = filterCursorPath(merged, SCENE_WINDOW_IDS, offset, DURATION);
     return sceneEntries.length > 0 ? mapCursorPath(sceneEntries) : CURSOR_ACTIONS;
-  }, [cursorPathRaw, enabledScenes, props.overlap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursorPathRaw, enabledScenes, props.overlap, pendingRev]);
 
   const mcStart = windows.find((w) => w.id === "spreadsheet")?.animateAt ?? 150;
 
@@ -128,7 +132,9 @@ export const ChaosDesktop: React.FC = () => {
     const def = windows.find((d) => d.id === id);
     if (!def) return undefined;
     const pose = resolveWindowPose(def, frame);
-    if (!pose.visible) return undefined;
+    if (!pose.visible) {
+      return { left: def.startX, top: def.startY, width: def.startW, height: def.startH };
+    }
     return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 

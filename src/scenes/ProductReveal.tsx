@@ -5,6 +5,7 @@ import type { CursorAction, UIKeyframe } from "../engine";
 import { ScenePush, Window, Panel, PanelGrid, Placeholder } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
 import { useProductFeatures, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
+import { applyPendingEdits, getPendingRevision } from "../editor/pendingCursorEdits";
 
 const DURATION = 150;
 
@@ -100,12 +101,15 @@ export const ProductReveal: React.FC = () => {
   const enabledScenes = useMemo(() => videoProps.scenes.filter((s) => s.enabled), [videoProps.scenes]);
   const dragToX = productWin?.endX ?? productWin?.startX ?? 980;
   const dragToY = productWin?.endY ?? productWin?.startY ?? 500;
+  const pendingRev = getPendingRevision();
   const cursorActions = useMemo(() => {
+    const merged = applyPendingEdits(cursorPathRaw);
     const offset = getSceneStartFrame(enabledScenes, "product-reveal", videoProps.overlap);
-    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    const sceneEntries = filterCursorPath(merged, SCENE_WINDOW_IDS, offset, DURATION);
     if (sceneEntries.length > 0) return mapCursorPath(sceneEntries);
     return buildCursorActions({ x: dragToX, y: dragToY });
-  }, [cursorPathRaw, enabledScenes, videoProps.overlap, dragToX, dragToY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursorPathRaw, enabledScenes, videoProps.overlap, dragToX, dragToY, pendingRev]);
 
   const pressKeyframes = useMemo(() => generatePressKeyframes(cursorActions), [cursorActions]);
   const allKeyframes = useMemo(
@@ -117,7 +121,9 @@ export const ProductReveal: React.FC = () => {
     const def = windows.find((w) => w.id === id);
     if (!def) return undefined;
     const pose = resolveWindowPose(def, frame);
-    if (!pose.visible) return undefined;
+    if (!pose.visible) {
+      return { left: def.startX, top: def.startY, width: def.startW, height: def.startH };
+    }
     return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 

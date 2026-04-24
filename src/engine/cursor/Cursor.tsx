@@ -130,7 +130,7 @@ function buildSegments(
       segments.push({
         startFrame: action.at,
         endFrame,
-        from: target,
+        from: currentPos,
         to: target,
         clickFrame: action.at,
         actionType: "click",

@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { resolveWindowPose, getSceneAtFrame, interpolateCurve } from "../engine";
+import { resolveWindowPose, resolveAnchorFromRect, getSceneAtFrame, interpolateCurve } from "../engine";
 import { persistUpdate } from "./updateProps";
-import type { CurveType } from "../engine";
+import { setPendingDrag, clearPendingDrag } from "./pendingCursorEdits";
+import type { AnchorPoint, CurveType } from "../engine";
 import type { CinematicProps, CursorPathEntry } from "../schema";
 import type { WindowLayout } from "../schema";
 
@@ -21,6 +22,13 @@ interface ResolvedWaypoint {
   target?: string;
   index: number;
   curve?: CurveType;
+}
+
+function resolveEntryAnchor(entry: CinematicProps["cursorPath"][0]): AnchorPoint {
+  if (entry.anchorXPct !== undefined && entry.anchorYPct !== undefined) {
+    return { xPct: entry.anchorXPct, yPct: entry.anchorYPct };
+  }
+  return entry.anchor ?? "center";
 }
 
 export function resolveWaypointPosition(
@@ -46,13 +54,12 @@ export function resolveWaypointPosition(
   if (entry.target) {
     const win = windows.find((w) => w.id === entry.target);
     if (win) {
+      const anchor = resolveEntryAnchor(entry);
       const pose = resolveWindowPose(win, entryFrame);
-      if (pose.visible) {
-        return {
-          x: pose.left + pose.width / 2,
-          y: pose.top + pose.height / 2,
-        };
-      }
+      const rect = pose.visible
+        ? { left: pose.left, top: pose.top, width: pose.width, height: pose.height }
+        : { left: win.startX, top: win.startY, width: win.startW, height: win.startH };
+      return resolveAnchorFromRect(rect, anchor);
     }
   }
 
@@ -168,6 +175,7 @@ const WaypointEditor: React.FC<{
   return (
     <div
       onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
       style={{
         position: "absolute",
         left: panelLeft,
@@ -378,12 +386,14 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       const entry = cursorPath[idx];
       if (entry && entry.positionX === pos.x && entry.positionY === pos.y) {
         delete pendingDrags.current[idx];
+        clearPendingDrag(idx);
       }
     }
   }, [cursorPath]);
 
   const persistDrag = useCallback((index: number, pos: { x: number; y: number }) => {
     pendingDrags.current[index] = pos;
+    setPendingDrag(index, pos);
     persistUpdate((prev) => {
       const entry = prev.cursorPath[index];
       if (!entry) return prev;

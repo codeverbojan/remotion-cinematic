@@ -33,6 +33,7 @@ function entranceOffsets(style: WindowLayout["enterFrom"]): { scale: number; tx:
     case "slide-up": return { scale: 1, tx: 0, ty: 40 };
     case "slide-left": return { scale: 1, tx: -60, ty: 0 };
     case "slide-right": return { scale: 1, tx: 60, ty: 0 };
+    default: return { scale: 1, tx: 0, ty: 0 };
   }
 }
 

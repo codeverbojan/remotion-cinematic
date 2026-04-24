@@ -59,7 +59,9 @@ export function persistUpdate(
       if (!Array.isArray(prev.cursorPath)) prev.cursorPath = SCHEMA_DEFAULTS.cursorPath;
       if (!Array.isArray(prev.scenes)) prev.scenes = SCHEMA_DEFAULTS.scenes;
       const updated = updater(prev);
-      scheduleBackup(updated);
+      delete (updated as Record<string, unknown>).savedDefaultProps;
+      delete (updated as Record<string, unknown>).unsavedDefaultProps;
+      delete (updated as Record<string, unknown>).schema;
       return updated;
     },
   }).catch((err: unknown) => {

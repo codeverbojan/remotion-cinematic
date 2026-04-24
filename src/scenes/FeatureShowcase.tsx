@@ -5,6 +5,7 @@ import type { CursorAction, ZoomKeyframe } from "../engine";
 import { ScenePush, Window, Panel, Placeholder } from "../primitives";
 import { CURSOR_SFX, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
 import { useProductFeatures, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
+import { applyPendingEdits, getPendingRevision } from "../editor/pendingCursorEdits";
 
 const DURATION = 200;
 
@@ -58,11 +59,14 @@ export const FeatureShowcase: React.FC = () => {
   const cursorPathRaw = useCursorPath();
   const cursorStyle = useCursorStyle();
   const enabledScenes = useMemo(() => props.scenes.filter((s) => s.enabled), [props.scenes]);
+  const pendingRev = getPendingRevision();
   const cursorActions = useMemo(() => {
+    const merged = applyPendingEdits(cursorPathRaw);
     const offset = getSceneStartFrame(enabledScenes, "feature-showcase", props.overlap);
-    const sceneEntries = filterCursorPath(cursorPathRaw, SCENE_WINDOW_IDS, offset, DURATION);
+    const sceneEntries = filterCursorPath(merged, SCENE_WINDOW_IDS, offset, DURATION);
     return sceneEntries.length > 0 ? mapCursorPath(sceneEntries) : CURSOR_ACTIONS;
-  }, [cursorPathRaw, enabledScenes, props.overlap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursorPathRaw, enabledScenes, props.overlap, pendingRev]);
 
   const sortedWindows = useMemo(
     () => [...windows].sort((a, b) => a.zIndex - b.zIndex),
@@ -73,7 +77,9 @@ export const FeatureShowcase: React.FC = () => {
     const def = windows.find((w) => w.id === id);
     if (!def) return undefined;
     const pose = resolveWindowPose(def, frame);
-    if (!pose.visible) return undefined;
+    if (!pose.visible) {
+      return { left: def.startX, top: def.startY, width: def.startW, height: def.startH };
+    }
     return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
