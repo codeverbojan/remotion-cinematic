@@ -36,14 +36,24 @@ src/
 │   ├── ProductReveal.tsx
 │   ├── FeatureShowcase.tsx
 │   ├── HeadlineResolution.tsx
-│   └── Closer.tsx
+│   ├── Closer.tsx
+│   └── DynamicWindows.tsx # Renders windows not claimed by any scene's hardcoded IDs
 ├── editor/              # Visual editor overlay (Studio-only)
-│   ├── EditorOverlay.tsx  # Selection, drag, resize, keyboard shortcuts
-│   ├── InlineEdit.tsx     # Double-click-to-edit text wrapper
-│   ├── TextToolbar.tsx    # Floating font size/weight/color toolbar
-│   ├── PropertyPanel.tsx  # Context-aware floating property panel
-│   ├── SelectionBox.tsx   # Blue bounding box + resize handles
-│   └── SnapGuides.tsx     # Alignment snap guides
+│   ├── EditorOverlay.tsx    # Selection, drag, resize, keyboard shortcuts
+│   ├── CursorPathEditor.tsx # Cursor path waypoint editing panel
+│   ├── CursorPathOverlay.tsx # SVG cursor path visualization
+│   ├── ElementPalette.tsx   # Window template palette (add/remove windows)
+│   ├── InlineEdit.tsx       # Double-click-to-edit text wrapper
+│   ├── TextToolbar.tsx      # Floating font size/weight/color toolbar
+│   ├── PropertyPanel.tsx    # Context-aware floating property panel
+│   ├── SelectionBox.tsx     # Blue bounding box + resize handles
+│   └── SnapGuides.tsx       # Alignment snap guides
+├── cli/                 # Figma/screenshot import CLI tool
+│   ├── figma-client.ts        # Figma REST API client (fetch nodes)
+│   ├── figma-to-descriptor.ts # Figma node tree → LayoutDescriptor converter
+│   ├── screenshot-to-descriptor.ts # Claude vision → LayoutDescriptor
+│   ├── inject.ts              # Write descriptor into Root.tsx defaultProps
+│   └── index.ts               # CLI entry point (cinematic-import)
 ├── schema.ts            # Zod schema for Remotion input props (brand, scenes, easing, etc.)
 ├── VideoPropsContext.tsx # React context + hooks for passing props to scenes
 ├── content.ts           # Static demo data (spreadsheet rows, SFX config, camera timeline)
@@ -86,7 +96,7 @@ schema.ts (Zod) → Root.tsx (Composition + defaultProps) → CinematicDemo.tsx 
 ### Context hooks
 
 ```tsx
-import { useVideoProps, useHeadlines, useBrand, useProductFeatures, useEasing, useWindowLayout, useCursorPath, useAppDescriptor } from "../VideoPropsContext";
+import { useVideoProps, useHeadlines, useBrand, useProductFeatures, useEasing, useWindowLayout, useCursorPath, useCursorStyle, useAppDescriptor } from "../VideoPropsContext";
 
 const props = useVideoProps();          // full CinematicProps
 const headlines = useHeadlines();       // { pain, resolution, closer, painFontSize?, ... }
@@ -95,6 +105,7 @@ const features = useProductFeatures();  // [{ title, description }, ...]
 const easing = useEasing();             // resolved easing options object (for interpolate)
 const windows = useWindowLayout();      // WindowLayout[] — all window definitions
 const cursorPath = useCursorPath();     // CursorPathEntry[] — Studio-editable cursor path
+const cursorStyle = useCursorStyle();   // { scale: number, rotation: number }
 const descriptor = useAppDescriptor();  // LayoutDescriptor — JSON-driven app UI
 ```
 
@@ -109,6 +120,9 @@ const descriptor = useAppDescriptor();  // LayoutDescriptor — JSON-driven app 
 | `scenes` | id, enabled, durationInFrames, enterFrom, exitTo, background | Toggles + dropdowns |
 | `overlap` | scene transition overlap (0-30 frames) | Slider |
 | `easing` | cinematic, snappy, smooth, elastic, bounce, spring | Dropdown |
+| `cursorScale` | cursor size multiplier (0.5–3.0) | Slider |
+| `cursorRotation` | cursor rotation in degrees (-180–180) | Slider |
+| `cursorPath` | waypoint-based cursor choreography with per-segment curve | Array editor |
 | `music` | enabled, volume, fadeInFrames, fadeOutFrames | Toggle + sliders |
 | `sfxEnabled` / `sfxVolume` | global SFX toggle + volume | Toggle + slider |
 
@@ -324,8 +338,10 @@ const CURSOR_ACTIONS: CursorAction[] = [
   // Idle: cursor appears at a fixed position
   { at: 0, action: "idle", position: { x: 960, y: 540 } },
 
-  // MoveTo: arc-interpolated movement to a target element
+  // MoveTo: interpolated movement to a target element (default curve: "arc")
   { at: 20, action: "moveTo", target: "window-id", anchor: "center", duration: 15 },
+  // With explicit curve type:
+  { at: 20, action: "moveTo", target: "window-id", anchor: "center", duration: 15, curve: "linear" },
 
   // Click: visual click pulse at target
   { at: 50, action: "click", target: "window-id" },
@@ -334,6 +350,11 @@ const CURSOR_ACTIONS: CursorAction[] = [
   { at: 80, action: "drag", target: "window-id", anchor: "corner-top-left",
     to: { x: 980, y: 500 }, duration: 18 },
 ];
+
+// Curve types for moveTo and drag:
+// "arc"    — quadratic bezier with perpendicular bulge + bezier easing (default, natural mouse movement)
+// "linear" — straight line, constant speed (precise UI interactions)
+// "ease"   — straight line with smoothstep t*t*(3-2*t) (smooth direct movements)
 
 // Anchor types:
 // "center"              — element center
@@ -541,6 +562,7 @@ import type { WindowLayout, CursorPathEntry } from "../schema";
 | `anchorXPct/YPct` | number? | — | Percentage anchor (0-100, overrides named anchor) |
 | `toX/Y` | number? | — | Drag destination |
 | `duration` | int? | — | Movement duration in frames |
+| `curve` | enum? | "arc" | "arc" \| "linear" \| "ease" — interpolation curve type |
 
 **Pure functions:**
 
@@ -576,6 +598,38 @@ const cursorActions = useMemo(() => mapCursorPath(cursorPath), [cursorPath]);
     </div>
   );
 })}
+```
+
+### Dynamic Windows
+
+Windows added via the Element Palette (or programmatically via `windowLayout` props) that are not claimed by any scene's hardcoded `SCENE_WINDOW_IDS` are rendered by `DynamicWindows.tsx`. This component is included inside each scene's `<Sequence>` in `CinematicDemo.tsx`, so dynamic windows automatically use scene-relative frames.
+
+```tsx
+// In CinematicDemo.tsx — already wired, no manual setup needed:
+<Sequence key={scene.id} from={from} durationInFrames={scene.durationInFrames} layout="none">
+  <Component />
+  <DynamicWindows />
+</Sequence>
+```
+
+Claimed IDs (hardcoded in existing scenes): `spreadsheet`, `email`, `chat`, `notification-0/1/2`, `product-window`, `top-panel`, `left-panel`, `feature-0/1/2`. Any window with an ID not in this set renders via DynamicWindows.
+
+### Figma CLI Import
+
+Import Figma designs or screenshots as `LayoutDescriptor` JSON:
+
+```bash
+# From Figma URL (needs FIGMA_TOKEN or --token)
+npx tsx src/cli/index.ts --figma-url="https://figma.com/design/abc/App?node-id=1-2"
+
+# From screenshot (needs ANTHROPIC_API_KEY)
+npx tsx src/cli/index.ts --screenshot=./dashboard.png
+
+# Inject directly into Root.tsx defaultProps
+npx tsx src/cli/index.ts --figma-url="..." --inject
+
+# Output to file
+npx tsx src/cli/index.ts --screenshot=./app.png --out=descriptor.json
 ```
 
 ### Figma Bridge (AppFromDescriptor)
@@ -663,6 +717,9 @@ EditorOverlay (gates on isStudio)
 | `src/editor/SelectionBox.tsx` | Blue border + label + 8 resize handles (corners + edges) + move area |
 | `src/editor/SnapGuides.tsx` | Snap guide computation (pure functions) + visual guide lines |
 | `src/editor/PropertyPanel.tsx` | Floating property panel — context-aware for windows/headlines/buttons |
+| `src/editor/CursorPathEditor.tsx` | Cursor path waypoint editing panel with scale/rotation sliders |
+| `src/editor/CursorPathOverlay.tsx` | SVG overlay rendering cursor movement paths with curve visualization |
+| `src/editor/ElementPalette.tsx` | Window template palette — add/remove windows at current frame |
 | `src/editor/InlineEdit.tsx` | Double-click-to-edit text wrapper (used by Window, Headline, EndCard) |
 | `src/editor/TextToolbar.tsx` | Floating toolbar — font size +/-, weight cycling, color picker |
 | `src/editor/index.ts` | Barrel exports |
@@ -678,6 +735,10 @@ EditorOverlay (gates on isStudio)
 **Inline text editing:** Window titles, headlines, and CTA text are self-wiring — the components handle their own persistence via `updateProp()`. Double-click text to edit, blur/Enter to save, Escape to cancel. Headlines show a formatting toolbar (font size, color). No callback props needed from parent scenes.
 
 **Snap guides:** During move, red lines appear at alignment points — other window edges, centers, and canvas center. Snap threshold: 6px. Guide computation is in `computeSnapGuides()` and `applySnap()` (pure functions, exported for testing).
+
+**Cursor path editor:** Visual overlay showing cursor movement paths as SVG lines/curves. Waypoints are displayed as circles. Click a waypoint to select and edit its properties (target, anchor, duration, curve type). The editor panel includes cursor scale (0.5–3.0) and rotation (-180°–180°) sliders with debounced updates to prevent Studio reload spam.
+
+**Element palette:** Top-right "+ Elements" button opens a panel with window templates (Window, Small Card, Full Width, Left Panel, Right Panel). Adding a window creates it with `enterAt` set to the current scene-relative frame. Lists existing windows with remove buttons. Dynamic windows are rendered via `DynamicWindows.tsx` across all scenes.
 
 **Context-aware property panel:**
 

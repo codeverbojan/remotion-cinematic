@@ -16,9 +16,11 @@ No screenshots. Live React components that the cursor clicks, tabs that switch, 
 
 ---
 
-## Phase 1: Input Props System
+## Phase 1: Input Props System ✅
 
 **Goal**: Make every customizable value editable in Remotion Studio without touching code.
+
+> **Status: Complete.** Full Zod schema, Studio props panel, context hooks, easing presets, calculateMetadata.
 
 ### 1.1 — Props Schema (Zod)
 
@@ -111,9 +113,11 @@ A user opens Remotion Studio and sees a right panel with:
 
 ---
 
-## Phase 2: Interaction Layer
+## Phase 2: Interaction Layer ✅
 
 **Goal**: UI primitives respond to cursor actions — clicks switch tabs, highlight rows, toggle states.
+
+> **Status: Complete.** UIKeyframe system, useUIState hook, auto-press from cursor clicks, all primitives interactive.
 
 ### 2.1 — UIKeyframe System
 
@@ -177,9 +181,11 @@ Cursor clicks a sidebar item → sidebar highlights that item and content area c
 
 ---
 
-## Phase 3: Window Choreography Props
+## Phase 3: Window Choreography Props ✅
 
 **Goal**: Window positions, sizes, and motion paths are editable — in Studio forms and eventually with visual drag handles.
+
+> **Status: Complete.** WindowLayout schema, CursorPathEntry schema with curve types, resolveWindowPose, mapCursorPath, all scenes converted.
 
 ### 3.1 — Window Layout Schema
 
@@ -219,9 +225,11 @@ All choreography lives in the props schema. Studio shows editable arrays: add a 
 
 ---
 
-## Phase 4: Figma Bridge
+## Phase 4: Figma Bridge 🔶
 
 **Goal**: Import real app layouts from Figma as structured data that maps to app-ui primitives.
+
+> **Status: Partial.** CLI tool built (Path C). Figma REST API client, node-to-descriptor converter, screenshot-to-descriptor via Claude vision, inject into Root.tsx. AppFromDescriptor renderer complete. Figma plugin (Path A) not started.
 
 ### 4.1 — Figma Layout Descriptor
 
@@ -296,9 +304,11 @@ User selects a frame in Figma → exports JSON → pastes into Remotion Studio �
 
 ---
 
-## Phase 5: Visual Editor
+## Phase 5: Visual Editor 🔶
 
 **Goal**: Turn Remotion Studio into a full visual motion design editor — click elements to select, drag to reposition, floating panels to edit properties.
+
+> **Status: Partial (5.1–5.3 complete).** Selection + bounding box, drag-to-move/resize with snap guides, floating property panels, inline text editing, keyboard shortcuts, cursor path editor with SVG overlay, element palette for adding windows. Timeline editor (5.4) and animation controls (5.5) not started.
 
 ### Architecture
 
@@ -487,28 +497,25 @@ Each scene template:
 
 ```
 Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4
-  Props      Interact     Choreo      Figma
-  (1 week)   (1 week)    (3 days)    (1 week)
+  Props ✅   Interact ✅  Choreo ✅   Figma 🔶
 
 Phase 5 depends on Phase 1–3 being solid:
-  Phase 5a (Selection + float panel) — 1 week, after Phase 3
-  Phase 5b (Canvas drag & drop) — 1 week, after 5a
-  Phase 5c (Timeline editor) — 2 weeks, after 5b
-  Phase 5d (Animation controls) — 1 week, after 5c
+  Phase 5a (Selection + float panel) ✅
+  Phase 5b (Canvas drag & drop) ✅
+  Phase 5c (Cursor path editor) ✅
+  Phase 5d (Timeline editor) — not started
+  Phase 5e (Animation controls) — not started
 
 Phase 6 can start after Phase 2:
-  Phase 6 (Scene templates) — ongoing
+  Phase 6 (Scene templates) — not started
 ```
 
-### Priority
+### Remaining priorities
 
-1. **Phase 1** — Input props. Unlocks Studio editing immediately. Foundation for everything else.
-2. **Phase 2** — Interaction layer. Makes the video feel real, not a slideshow.
-3. **Phase 3** — Window choreography props. Power users who want full control.
-4. **Phase 4** — Figma bridge (Path B: Claude from screenshot is already partially working, formalize it).
-5. **Phase 5a–b** — Selection + drag. The "click to edit" moment that changes everything.
-6. **Phase 6** — Scene templates. Grows the library, makes the template more versatile.
-7. **Phase 5c–d** — Timeline + animation controls. Full motion design editor.
+1. **Phase 4 completion** — Figma plugin (Path A) for richer import. Local JSON file support for the CLI.
+2. **Phase 5d** — Timeline editor. Visual keyframe editing on a horizontal timeline.
+3. **Phase 6** — Scene templates. Pre-built patterns (split compare, testimonial, pricing table, etc.).
+4. **Phase 5e** — Animation controls. Easing curve editor, motion path preview, onion skinning.
 
 ---
 

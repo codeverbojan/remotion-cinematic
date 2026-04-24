@@ -172,7 +172,7 @@ interface ComputedRect {
 
 ## Cursor
 
-Geometry-aware cursor that targets elements by ID. Movements use arc interpolation (quadratic bezier) for natural-looking paths. The cursor resolves positions from a `getRect` callback at render time.
+Geometry-aware cursor that targets elements by ID. Movements support three curve types: arc (quadratic bezier), linear (straight line), and ease (smoothstep). The cursor resolves positions from a `getRect` callback at render time.
 
 ### `<Cursor>`
 
@@ -182,7 +182,8 @@ Geometry-aware cursor that targets elements by ID. Movements use arc interpolati
 | `getRect` | `(id: string) => { left, top, width, height } \| undefined` | — | Position resolver (optional) |
 | `sfx` | `CursorSFXMap` | — | Maps action types to sounds — fires automatically |
 | `canvas` | `{ width: number; height: number }` | — | Canvas dimensions (for clamp/defaults) |
-| `size` | `number` | — | Cursor size in px |
+| `size` | `number` | — | Cursor size in px (also controlled by `cursorScale` prop) |
+| `baseRotation` | `number` | — | Cursor rotation in degrees (from `cursorRotation` prop) |
 | `color` | `string` | — | Cursor color |
 | `visible` | `boolean` | — | Show/hide cursor |
 | `fadeOutDelay` | `number` | — | Frames after last action before fade-out starts |
@@ -226,9 +227,10 @@ All `at` values are scene-relative frame numbers.
 { at: 0, action: "idle", position: { x: 960, y: 540 } }
 ```
 
-**moveTo** — arc-interpolated movement to a target element:
+**moveTo** — interpolated movement to a target element:
 ```ts
 { at: 20, action: "moveTo", target: "window-id", anchor: "center", duration: 15 }
+{ at: 20, action: "moveTo", target: "window-id", anchor: "center", duration: 15, curve: "linear" }
 ```
 
 **click** — visual click pulse at target:
@@ -242,6 +244,24 @@ All `at` values are scene-relative frame numbers.
 { at: 80, action: "drag", target: "window-id", anchor: "corner-bottom-right",
   to: { x: 1700, y: 900 }, duration: 30 }
 ```
+
+### Curve types
+
+`moveTo` and `drag` actions accept an optional `curve` field:
+
+| Curve | Behavior | Best for |
+|-------|----------|----------|
+| `"arc"` (default) | Quadratic bezier with perpendicular bulge + bezier easing | Natural mouse movements |
+| `"linear"` | Straight line, constant speed | Precise UI interactions |
+| `"ease"` | Straight line with smoothstep acceleration (`t*t*(3-2*t)`) | Smooth direct movements |
+
+```ts
+{ at: 20, action: "moveTo", target: "btn", duration: 15, curve: "arc" }    // default
+{ at: 20, action: "moveTo", target: "btn", duration: 15, curve: "linear" } // straight
+{ at: 20, action: "moveTo", target: "btn", duration: 15, curve: "ease" }   // smooth straight
+```
+
+The curve type is also editable per-waypoint in the visual cursor path editor (Studio overlay).
 
 ### Anchor types
 
