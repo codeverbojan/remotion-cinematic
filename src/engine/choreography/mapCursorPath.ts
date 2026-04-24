@@ -25,7 +25,15 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
         break;
 
       case "moveTo":
-        if (entry.target) {
+        if (entry.positionX !== undefined && entry.positionY !== undefined) {
+          actions.push({
+            at: entry.at,
+            action: "moveTo",
+            position: { x: entry.positionX, y: entry.positionY },
+            duration: entry.duration,
+            curve: entry.curve,
+          });
+        } else if (entry.target) {
           actions.push({
             at: entry.at,
             action: "moveTo",
@@ -38,7 +46,13 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
         break;
 
       case "click":
-        if (entry.target) {
+        if (entry.positionX !== undefined && entry.positionY !== undefined) {
+          actions.push({
+            at: entry.at,
+            action: "click",
+            position: { x: entry.positionX, y: entry.positionY },
+          });
+        } else if (entry.target) {
           actions.push({
             at: entry.at,
             action: "click",
@@ -49,16 +63,27 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
         break;
 
       case "drag":
-        if (entry.target && entry.toX !== undefined && entry.toY !== undefined) {
-          actions.push({
-            at: entry.at,
-            action: "drag",
-            target: entry.target,
-            anchor: resolveAnchor(entry),
-            to: { x: entry.toX, y: entry.toY },
-            duration: entry.duration,
-            curve: entry.curve,
-          });
+        if (entry.toX !== undefined && entry.toY !== undefined) {
+          if (entry.positionX !== undefined && entry.positionY !== undefined) {
+            actions.push({
+              at: entry.at,
+              action: "drag",
+              position: { x: entry.positionX, y: entry.positionY },
+              to: { x: entry.toX, y: entry.toY },
+              duration: entry.duration,
+              curve: entry.curve,
+            });
+          } else if (entry.target) {
+            actions.push({
+              at: entry.at,
+              action: "drag",
+              target: entry.target,
+              anchor: resolveAnchor(entry),
+              to: { x: entry.toX, y: entry.toY },
+              duration: entry.duration,
+              curve: entry.curve,
+            });
+          }
         }
         break;
     }

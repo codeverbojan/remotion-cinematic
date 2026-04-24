@@ -19,8 +19,9 @@ export type CurveType = "arc" | "linear" | "ease";
 export interface CursorActionMoveTo {
   at: number;
   action: "moveTo";
-  target: string;
-  anchor: AnchorPoint;
+  target?: string;
+  position?: { x: number; y: number };
+  anchor?: AnchorPoint;
   duration?: number;
   curve?: CurveType;
 }
@@ -28,15 +29,17 @@ export interface CursorActionMoveTo {
 export interface CursorActionClick {
   at: number;
   action: "click";
-  target: string;
+  target?: string;
+  position?: { x: number; y: number };
   anchor?: AnchorPoint;
 }
 
 export interface CursorActionDrag {
   at: number;
   action: "drag";
-  target: string;
-  anchor: AnchorPoint;
+  target?: string;
+  position?: { x: number; y: number };
+  anchor?: AnchorPoint;
   to: { x: number; y: number };
   duration?: number;
   curve?: CurveType;

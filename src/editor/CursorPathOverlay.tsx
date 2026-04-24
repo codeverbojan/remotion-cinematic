@@ -376,9 +376,11 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       if (!entry) return prev;
       return {
         ...prev,
-        cursorPath: prev.cursorPath.map((e, i) =>
-          i === index ? { ...e, positionX: pos.x, positionY: pos.y } : e,
-        ),
+        cursorPath: prev.cursorPath.map((e, i) => {
+          if (i !== index) return e;
+          const { target: _, ...rest } = e;
+          return { ...rest, positionX: pos.x, positionY: pos.y };
+        }),
       };
     });
   }, []);

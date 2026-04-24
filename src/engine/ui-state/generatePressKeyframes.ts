@@ -7,7 +7,7 @@ export function generatePressKeyframes(actions: readonly CursorAction[]): UIKeyf
   const keyframes: UIKeyframe[] = [];
 
   for (const action of actions) {
-    if (action.action === "click") {
+    if (action.action === "click" && action.target) {
       keyframes.push({
         at: action.at,
         target: action.target,

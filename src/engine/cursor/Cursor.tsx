@@ -45,9 +45,15 @@ function resolvePosition(
     return action.position;
   }
 
-  const anchor = action.action === "click"
-    ? (action.anchor ?? "center")
-    : action.anchor;
+  if (action.position) {
+    return action.position;
+  }
+
+  if (!action.target) {
+    return { x: 0, y: 0 };
+  }
+
+  const anchor = action.anchor ?? "center";
 
   const rect = getRect(action.target);
   if (!rect) {
