@@ -26,14 +26,16 @@ export const EditorOverlay: React.FC<{ children: React.ReactNode }> = ({ childre
 };
 
 function updateWindowProps(
-  props: CinematicProps,
+  _props: CinematicProps,
   windowId: string,
   updates: Partial<WindowLayout>,
 ) {
-  const updated = props.windowLayout.map((w) =>
-    w.id === windowId ? { ...w, ...updates } : w,
-  );
-  persistUpdate(() => ({ ...props, windowLayout: updated }));
+  persistUpdate((prev) => ({
+    ...prev,
+    windowLayout: prev.windowLayout.map((w) =>
+      w.id === windowId ? { ...w, ...updates } : w,
+    ),
+  }));
 }
 
 const CANVAS_W = 1920;

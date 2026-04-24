@@ -195,37 +195,39 @@ export const ColorInput: React.FC<{
 // --- Props Update Helpers ---
 
 function updateWindowProp(
-  props: CinematicProps,
+  _props: CinematicProps,
   windowId: string,
   updates: Partial<WindowLayout>,
 ) {
-  const updated = props.windowLayout.map((w) =>
-    w.id === windowId ? { ...w, ...updates } : w,
-  );
-  persistUpdate(() => ({ ...props, windowLayout: updated }));
+  persistUpdate((prev) => ({
+    ...prev,
+    windowLayout: prev.windowLayout.map((w) =>
+      w.id === windowId ? { ...w, ...updates } : w,
+    ),
+  }));
 }
 
 function updateHeadlineProp(
-  props: CinematicProps,
+  _props: CinematicProps,
   field: "pain" | "resolution" | "closer",
   value: string[],
 ) {
-  persistUpdate(() => ({
-    ...props,
-    headlines: { ...props.headlines, [field]: value },
+  persistUpdate((prev) => ({
+    ...prev,
+    headlines: { ...prev.headlines, [field]: value },
   }));
 }
 
 function updateBrandColor(
-  props: CinematicProps,
+  _props: CinematicProps,
   colorKey: string,
   value: string,
 ) {
-  persistUpdate(() => ({
-    ...props,
+  persistUpdate((prev) => ({
+    ...prev,
     brand: {
-      ...props.brand,
-      colors: { ...props.brand.colors, [colorKey]: value },
+      ...prev.brand,
+      colors: { ...prev.brand.colors, [colorKey]: value },
     },
   }));
 }
@@ -396,12 +398,10 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
           <Spacer />
           <button
             onClick={() => {
-              const updatedWindows = props.windowLayout.filter((w) => w.id !== win.id);
-              const updatedCursor = props.cursorPath.filter((e) => e.target !== win.id);
-              persistUpdate(() => ({
-                ...props,
-                windowLayout: updatedWindows,
-                cursorPath: updatedCursor,
+              persistUpdate((prev) => ({
+                ...prev,
+                windowLayout: prev.windowLayout.filter((w) => w.id !== win.id),
+                cursorPath: prev.cursorPath.filter((e) => e.target !== win.id),
               }));
             }}
             style={{ ...SMALL_BTN_STYLE, color: "#F87171", borderColor: "#F87171" }}
@@ -453,9 +453,9 @@ const HeadlinePanel: React.FC<{ selectedId: string; props: CinematicProps }> = (
         label="Serif Font"
         value={props.brand.fontSerif}
         onChange={(v) => {
-          persistUpdate(() => ({
-            ...props,
-            brand: { ...props.brand, fontSerif: v },
+          persistUpdate((prev) => ({
+            ...prev,
+            brand: { ...prev.brand, fontSerif: v },
           }));
         }}
       />
@@ -477,7 +477,7 @@ const ButtonPanel: React.FC<{ selectedId: string; props: CinematicProps }> = ({ 
             label="CTA Label"
             value={props.cta}
             onChange={(v) => {
-              persistUpdate(() => ({ ...props, cta: v }));
+              persistUpdate((prev) => ({ ...prev, cta: v }));
             }}
           />
           <Spacer />

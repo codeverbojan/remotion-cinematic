@@ -125,11 +125,12 @@ const WaypointEditor: React.FC<{
 
   const commitUpdate = useCallback(
     (updates: Partial<CursorPathEntry>) => {
-      const current = propsRef.current;
-      const updated = current.cursorPath.map((e, i) =>
-        i === index ? { ...e, ...updates } : e,
-      );
-      persistUpdate(() => ({ ...current, cursorPath: updated }));
+      persistUpdate((prev) => ({
+        ...prev,
+        cursorPath: prev.cursorPath.map((e, i) =>
+          i === index ? { ...e, ...updates } : e,
+        ),
+      }));
     },
     [index],
   );
@@ -151,9 +152,10 @@ const WaypointEditor: React.FC<{
   }, []);
 
   const remove = useCallback(() => {
-    const current = propsRef.current;
-    const updated = current.cursorPath.filter((_, i) => i !== index);
-    persistUpdate(() => ({ ...current, cursorPath: updated }));
+    persistUpdate((prev) => ({
+      ...prev,
+      cursorPath: prev.cursorPath.filter((_, i) => i !== index),
+    }));
     onClose();
   }, [index, onClose]);
 
@@ -365,18 +367,21 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   propsRef.current = props;
 
   const persistDrag = useCallback((index: number, pos: { x: number; y: number }) => {
-    const current = propsRef.current;
-    const entry = current.cursorPath[index];
-    if (!entry) return;
-    const updated = current.cursorPath.map((e, i) => {
-      if (i !== index) return e;
-      if (e.target) {
-        const { target: _, ...rest } = e;
-        return { ...rest, positionX: pos.x, positionY: pos.y };
-      }
-      return { ...e, positionX: pos.x, positionY: pos.y };
+    persistUpdate((prev) => {
+      const entry = prev.cursorPath[index];
+      if (!entry) return prev;
+      return {
+        ...prev,
+        cursorPath: prev.cursorPath.map((e, i) => {
+          if (i !== index) return e;
+          if (e.target) {
+            const { target: _, ...rest } = e;
+            return { ...rest, positionX: pos.x, positionY: pos.y };
+          }
+          return { ...e, positionX: pos.x, positionY: pos.y };
+        }),
+      };
     });
-    persistUpdate(() => ({ ...current, cursorPath: updated }));
   }, []);
 
   useEffect(() => {

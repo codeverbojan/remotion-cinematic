@@ -155,8 +155,7 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
         sceneId: sceneRange?.id,
       } as WindowLayout;
 
-      const updated = [...currentProps.windowLayout, newWindow];
-      persistUpdate(() => ({ ...currentProps, windowLayout: updated }));
+      persistUpdate((prev) => ({ ...prev, windowLayout: [...prev.windowLayout, newWindow] }));
 
       setOpen(false);
     },
@@ -165,13 +164,10 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
 
   const handleRemove = useCallback(
     (id: string) => {
-      const currentProps = propsRef.current;
-      const updatedWindows = currentProps.windowLayout.filter((w) => w.id !== id);
-      const updatedCursor = currentProps.cursorPath.filter((e) => e.target !== id);
-      persistUpdate(() => ({
-        ...currentProps,
-        windowLayout: updatedWindows,
-        cursorPath: updatedCursor,
+      persistUpdate((prev) => ({
+        ...prev,
+        windowLayout: prev.windowLayout.filter((w) => w.id !== id),
+        cursorPath: prev.cursorPath.filter((e) => e.target !== id),
       }));
     },
     [],

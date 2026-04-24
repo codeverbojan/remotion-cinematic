@@ -1,7 +1,10 @@
 import type { CinematicProps } from "../schema";
+import { CinematicSchema } from "../schema";
 
 const PROP_SERVER_URL = "http://localhost:3099";
 const DEBOUNCE_MS = 3000;
+
+const SCHEMA_DEFAULTS = CinematicSchema.parse({});
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let latestProps: CinematicProps | null = null;
@@ -51,9 +54,15 @@ export function persistUpdate(
   updateDefaultProps({
     compositionId: "CinematicDemo",
     defaultProps: (current: Record<string, unknown>) => {
-      const updated = updater(current as CinematicProps);
+      const prev = { ...SCHEMA_DEFAULTS, ...current } as CinematicProps;
+      if (!Array.isArray(prev.windowLayout)) prev.windowLayout = SCHEMA_DEFAULTS.windowLayout;
+      if (!Array.isArray(prev.cursorPath)) prev.cursorPath = SCHEMA_DEFAULTS.cursorPath;
+      if (!Array.isArray(prev.scenes)) prev.scenes = SCHEMA_DEFAULTS.scenes;
+      const updated = updater(prev);
       scheduleBackup(updated);
       return updated;
     },
-  }).catch(() => {});
+  }).catch((err: unknown) => {
+    console.error("[persistUpdate] updateDefaultProps failed:", err);
+  });
 }

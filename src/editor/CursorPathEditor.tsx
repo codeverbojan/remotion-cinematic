@@ -25,12 +25,12 @@ const ACTION_OPTIONS: { value: ActionType; label: string; icon: string }[] = [
 
 const TOOLBAR_FONT = "system-ui, -apple-system, sans-serif";
 
-function updateCursorPath(props: CinematicProps, path: CursorPathEntry[]) {
-  persistUpdate(() => ({ ...props, cursorPath: path }));
+function updateCursorPath(_props: CinematicProps, path: CursorPathEntry[]) {
+  persistUpdate((prev) => ({ ...prev, cursorPath: path }));
 }
 
-function updateCursorStyle(props: CinematicProps, updates: Partial<Pick<CinematicProps, "cursorScale" | "cursorRotation">>) {
-  persistUpdate(() => ({ ...props, ...updates }));
+function updateCursorStyle(_props: CinematicProps, updates: Partial<Pick<CinematicProps, "cursorScale" | "cursorRotation">>) {
+  persistUpdate((prev) => ({ ...prev, ...updates }));
 }
 
 function canvasPositionFromEvent(
