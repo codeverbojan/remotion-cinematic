@@ -38,15 +38,19 @@ export const FPS = 30;
 
 export { Easing } from "remotion";
 import { Easing } from "remotion";
+
+const CLAMP = {
+  extrapolateLeft: "clamp" as const,
+  extrapolateRight: "clamp" as const,
+};
+
 export const EASE = {
-  snappy: {
-    extrapolateLeft: "clamp" as const,
-    extrapolateRight: "clamp" as const,
-    easing: Easing.out(Easing.exp),
-  },
-  smooth: {
-    extrapolateLeft: "clamp" as const,
-    extrapolateRight: "clamp" as const,
-    easing: Easing.out(Easing.cubic),
-  },
+  cinematic: { ...CLAMP, easing: Easing.bezier(0.22, 0.61, 0.36, 1) },
+  snappy: { ...CLAMP, easing: Easing.out(Easing.exp) },
+  smooth: { ...CLAMP, easing: Easing.out(Easing.cubic) },
+  elastic: { ...CLAMP, easing: Easing.elastic(1) },
+  bounce: { ...CLAMP, easing: Easing.bounce },
+  spring: { ...CLAMP, easing: Easing.bezier(0.34, 1.56, 0.64, 1) },
 } as const;
+
+export type EasingPresetKey = keyof typeof EASE;

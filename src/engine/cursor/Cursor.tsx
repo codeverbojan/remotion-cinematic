@@ -114,7 +114,9 @@ function buildSegments(
       }
       currentPos = target;
     } else if (action.action === "click") {
-      const target = resolvePosition(action, getRect);
+      const target = action.anchor
+        ? resolvePosition(action, getRect)
+        : currentPos;
       segments.push({
         startFrame: action.at,
         endFrame,

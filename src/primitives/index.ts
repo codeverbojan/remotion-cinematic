@@ -1,7 +1,7 @@
 export { TrafficLights } from "./TrafficLights";
 export { Window, CHROME_HEIGHT } from "./Window";
 export { Headline, getHeadlinePose, getLineStartFrame } from "./Headline";
-export type { HeadlineProps, LinePose } from "./Headline";
+export type { HeadlineProps, LinePose, HeadlineKey } from "./Headline";
 export { EndCard } from "./EndCard";
 export { Wallpaper } from "./Wallpaper";
 export { Enter, getEnterPose } from "./Enter";

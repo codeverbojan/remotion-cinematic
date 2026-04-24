@@ -25,6 +25,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div
       data-cursor-target={id}
+      data-editor-id={id}
+      data-editor-type="stat-card"
       style={{
         backgroundColor: C.bgLight,
         border: `1px solid ${C.border}`,

@@ -1,6 +1,12 @@
-import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import React, { useCallback, useMemo } from "react";
+import { AbsoluteFill, getRemotionEnvironment, interpolate, useCurrentFrame } from "remotion";
 import { C, EASE, F } from "../tokens";
+import { InlineEdit, TextToolbar } from "../editor";
+import type { TextToolbarValues } from "../editor";
+import type { HeadlinesConfig, HeadlineKey } from "../schema";
+import { updateProp } from "../VideoPropsContext";
+
+export type { HeadlineKey };
 
 export interface HeadlineProps {
   readonly lines: readonly string[];
@@ -17,6 +23,7 @@ export interface HeadlineProps {
     readonly duration?: number;
     readonly yRise?: number;
   };
+  readonly headlineKey?: HeadlineKey;
 }
 
 export interface LinePose {
@@ -66,6 +73,12 @@ export function getHeadlinePose(args: {
   return { opacity, translateY };
 }
 
+const FONT_SIZE_KEY: Record<HeadlineKey, keyof HeadlinesConfig> = {
+  pain: "painFontSize",
+  resolution: "resolutionFontSize",
+  closer: "closerFontSize",
+};
+
 export const Headline: React.FC<HeadlineProps> = ({
   lines,
   fontSize = 88,
@@ -77,11 +90,63 @@ export const Headline: React.FC<HeadlineProps> = ({
   exitAt,
   exitDuration = 10,
   wordStream,
+  headlineKey,
 }) => {
   const frame = useCurrentFrame();
   const wordStagger = wordStream?.stagger ?? 3;
   const wordDuration = wordStream?.duration ?? 7;
   const wordYRise = wordStream?.yRise ?? 14;
+
+  const isStudio = useMemo(() => {
+    try { return getRemotionEnvironment().isStudio; } catch { return false; }
+  }, []);
+  const canEdit = isStudio && !!headlineKey;
+
+  const handleLineChange = useCallback(
+    (lineIndex: number, newText: string) => {
+      if (!headlineKey) return;
+      updateProp((prev) => {
+        const currentLines = [...(prev.headlines[headlineKey] as string[])];
+        currentLines[lineIndex] = newText;
+        return {
+          ...prev,
+          headlines: { ...prev.headlines, [headlineKey]: currentLines },
+        };
+      });
+    },
+    [headlineKey],
+  );
+
+  const handleToolbarChange = useCallback(
+    (values: Partial<TextToolbarValues>) => {
+      if (!headlineKey) return;
+      const updates: Partial<HeadlinesConfig> = {};
+      if (values.fontSize !== undefined) {
+        (updates as Record<string, unknown>)[FONT_SIZE_KEY[headlineKey] as string] = values.fontSize;
+      }
+      if (values.color !== undefined) {
+        updates.color = values.color;
+      }
+      updateProp((prev) => ({
+        ...prev,
+        headlines: { ...prev.headlines, ...updates },
+      }));
+    },
+    [headlineKey],
+  );
+
+  const toolbarValues: TextToolbarValues = useMemo(
+    () => ({ fontSize, fontWeight: 500, color }),
+    [fontSize, color],
+  );
+
+  const renderToolbar = canEdit ? (
+    <TextToolbar
+      values={toolbarValues}
+      onChange={handleToolbarChange}
+      showFontWeight={false}
+    />
+  ) : null;
 
   return (
     <AbsoluteFill
@@ -121,7 +186,8 @@ export const Headline: React.FC<HeadlineProps> = ({
                   )
                 : 1;
             const words = line.split(/\s+/).filter((w) => w.length > 0);
-            return (
+
+            const content = (
               <div key={i} style={{ ...commonStyle, opacity: lineExitOpacity }}>
                 {words.map((word, wIdx) => {
                   const wStart = lineStart + wIdx * wordStagger;
@@ -159,9 +225,24 @@ export const Headline: React.FC<HeadlineProps> = ({
                 })}
               </div>
             );
+
+            if (canEdit) {
+              return (
+                <InlineEdit
+                  key={i}
+                  value={line}
+                  onChange={(v) => handleLineChange(i, v)}
+                  style={commonStyle}
+                  toolbar={i === 0 ? renderToolbar : undefined}
+                >
+                  {content}
+                </InlineEdit>
+              );
+            }
+            return content;
           }
 
-          return (
+          const content = (
             <div
               key={i}
               style={{
@@ -174,6 +255,21 @@ export const Headline: React.FC<HeadlineProps> = ({
               {line}
             </div>
           );
+
+          if (canEdit) {
+            return (
+              <InlineEdit
+                key={i}
+                value={line}
+                onChange={(v) => handleLineChange(i, v)}
+                style={commonStyle}
+                toolbar={i === 0 ? renderToolbar : undefined}
+              >
+                {content}
+              </InlineEdit>
+            );
+          }
+          return content;
         })}
       </div>
     </AbsoluteFill>

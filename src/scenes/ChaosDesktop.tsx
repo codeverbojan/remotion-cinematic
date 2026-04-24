@@ -1,13 +1,12 @@
 import React from "react";
 import { Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
-import { Cursor } from "../engine";
+import { Cursor, resolveWindowPose } from "../engine";
 import type { CursorAction } from "../engine";
 import { Headline, ScenePush, Window, DataTable, MessageList, NotificationToast } from "../primitives";
 import {
   CHAT_MESSAGES,
   CURSOR_SFX,
   EMAIL_THREAD,
-  HEADLINES,
   NOTIFICATIONS,
   SCENE_OVERLAP,
   SFX,
@@ -15,53 +14,20 @@ import {
   SPREADSHEET_ROWS,
   STICKY_NOTES,
 } from "../content";
+import { useHeadlines, useWindowLayout } from "../VideoPropsContext";
 import { C, EASE, F } from "../tokens";
 
 const DURATION = 260;
-const MC_START = 150;
-const MC_DUR = 25;
 
-interface WindowDef {
-  id: string;
-  title: string;
-  enterAt: number;
-  enterDur: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  mcX: number;
-  mcY: number;
-}
-
-const WINDOW_DEFS: WindowDef[] = [
-  {
-    id: "spreadsheet", title: "Tracking Sheet",
-    enterAt: 5, enterDur: 14,
-    x: 500, y: 30, w: 1100, h: 500,
-    mcX: 1450, mcY: -200,
-  },
-  {
-    id: "email", title: "Email — Q2 Requests",
-    enterAt: 30, enterDur: 14,
-    x: 20, y: 200, w: 1020, h: 400,
-    mcX: -680, mcY: 400,
-  },
-  {
-    id: "chat", title: "Team Chat",
-    enterAt: 60, enterDur: 14,
-    x: 200, y: 350, w: 1200, h: 500,
-    mcX: 900, mcY: 850,
-  },
-];
+const SCENE_WINDOW_IDS = ["spreadsheet", "email", "chat"];
 
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 1400, y: 300 } },
-  { at: 10, action: "moveTo", target: "spreadsheet", anchor: { xPct: 0.6, yPct: 0.4 }, duration: 12 },
+  { at: 10, action: "moveTo", target: "spreadsheet", anchor: { xPct: 60, yPct: 40 }, duration: 12 },
   { at: 26, action: "click", target: "spreadsheet" },
   { at: 34, action: "moveTo", target: "email", anchor: "top-bar", duration: 12 },
   { at: 50, action: "click", target: "email" },
-  { at: 58, action: "moveTo", target: "chat", anchor: { xPct: 0.4, yPct: 0.3 }, duration: 12 },
+  { at: 58, action: "moveTo", target: "chat", anchor: { xPct: 40, yPct: 30 }, duration: 12 },
   { at: 76, action: "click", target: "chat" },
   { at: 84, action: "moveTo", target: "notification-0", anchor: "center", duration: 12 },
   { at: 100, action: "click", target: "notification-0" },
@@ -110,7 +76,13 @@ const WINDOW_CONTENT: Record<string, React.ReactNode> = {
 
 export const ChaosDesktop: React.FC = () => {
   const frame = useCurrentFrame();
-  const mcProg = interpolate(frame, [MC_START, MC_START + MC_DUR], [0, 1], EASE.snappy);
+  const headlines = useHeadlines();
+  const allWindows = useWindowLayout();
+  const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
+  const mcStart = windows[0]?.animateAt ?? 150;
+  const mcDur = windows[0]?.animateDuration ?? 25;
+  const mcProg = interpolate(frame, [mcStart, mcStart + mcDur], [0, 1], EASE.snappy);
 
   const getRect = (id: string) => {
     if (id.startsWith("notification-")) {
@@ -118,11 +90,11 @@ export const ChaosDesktop: React.FC = () => {
       const mcSlide = interpolate(mcProg, [0, 1], [0, 500], EASE.snappy);
       return { left: 1920 - 30 - 360 + mcSlide, top: 30 + idx * 102, width: 360, height: 80 };
     }
-    const def = WINDOW_DEFS.find((d) => d.id === id);
+    const def = windows.find((d) => d.id === id);
     if (!def) return undefined;
-    const x = interpolate(mcProg, [0, 1], [def.x, def.mcX], EASE.snappy);
-    const y = interpolate(mcProg, [0, 1], [def.y, def.mcY], EASE.snappy);
-    return { left: x, top: y, width: def.w, height: def.h };
+    const pose = resolveWindowPose(def, frame);
+    if (!pose.visible) return undefined;
+    return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
   return (
@@ -163,24 +135,23 @@ export const ChaosDesktop: React.FC = () => {
         );
       })}
 
-      {/* Main windows */}
-      {WINDOW_DEFS.map((def) => {
-        const enterProg = interpolate(frame, [def.enterAt, def.enterAt + def.enterDur], [0, 1], EASE.snappy);
-        const x = interpolate(mcProg, [0, 1], [def.x, def.mcX], EASE.snappy);
-        const y = interpolate(mcProg, [0, 1], [def.y, def.mcY], EASE.snappy);
-        const enterScale = interpolate(enterProg, [0, 1], [0.92, 1], EASE.snappy);
-        const enterTY = interpolate(enterProg, [0, 1], [30, 0], EASE.snappy);
+      {/* Main windows — positions driven by windowLayout props */}
+      {windows.map((def) => {
+        const pose = resolveWindowPose(def, frame);
+        if (!pose.visible) return null;
+
         return (
           <div
             key={def.id}
             data-cursor-target={def.id}
             style={{
               position: "absolute",
-              left: Math.round(x), top: Math.round(y),
-              width: def.w, height: def.h,
-              opacity: enterProg,
-              transform: `translateY(${Math.round(enterTY)}px) scale(${enterScale}) translateZ(0)`,
+              left: pose.left, top: pose.top,
+              width: pose.width, height: pose.height,
+              opacity: pose.opacity,
+              transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
               transformOrigin: "top left",
+              zIndex: def.zIndex,
               willChange: "transform",
             }}
           >
@@ -231,14 +202,16 @@ export const ChaosDesktop: React.FC = () => {
       ))}
 
       {/* Headline — stays visible until push exit (no exitAt) */}
-      <Sequence from={MC_START} layout="none">
+      <Sequence from={mcStart} layout="none">
         <Headline
-          lines={HEADLINES.pain}
-          fontSize={104}
+          lines={headlines.pain}
+          fontSize={headlines.painFontSize ?? 104}
+          color={headlines.color}
           lineDelay={18}
           entranceDuration={12}
           yRise={80}
           wordStream={{ stagger: 3, duration: 5, yRise: 50 }}
+          headlineKey="pain"
         />
       </Sequence>
 

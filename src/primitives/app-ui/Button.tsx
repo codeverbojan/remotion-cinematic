@@ -1,4 +1,6 @@
 import React from "react";
+import { interpolate, useCurrentFrame } from "remotion";
+import { useUIState } from "../../engine/ui-state";
 import { C, F } from "../../tokens";
 
 export interface ButtonProps {
@@ -8,6 +10,14 @@ export interface ButtonProps {
   id?: string;
   style?: React.CSSProperties;
 }
+
+interface ButtonUIState {
+  pressed: boolean;
+  pressedAt: number;
+}
+
+const DEFAULT_STATE: ButtonUIState = { pressed: false, pressedAt: -1 };
+const PRESS_DURATION = 4;
 
 const VARIANTS = {
   primary: { bg: C.brand, color: "#FFFFFF", border: "none" },
@@ -27,12 +37,31 @@ export const Button: React.FC<ButtonProps> = ({
   id,
   style,
 }) => {
+  const frame = useCurrentFrame();
+  const { pressedAt } = useUIState(id ?? "", DEFAULT_STATE);
+
   const v = VARIANTS[variant];
   const s = SIZES[size];
+
+  let scale = 1;
+  let brightnessShift = 0;
+  if (pressedAt >= 0) {
+    const elapsed = frame - pressedAt;
+    if (elapsed >= 0 && elapsed <= PRESS_DURATION) {
+      const pressProgress = interpolate(elapsed, [0, PRESS_DURATION], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      });
+      scale = 1 - 0.04 * pressProgress;
+      brightnessShift = -0.08 * pressProgress;
+    }
+  }
 
   return (
     <div
       data-cursor-target={id}
+      data-editor-id={id}
+      data-editor-type="button"
       style={{
         display: "inline-block",
         backgroundColor: v.bg,
@@ -44,6 +73,9 @@ export const Button: React.FC<ButtonProps> = ({
         fontFamily: F.sans,
         padding: s.padding,
         cursor: "default",
+        transform: scale !== 1 ? `scale(${scale})` : undefined,
+        filter: brightnessShift !== 0 ? `brightness(${1 + brightnessShift})` : undefined,
+        transformOrigin: "center center",
         ...style,
       }}
     >

@@ -59,6 +59,8 @@ export const LayoutWindow: React.FC<LayoutWindowProps> = ({
   return (
     <div
       data-cursor-target={id}
+      data-editor-id={id}
+      data-editor-type="layout-window"
       style={{
         position: "absolute",
         left: rect.left,

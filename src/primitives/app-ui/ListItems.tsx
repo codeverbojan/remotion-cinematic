@@ -19,7 +19,7 @@ export const ListItems: React.FC<ListItemsProps> = ({
   id,
   style,
 }) => (
-  <div data-cursor-target={id} style={{ fontFamily: F.sans, ...style }}>
+  <div data-cursor-target={id} data-editor-id={id} data-editor-type="list-items" style={{ fontFamily: F.sans, ...style }}>
     {items.map((item, i) => (
       <div
         key={i}

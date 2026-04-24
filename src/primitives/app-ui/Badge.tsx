@@ -16,6 +16,8 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => (
   <span
     data-cursor-target={id}
+    data-editor-id={id}
+    data-editor-type="badge"
     style={{
       display: "inline-block",
       fontSize: 11,

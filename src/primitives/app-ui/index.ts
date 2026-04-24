@@ -24,7 +24,11 @@ export { Badge } from "./Badge";
 export { Button } from "./Button";
 export { SearchBar } from "./SearchBar";
 
+// Descriptor renderer
+export { AppFromDescriptor } from "./AppFromDescriptor";
+
 // Types
+export type { AppFromDescriptorProps } from "./AppFromDescriptor";
 export type { AppShellProps } from "./AppShell";
 export type { PanelProps } from "./Panel";
 export type { PanelGridProps } from "./PanelGrid";

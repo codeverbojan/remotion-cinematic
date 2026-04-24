@@ -11,6 +11,8 @@ src/
 │   ├── cursor/          # Geometry-aware cursor
 │   ├── camera/          # CameraRig (global) + AutoZoom (per-scene)
 │   ├── audio/           # Audio manager (music + SFX)
+│   ├── ui-state/        # Interaction layer (UIKeyframes → primitive state)
+│   ├── choreography/    # Prop-driven window positioning (resolveWindowPose, mapCursorPath)
 │   └── types.ts         # Shared types (SceneTiming, Rect)
 ├── primitives/          # Reusable visual components
 │   ├── Window.tsx       # macOS-style window with traffic lights
@@ -25,20 +27,24 @@ src/
 │       ├── DataTable    # Spreadsheet/table with status colors
 │       ├── MessageList  # Chat or email thread
 │       ├── StatCard     # Metric card with delta
+│       ├── AppFromDescriptor  # JSON descriptor → full app UI renderer
 │       └── ...          # Panel, PanelGrid, TopNav, TabBar, ListItems,
 │                        # Placeholder, NotificationToast, Avatar, Badge,
-│                        # Button, SearchBar (16 total)
+│                        # Button, SearchBar (17 total)
 ├── scenes/              # Scene components (users add/edit these)
 │   ├── ChaosDesktop.tsx
 │   ├── ProductReveal.tsx
 │   ├── FeatureShowcase.tsx
 │   ├── HeadlineResolution.tsx
+│   ├── ChoreographedDemo.tsx
 │   └── Closer.tsx
-├── content.ts           # ALL copy, scene order, timing — single source of truth
-├── tokens.ts            # Brand colors, fonts, easing presets (user edits this)
+├── schema.ts            # Zod schema for Remotion input props (brand, scenes, easing, etc.)
+├── VideoPropsContext.tsx # React context + hooks for passing props to scenes
+├── content.ts           # Static demo data (spreadsheet rows, SFX config, camera timeline)
+├── tokens.ts            # Brand colors, fonts, easing presets
 ├── fonts.ts             # Font loading (Inter, Fraunces, JetBrains Mono)
-├── CinematicDemo.tsx    # Main composition — wires scenes with Sequences
-├── Root.tsx             # Remotion composition registration
+├── CinematicDemo.tsx    # Main composition — accepts props, wraps in VideoPropsProvider
+├── Root.tsx             # Remotion composition registration with schema + calculateMetadata
 └── index.ts             # Entry point
 public/
 ├── music/               # Background music (MP3/WAV)
@@ -51,10 +57,65 @@ public/
 - Canvas: **1920x1080 @ 30fps**
 - No `Math.random()` — causes Remotion render jitter. Use deterministic values
 - Guard against zero-duration interpolation: always `Math.max(1, duration)`
-- All text content lives in `content.ts`, not inline in scene files
-- Colors/fonts come from `tokens.ts` (`C` and `F` exports)
-- Use `EASE.snappy` from `tokens.ts` for all animation easing (not raw `Easing` imports)
+- User-editable text (headlines, CTA, features) flows through input props via `useVideoProps()` context hooks
+- Static demo data (spreadsheet rows, chat messages, SFX config) stays in `content.ts`
+- Colors/fonts come from `tokens.ts` (`C` and `F` exports), brand overrides via `useBrand()`
+- Use `EASE.snappy` from `tokens.ts` for default easing, or `useEasing()` for global preset
 - Import fonts via `./fonts.ts` (already done in CinematicDemo.tsx)
+
+## Input props system
+
+All user-facing configuration is defined in `src/schema.ts` as a Zod schema. Remotion Studio shows these as editable controls (text fields, color pickers, sliders, toggles).
+
+### Architecture
+
+```
+schema.ts (Zod) → Root.tsx (Composition + defaultProps) → CinematicDemo.tsx (accepts props)
+                                                            ↓
+                                                  VideoPropsProvider (React context)
+                                                            ↓
+                                          Scenes read via hooks: useHeadlines(), useBrand(), etc.
+```
+
+### Context hooks
+
+```tsx
+import { useVideoProps, useHeadlines, useBrand, useProductFeatures, useEasing } from "../VideoPropsContext";
+
+const props = useVideoProps();          // full CinematicProps
+const headlines = useHeadlines();       // { pain, resolution, closer }
+const brand = useBrand();               // { name, colors, fontSans, ... }
+const features = useProductFeatures();  // [{ title, description }, ...]
+const easing = useEasing();             // resolved easing options object (for interpolate)
+```
+
+### What's in the schema
+
+| Section | Fields | Studio control |
+|---------|--------|----------------|
+| `brand` | name, colors (10 color fields), fonts, logoUrl | Text + color pickers |
+| `headlines` | pain, resolution, closer (string arrays) | Text fields |
+| `cta` | CTA button text | Text field |
+| `productFeatures` | title + description array | Text fields |
+| `scenes` | id, enabled, durationInFrames, enterFrom, exitTo, background | Toggles + dropdowns |
+| `overlap` | scene transition overlap (0-30 frames) | Slider |
+| `fps` | 24-60 | Slider |
+| `easing` | cinematic, snappy, smooth, elastic, bounce, spring | Dropdown |
+| `music` | enabled, volume, fadeInFrames, fadeOutFrames | Toggle + sliders |
+| `sfxEnabled` / `sfxVolume` | global SFX toggle + volume | Toggle + slider |
+
+### Easing presets
+
+```tsx
+import { EASE } from "../tokens";
+
+EASE.cinematic  // Bezier(0.22, 0.61, 0.36, 1) — camera moves, transitions
+EASE.snappy     // Easing.out(Easing.exp) — UI interactions (default)
+EASE.smooth     // Easing.out(Easing.cubic) — fade-ins, subtle motion
+EASE.elastic    // Easing.elastic(1) — playful bounces (overshoots, use for scale not opacity)
+EASE.bounce     // Easing.bounce — physical impacts
+EASE.spring     // Bezier(0.34, 1.56, 0.64, 1) — overshoot, organic feel
+```
 
 ## Scene positioning: two patterns
 
@@ -342,16 +403,307 @@ import { SFX } from "../content";
 />
 ```
 
+### Interaction layer (UI state)
+
+Frame-based state changes that drive primitive behavior (expand panels, press buttons, reveal messages, etc.). Primitives read state via `useUIState` and fall back to defaults when no `UIStateProvider` is in the tree.
+
+```tsx
+import { UIStateProvider, generatePressKeyframes } from "../engine";
+import type { UIKeyframe } from "../engine";
+
+// UIKeyframe — sets partial state on a target at a specific frame
+interface UIKeyframe {
+  at: number;                        // scene-relative frame
+  target: string;                    // matches primitive's id prop
+  set: Record<string, unknown>;      // partial state to merge
+}
+
+// Define interaction keyframes
+const KEYFRAMES: UIKeyframe[] = [
+  { at: 0,  target: "my-panel", set: { expanded: false } },
+  { at: 50, target: "my-panel", set: { expanded: true } },
+  { at: 30, target: "notif",   set: { visible: true, changedAt: 30 } },
+];
+
+// Auto-generate press/release keyframes from cursor click actions
+const pressKFs = generatePressKeyframes(CURSOR_ACTIONS);
+// For each click: { pressed: true, pressedAt: N } at click frame,
+//                 { pressed: false } at click frame + 4
+
+// Combine and wrap scene content
+const allKeyframes = useMemo(
+  () => [...KEYFRAMES, ...pressKFs],
+  [pressKFs],
+);
+
+<UIStateProvider keyframes={allKeyframes}>
+  {/* Primitives inside read state via useUIState(id, defaultState) */}
+</UIStateProvider>
+```
+
+**Primitive interaction states:**
+
+| Primitive | State fields | Default | Effect |
+|-----------|-------------|---------|--------|
+| Panel | `expanded: boolean` | `true` | Hides children + subtitle when false |
+| Button | `pressed: boolean, pressedAt: number` | `false, -1` | Scale down + brightness shift for 4 frames |
+| SidebarNav | `activeIndex: number` | `-1` | Overrides item.active flags when >= 0 |
+| TabBar | `activeTab: string` | `""` | Overrides tab.active when non-empty |
+| DataTable | `selectedRow: number\|null, highlightedCell: [r,c]\|null` | `null, null` | Row highlight + cell outline |
+| SearchBar | `value: string` | `""` | Overrides prop value when non-empty |
+| MessageList | `visibleCount: number, revealedAt: number` | `-1, -1` | Progressive reveal with slide-in entrance |
+| NotificationToast | `visible: boolean, changedAt: number` | `true, -1` | Slide in/out with 8-frame transition |
+
+**Using useUIState in custom components:**
+
+```tsx
+import { useUIState } from "../engine/ui-state";
+
+interface MyState { active: boolean }
+const DEFAULT: MyState = { active: false };
+
+const MyComponent: React.FC<{ id?: string }> = ({ id }) => {
+  const { active } = useUIState(id ?? "", DEFAULT);
+  // Returns default when no UIStateProvider or no matching keyframes
+};
+```
+
+### Window choreography props
+
+Window positions, sizes, entrances, and cursor paths can be defined as Studio-editable props instead of hardcoded in scene code. The `choreographed-demo` scene demonstrates this pattern.
+
+```tsx
+import { resolveWindowPose, mapCursorPath } from "../engine";
+import { useWindowLayout, useCursorPath } from "../VideoPropsContext";
+import type { WindowLayout, CursorPathEntry } from "../schema";
+```
+
+**WindowLayout schema** (editable in Studio):
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | string | — | Unique window ID (cursor target) |
+| `title` | string | "Window" | Window title bar text |
+| `startX/Y` | int | — | Initial position |
+| `startW/H` | int | — | Initial size |
+| `endX/Y/W/H` | int? | — | Animate to position/size |
+| `enterAt` | int | — | Frame to appear |
+| `enterDuration` | int | 12 | Entrance animation length |
+| `enterFrom` | enum | "scale" | "fade" \| "scale" \| "slide-up" \| "slide-left" \| "slide-right" |
+| `animateAt` | int? | enterAt+enterDuration | Frame to start position/size animation |
+| `animateDuration` | int | 18 | Position/size animation length |
+| `exitAt` | int? | — | Frame to start exit fade |
+| `exitDuration` | int | 12 | Exit fade length |
+| `zIndex` | int | 1 | Stacking order |
+
+**CursorPathEntry schema** (editable in Studio):
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `at` | int | — | Frame number |
+| `action` | enum | — | "idle" \| "moveTo" \| "click" \| "drag" |
+| `target` | string? | — | Window ID to target |
+| `positionX/Y` | number? | — | Position for idle action |
+| `anchor` | enum | "center" | Named anchor preset |
+| `anchorXPct/YPct` | number? | — | Percentage anchor (0-100, overrides named anchor) |
+| `toX/Y` | number? | — | Drag destination |
+| `duration` | int? | — | Movement duration in frames |
+
+**Pure functions:**
+
+```tsx
+// resolveWindowPose — compute window position/appearance for any frame
+const pose = resolveWindowPose(windowDef, frame);
+// Returns: { left, top, width, height, opacity, scale, translateX, translateY, visible }
+
+// mapCursorPath — convert Studio-friendly flat entries to internal CursorAction[]
+const actions = mapCursorPath(cursorPathEntries);
+```
+
+**Creating a prop-driven scene:**
+
+```tsx
+const windowLayout = useWindowLayout();  // reads from props
+const cursorPath = useCursorPath();      // reads from props
+const cursorActions = useMemo(() => mapCursorPath(cursorPath), [cursorPath]);
+
+// Render each window at its computed pose
+{windowLayout.map((def) => {
+  const pose = resolveWindowPose(def, frame);
+  if (!pose.visible) return null;
+  return (
+    <div style={{
+      position: "absolute",
+      left: pose.left, top: pose.top,
+      width: pose.width, height: pose.height,
+      opacity: pose.opacity,
+      transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px)`,
+    }}>
+      <Window id={def.id} title={def.title}>{content}</Window>
+    </div>
+  );
+})}
+```
+
+### Figma Bridge (AppFromDescriptor)
+
+Renders a complete app UI from a JSON descriptor — the `appDescriptor` prop in Studio. No need to compose primitives manually; the descriptor drives layout, navigation, and content panels.
+
+```tsx
+import { AppFromDescriptor } from "../primitives/app-ui";
+import { useAppDescriptor } from "../VideoPropsContext";
+
+const descriptor = useAppDescriptor(); // reads from props.appDescriptor
+<AppFromDescriptor descriptor={descriptor} id="my-window" />
+```
+
+**Layout modes** (`descriptor.layout`):
+- `"sidebar"` — AppShell with SidebarNav + TopNav + content
+- `"topbar"` — AppShell with TopNav only (no sidebar)
+- `"minimal"` — Content area only, no chrome
+
+**Content panel types** (`descriptor.content.panels[].type`):
+
+| Type | Required fields | Renders |
+|------|----------------|---------|
+| `stat` | `value` | StatCard with label, value, delta |
+| `table` | `columns` (non-empty) | DataTable with rows, statusColumn |
+| `list` | `items` (non-empty) | ListItems with label, description, badge |
+| `messages` | `messages` (non-empty) | MessageList (chat or email variant) |
+| `placeholder` | — | Placeholder with title and height |
+
+**Key schema fields:**
+
+```
+appDescriptor.layout          — "sidebar" | "topbar" | "minimal"
+appDescriptor.sidebar.items[] — { label, icon?, active?, badge? }
+appDescriptor.sidebar.width   — 100-400 (default 220)
+appDescriptor.topBar.title    — page title
+appDescriptor.topBar.search   — show search bar
+appDescriptor.topBar.tabs[]   — { label, active? }
+appDescriptor.topBar.actions[] — { label, variant: "primary"|"secondary"|"ghost" }
+appDescriptor.content.columnCount — 1-6 grid columns (default 2)
+appDescriptor.content.gap     — 0-40px panel gap (default 16)
+appDescriptor.content.panels[] — array of content panels
+```
+
+The `ChoreographedDemo` scene renders `AppFromDescriptor` inside each prop-driven window, so the entire demo UI is editable from Studio props.
+
+### Visual Editor (Studio)
+
+Remotion Studio has experimental visual editing enabled via `remotion.config.ts`:
+
+```ts
+Config.setExperimentalVisualMode(true); // click-to-select, drag, resize in preview
+```
+
+**Visual controls** — sidebar knobs for hardcoded constants in scene code:
+
+```tsx
+import { visualControl } from "@remotion/studio";
+
+// Inside a component (it's a React hook):
+const fontSize = visualControl("Scene: Font Size", 110);
+const resizeStart = visualControl("Scene: Resize Start", 30);
+```
+
+- Returns default value during render/test (non-Studio environments)
+- Key naming convention: `"SceneName: Control Name"`
+- Only for hardcoded constants — props are already editable in Studio's right panel
+- Values are ephemeral unless user clicks "Save" in Studio
+
+**Scenes with visual controls:**
+
+| Scene | Controls |
+|-------|----------|
+| ProductReveal | Small X/Y/W/H, Resize Start/End |
+| ChaosDesktop | MC Start, MC Duration |
+| HeadlineResolution | Font Size, Line Delay, Y Rise |
+
+**Editor attributes** — all primitives with `id` have:
+
+```html
+data-cursor-target={id}   <!-- cursor system -->
+data-editor-id={id}        <!-- element identification -->
+data-editor-type="window"  <!-- component type (kebab-case) -->
+```
+
+Types: `window`, `layout-window`, `panel`, `stat-card`, `data-table`, `button`, `sidebar-nav`, `tab-bar`, `search-bar`, `message-list`, `list-items`, `placeholder`, `notification-toast`, `avatar`, `badge`, `app-descriptor`
+
+#### Custom Editor Overlay
+
+The editor renders an interactive overlay inside the composition, gated by `getRemotionEnvironment().isStudio`. The overlay provides visual selection, drag-to-move, drag-to-resize, snap guides, and floating property panels — all writing back to Remotion props via `updateDefaultProps()`.
+
+**Architecture:**
+
+```
+EditorOverlay (gates on isStudio)
+  └── EditorOverlayInner
+        ├── SelectionBox — blue bounding box + 8 resize handles + move area
+        ├── SnapGuides — red alignment lines during drag (canvas center + other window edges/centers)
+        └── PropertyPanel — floating context-aware panel with controls
+```
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `src/editor/EditorOverlay.tsx` | Main overlay — coordinates selection, drag, keyboard shortcuts |
+| `src/editor/useEditorState.ts` | Hook — selection state, drag state tracking |
+| `src/editor/SelectionBox.tsx` | Blue border + label + 8 resize handles (corners + edges) + move area |
+| `src/editor/SnapGuides.tsx` | Snap guide computation (pure functions) + visual guide lines |
+| `src/editor/PropertyPanel.tsx` | Floating property panel — context-aware for windows/headlines/buttons |
+| `src/editor/index.ts` | Barrel exports |
+
+**Selection:** Click any element with `data-editor-id` to select it. A blue bounding box with resize handles appears. Click empty area to deselect.
+
+**Drag-to-move:** Click and drag the interior of a selected window to reposition. Writes `startX`/`startY` to `windowLayout` props. Clamped to canvas bounds (1920x1080). Red snap guides appear when aligned with other windows or canvas center.
+
+**Drag-to-resize:** Drag any of the 8 handles (4 corners + 4 edges) to resize. Each handle constrains which dimensions change. Minimum size: 50px. Writes `startX`/`startY`/`startW`/`startH` to props.
+
+**Snap guides:** During move, red lines appear at alignment points — other window edges, centers, and canvas center. Snap threshold: 6px. Guide computation is in `computeSnapGuides()` and `applySnap()` (pure functions, exported for testing).
+
+**Context-aware property panel:**
+
+| Element type | Panel | Editable fields |
+|-------------|-------|----------------|
+| Window (in `windowLayout`) | WindowPanel | Title, X/Y, W/H, Enter Style (dropdown), Enter At/Duration, Exit At/Duration, Anim At/Duration, Z-Index, End position (if set) |
+| Headline | HeadlinePanel | Text lines (textarea), Text color (picker), Serif font |
+| Button | ButtonPanel | CTA label, Primary/Accent colors (pickers) |
+| Stat card | StatCardPanel | Read-only info, directs to Studio props |
+| Other | GenericPanel | Shows type, directs to Studio props |
+
+**Input components** (exported from PropertyPanel for reuse):
+
+- `NumberInput` — number input with optional min/max/step, NaN-safe
+- `TextInput` — text input
+- `TextAreaInput` — multi-line, splits/joins on newlines
+- `SelectInput` — dropdown with custom arrow
+- `SliderInput` — range slider with value display
+- `ColorInput` — color picker + hex text input
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|-----|--------|
+| `Escape` | Deselect current element |
+| `Arrow keys` | Nudge selected window by 1px |
+| `Shift + Arrow keys` | Nudge selected window by 10px |
+
+**Security:** All `querySelector` calls use `CSS.escape()` on IDs to prevent selector injection. Mouse handlers call `preventDefault()` + `stopPropagation()` to avoid text selection during drag.
+
 ### Easing
 
 ```tsx
 import { EASE } from "../tokens";
 
-// Use EASE.snappy for all animation interpolations (Easing.out(Easing.exp))
+// 6 presets: cinematic, snappy (default), smooth, elastic, bounce, spring
 const prog = interpolate(frame, [0, 12], [0, 1], EASE.snappy);
 
-// EASE.smooth available for gentler transitions (Easing.out(Easing.cubic))
-const prog = interpolate(frame, [0, 30], [0, 1], EASE.smooth);
+// Or use the global easing selection from input props:
+import { useEasing } from "../VideoPropsContext";
+const easing = useEasing(); // resolves to EASE[props.easing]
+const prog = interpolate(frame, [0, 12], [0, 1], easing);
 ```
 
 ### Primitives
@@ -603,23 +955,11 @@ All primitives accept `id?: string` for cursor targeting and `style?: React.CSSP
 
 ## `content.ts` schema
 
-This is the single source of truth for all content. Scene components import data from here.
+Static demo data and SFX config. User-editable content (headlines, features, brand, scenes) now flows through the input props system (`schema.ts` + `VideoPropsContext`).
 
 ```ts
-// Scene overlap — frames of overlap between adjacent scenes for push transitions
+// Scene overlap — still here for backwards compat, also in schema.ts
 export const SCENE_OVERLAP = 15;
-
-// Scene order and duration (frames = seconds * 30)
-export const SCENES: SceneTiming[] = [
-  { id: "scene-id", durationInFrames: 150 },
-];
-
-// Headlines
-export const HEADLINES = {
-  pain: ["Line 1", "Line 2"],
-  resolution: ["Line 1", "Line 2"],
-  closer: ["CTA text"],
-} as const;
 
 // Camera timeline — scene-relative keyframes (keep scale at 1.0)
 export const CAMERA_TIMELINE: CameraKeyframe[] = [...];
@@ -663,10 +1003,14 @@ export const F = {
 export const CANVAS = { width: 1920, height: 1080 } as const;
 export const FPS = 30;
 
-// Shared easing — use instead of raw Easing imports
+// 6 easing presets — use instead of raw Easing imports
 export const EASE = {
-  snappy: { ... Easing.out(Easing.exp) },
-  smooth: { ... Easing.out(Easing.cubic) },
+  cinematic: { ... Easing.bezier(0.22, 0.61, 0.36, 1) },
+  snappy:    { ... Easing.out(Easing.exp) },         // default
+  smooth:    { ... Easing.out(Easing.cubic) },
+  elastic:   { ... Easing.elastic(1) },              // overshoots
+  bounce:    { ... Easing.bounce },
+  spring:    { ... Easing.bezier(0.34, 1.56, 0.64, 1) }, // overshoots
 };
 ```
 

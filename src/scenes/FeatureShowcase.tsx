@@ -1,53 +1,27 @@
-import React from "react";
-import { Audio, Sequence, staticFile } from "remotion";
-import {
-  AutoZoom,
-  Cursor,
-  defineZones,
-  LayoutProvider,
-  LayoutWindow,
-} from "../engine";
-import type { CursorAction, ZoomKeyframe, ZoneConfig } from "../engine";
-import { Enter, ScenePush, Window, Panel, Placeholder } from "../primitives";
-import { CURSOR_SFX, PRODUCT_FEATURES, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
+import React, { useMemo } from "react";
+import { Audio, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { AutoZoom, Cursor, resolveWindowPose } from "../engine";
+import type { CursorAction, ZoomKeyframe } from "../engine";
+import { ScenePush, Window, Panel, Placeholder } from "../primitives";
+import { CURSOR_SFX, SCENE_OVERLAP, SFX, TRANSITION_SFX } from "../content";
+import { useProductFeatures, useWindowLayout } from "../VideoPropsContext";
 
 const DURATION = 200;
 
-const ZONES: ZoneConfig = {
-  canvas: { width: 1920, height: 1080 },
-  slots: [
-    { id: "left", region: { x: 0, y: 0, w: 960, h: 1080 } },
-    { id: "right", region: { x: 960, y: 0, w: 960, h: 1080 } },
-    { id: "full", region: { x: 0, y: 0, w: 1920, h: 1080 } },
-  ],
-  reserved: [],
-};
-
-const zoneSystem = defineZones(ZONES);
-
-const FEATURE_WINDOWS = PRODUCT_FEATURES.map((feat, i) => ({
-  id: `feature-${i}`,
-  zone: i === 0 ? "left" : i === 1 ? "right" : "full",
-  width: i < 2 ? 800 : 1400,
-  height: i < 2 ? 500 : 700,
-  delay: i * 35,
-  title: feat.title,
-  description: feat.description,
-}));
+const SCENE_WINDOW_IDS = ["feature-0", "feature-1", "feature-2"];
 
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 300, y: 400 } },
-  { at: 8, action: "moveTo", target: "feature-0", anchor: { xPct: 0.5, yPct: 0.35 }, duration: 12 },
+  { at: 8, action: "moveTo", target: "feature-0", anchor: { xPct: 50, yPct: 35 }, duration: 12 },
   { at: 24, action: "click", target: "feature-0" },
-  { at: 40, action: "moveTo", target: "feature-1", anchor: { xPct: 0.5, yPct: 0.35 }, duration: 12 },
+  { at: 40, action: "moveTo", target: "feature-1", anchor: { xPct: 50, yPct: 35 }, duration: 12 },
   { at: 56, action: "click", target: "feature-1" },
-  { at: 78, action: "moveTo", target: "feature-2", anchor: { xPct: 0.4, yPct: 0.3 }, duration: 12 },
+  { at: 78, action: "moveTo", target: "feature-2", anchor: { xPct: 40, yPct: 30 }, duration: 12 },
   { at: 94, action: "click", target: "feature-2" },
   { at: 115, action: "moveTo", target: "feature-2", anchor: "top-bar", duration: 10 },
   { at: 130, action: "click", target: "feature-2", anchor: "top-bar" },
 ];
 
-// Zoom follows the cursor — targets are element IDs, resolved via getRect
 const ZOOM_KEYFRAMES: ZoomKeyframe[] = [
   { at: 0, scale: 1 },
   { at: 15, target: "feature-0", scale: 1.06 },
@@ -76,56 +50,65 @@ const FeatureContent: React.FC<{ title: string; description: string }> = ({
 );
 
 export const FeatureShowcase: React.FC = () => {
+  const frame = useCurrentFrame();
+  const features = useProductFeatures();
+  const allWindows = useWindowLayout();
+  const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
+  const sortedWindows = useMemo(
+    () => [...windows].sort((a, b) => a.zIndex - b.zIndex),
+    [windows],
+  );
+
   const getRect = (id: string) => {
-    const feat = FEATURE_WINDOWS.find((f) => f.id === id);
-    if (!feat) return undefined;
-    try {
-      return zoneSystem.placeWindow({
-        id: feat.id,
-        slotId: feat.zone,
-        width: feat.width,
-        height: feat.height,
-        margin: 30,
-        avoidZones: [],
-      });
-    } catch {
-      return undefined;
-    }
+    const def = windows.find((w) => w.id === id);
+    if (!def) return undefined;
+    const pose = resolveWindowPose(def, frame);
+    if (!pose.visible) return undefined;
+    return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
   return (
     <ScenePush duration={DURATION} overlap={SCENE_OVERLAP} enterFrom="left" exitTo="top" enterSfx={TRANSITION_SFX}>
       <AutoZoom keyframes={ZOOM_KEYFRAMES} getRect={getRect}>
-        <LayoutProvider zones={zoneSystem}>
-          {FEATURE_WINDOWS.map((feat) => (
-            <Enter
-              key={feat.id}
-              delay={feat.delay}
-              duration={12}
-              translateY={25}
-              scaleFrom={0.95}
+        {sortedWindows.map((def, i) => {
+          const pose = resolveWindowPose(def, frame);
+          if (!pose.visible) return null;
+
+          const feat = features[i];
+
+          return (
+            <div
+              key={def.id}
+              data-cursor-target={def.id}
+              style={{
+                position: "absolute",
+                left: pose.left, top: pose.top,
+                width: pose.width, height: pose.height,
+                opacity: pose.opacity,
+                transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
+                transformOrigin: "top left",
+                zIndex: def.zIndex,
+                willChange: "transform",
+              }}
             >
-              <LayoutWindow
-                id={feat.id}
-                zone={feat.zone}
-                width={feat.width}
-                height={feat.height}
-                margin={30}
-              >
-                <Window id={feat.id} title={feat.title}>
-                  <FeatureContent title={feat.title} description={feat.description} />
-                </Window>
-              </LayoutWindow>
-            </Enter>
-          ))}
-          {/* Pop SFX on window entrance */}
-          {FEATURE_WINDOWS.map((feat) => (
-            <Sequence key={`pop-${feat.id}`} from={feat.delay} durationInFrames={SFX.pop.durationInFrames} layout="none">
-              <Audio src={staticFile(SFX.pop.src)} volume={SFX.pop.volume} />
-            </Sequence>
-          ))}
-          <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
-        </LayoutProvider>
+              <Window id={def.id} title={def.title}>
+                <FeatureContent
+                  title={feat?.title ?? def.title}
+                  description={feat?.description ?? ""}
+                />
+              </Window>
+            </div>
+          );
+        })}
+
+        {windows.map((def) => (
+          <Sequence key={`pop-${def.id}`} from={def.enterAt} durationInFrames={SFX.pop.durationInFrames} layout="none">
+            <Audio src={staticFile(SFX.pop.src)} volume={SFX.pop.volume} />
+          </Sequence>
+        ))}
+
+        <Cursor actions={CURSOR_ACTIONS} getRect={getRect} sfx={CURSOR_SFX} />
       </AutoZoom>
     </ScenePush>
   );

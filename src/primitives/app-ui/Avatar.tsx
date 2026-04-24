@@ -18,6 +18,8 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => (
   <div
     data-cursor-target={id}
+    data-editor-id={id}
+    data-editor-type="avatar"
     style={{
       width: size,
       height: size,

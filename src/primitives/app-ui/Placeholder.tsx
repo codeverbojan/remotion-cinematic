@@ -18,6 +18,8 @@ export const Placeholder: React.FC<PlaceholderProps> = ({
 }) => (
   <div
     data-cursor-target={id}
+    data-editor-id={id}
+    data-editor-type="placeholder"
     style={{
       height: height ?? (aspectRatio ? undefined : 200),
       aspectRatio,

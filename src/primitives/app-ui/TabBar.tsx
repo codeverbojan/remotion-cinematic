@@ -1,4 +1,5 @@
 import React from "react";
+import { useUIState } from "../../engine/ui-state";
 import { C, F } from "../../tokens";
 
 export interface Tab {
@@ -13,55 +14,69 @@ export interface TabBarProps {
   style?: React.CSSProperties;
 }
 
+interface TabUIState {
+  activeTab: string;
+}
+
+const DEFAULT_STATE: TabUIState = { activeTab: "" };
+
 export const TabBar: React.FC<TabBarProps> = ({
   tabs,
   variant = "underline",
   id,
   style,
-}) => (
-  <div
-    data-cursor-target={id}
-    style={{
-      display: "flex",
-      gap: variant === "pill" ? 6 : 0,
-      fontFamily: F.sans,
-      fontSize: 13,
-      borderBottom: variant === "underline" ? `1px solid ${C.border}` : undefined,
-      ...style,
-    }}
-  >
-    {tabs.map((tab, i) => {
-      if (variant === "pill") {
+}) => {
+  const { activeTab } = useUIState(id ?? "", DEFAULT_STATE);
+
+  return (
+    <div
+      data-cursor-target={id}
+      data-editor-id={id}
+      data-editor-type="tab-bar"
+      style={{
+        display: "flex",
+        gap: variant === "pill" ? 6 : 0,
+        fontFamily: F.sans,
+        fontSize: 13,
+        borderBottom: variant === "underline" ? `1px solid ${C.border}` : undefined,
+        ...style,
+      }}
+    >
+      {tabs.map((tab, i) => {
+        const active = activeTab ? tab.label === activeTab : !!tab.active;
+
+        if (variant === "pill") {
+          return (
+            <div
+              key={i}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 6,
+                fontWeight: active ? 600 : 400,
+                color: active ? C.text : C.textMuted,
+                backgroundColor: active ? C.surface : "transparent",
+              }}
+            >
+              {tab.label}
+            </div>
+          );
+        }
+
         return (
           <div
             key={i}
             style={{
-              padding: "5px 14px",
-              borderRadius: 6,
-              fontWeight: tab.active ? 600 : 400,
-              color: tab.active ? C.text : C.textMuted,
-              backgroundColor: tab.active ? C.surface : "transparent",
+              padding: "8px 16px",
+              fontWeight: active ? 600 : 400,
+              color: active ? C.text : C.textMuted,
+              borderBottom: active ? `2px solid ${C.brand}` : "2px solid transparent",
+              marginBottom: -1,
             }}
           >
             {tab.label}
           </div>
         );
-      }
-
-      return (
-        <div
-          key={i}
-          style={{
-            padding: "8px 16px",
-            fontWeight: tab.active ? 600 : 400,
-            color: tab.active ? C.text : C.textMuted,
-            borderBottom: tab.active ? `2px solid ${C.brand}` : "2px solid transparent",
-            marginBottom: -1,
-          }}
-        >
-          {tab.label}
-        </div>
-      );
-    })}
-  </div>
-);
+      })}
+    </div>
+  );
+};

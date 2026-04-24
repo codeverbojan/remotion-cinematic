@@ -11,12 +11,6 @@ export const SCENES: SceneTiming[] = [
   { id: "closer", durationInFrames: 90 },
 ];
 
-export const HEADLINES = {
-  pain: ["Where did that", "request go?"],
-  resolution: ["Every request.", "Tracked."],
-  closer: ["Try it free."],
-} as const;
-
 export const SPREADSHEET_COLUMNS = [
   "Name", "Email", "Status", "Date", "Amount",
 ] as const;
@@ -56,12 +50,6 @@ export const NOTIFICATIONS = [
   { title: "New request", body: "Alex Chen submitted a sample request" },
   { title: "Overdue", body: "3 requests are past their SLA" },
   { title: "Shipping delay", body: "Carrier reports 2-day delay on batch #47" },
-];
-
-export const PRODUCT_FEATURES = [
-  { title: "Dashboard", description: "Live metrics and KPIs at a glance" },
-  { title: "Request Manager", description: "Track every request from submission to delivery" },
-  { title: "Smart Alerts", description: "Get notified when things need attention" },
 ];
 
 export const CAMERA_TIMELINE: CameraKeyframe[] = [

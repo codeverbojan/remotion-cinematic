@@ -31,6 +31,13 @@ export {
 } from "./audio";
 
 export {
+  UIStateProvider,
+  useUIState,
+  resolveUIState,
+  generatePressKeyframes,
+} from "./ui-state";
+
+export {
   getSceneStartFrame,
   getTotalFrames,
 } from "./types";
@@ -72,3 +79,12 @@ export type {
   MusicConfig,
   ResolvedAudioCue,
 } from "./audio";
+
+export type { UIKeyframe } from "./ui-state";
+
+export {
+  resolveWindowPose,
+  mapCursorPath,
+} from "./choreography";
+
+export type { WindowPose } from "./choreography";
