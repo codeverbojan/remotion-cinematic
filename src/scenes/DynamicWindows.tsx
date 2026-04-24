@@ -6,6 +6,7 @@ import { useWindowLayout } from "../VideoPropsContext";
 
 const CLAIMED_IDS = new Set([
   "spreadsheet", "email", "chat",
+  "sticky-0", "sticky-1", "sticky-2",
   "notification-0", "notification-1", "notification-2",
   "product-window", "top-panel", "left-panel",
   "feature-0", "feature-1", "feature-2",

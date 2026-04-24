@@ -360,6 +360,7 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
 
       <Row>
         <NumberInput label="Z-Index" value={win.zIndex} onChange={(v) => set({ zIndex: v })} min={0} />
+        <NumberInput label="Rotation" value={win.rotation ?? 0} onChange={(v) => set({ rotation: v === 0 ? undefined : v })} step={0.5} min={-180} max={180} />
       </Row>
       <Spacer size={4} />
       <Row gap={4}>
@@ -600,7 +601,7 @@ function getPanelContent(
   props: CinematicProps,
   containerRef: React.RefObject<HTMLElement | null>,
 ): React.ReactNode {
-  if (selectedType === "window" || selectedType === "layout-window") {
+  if (selectedType === "window" || selectedType === "layout-window" || selectedType === "sticky-note" || selectedType === "notification-toast") {
     const win = props.windowLayout.find((w) => w.id === selectedId);
     if (win) {
       return <WindowPanel win={win} props={props} />;

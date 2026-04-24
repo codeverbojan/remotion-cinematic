@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Audio, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Cursor, resolveWindowPose, mapCursorPath, filterCursorPath, getSceneStartFrame } from "../engine";
 import type { CursorAction } from "../engine";
 import { Headline, ScenePush, Window, DataTable, MessageList, NotificationToast } from "../primitives";
@@ -15,11 +15,17 @@ import {
   STICKY_NOTES,
 } from "../content";
 import { useHeadlines, useWindowLayout, useCursorPath, useVideoProps, useCursorStyle } from "../VideoPropsContext";
-import { C, EASE, F } from "../tokens";
+import { persistUpdate } from "../editor/updateProps";
+import type { WindowLayout } from "../schema";
+import { C, F } from "../tokens";
 
 const DURATION = 260;
 
-const SCENE_WINDOW_IDS = ["spreadsheet", "email", "chat", "notification-0", "notification-1", "notification-2"];
+const SCENE_WINDOW_IDS = [
+  "spreadsheet", "email", "chat",
+  "sticky-0", "sticky-1", "sticky-2",
+  "notification-0", "notification-1", "notification-2",
+];
 
 const CURSOR_ACTIONS: CursorAction[] = [
   { at: 0, action: "idle", position: { x: 1400, y: 300 } },
@@ -35,19 +41,20 @@ const CURSOR_ACTIONS: CursorAction[] = [
   { at: 122, action: "click", target: "notification-1" },
 ];
 
-const NOTIFICATION_COLORS = [C.accent, C.error, C.warning];
+const ELEMENT_DEFAULTS: WindowLayout[] = [
+  { id: "sticky-0", title: "Sticky Note", startX: 30, startY: 20, startW: 200, startH: 160, endX: -100, endY: -180, enterAt: 0, enterDuration: 12, enterFrom: "scale", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 0, rotation: -3 },
+  { id: "sticky-1", title: "Sticky Note", startX: 260, startY: 35, startW: 200, startH: 160, endX: 60, endY: -200, enterAt: 8, enterDuration: 12, enterFrom: "scale", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 0, rotation: 2.5 },
+  { id: "sticky-2", title: "Sticky Note", startX: 140, startY: 190, startW: 200, startH: 160, endX: -60, endY: -160, enterAt: 16, enterDuration: 12, enterFrom: "scale", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 0, rotation: -4 },
+  { id: "notification-0", title: "Notification", startX: 1530, startY: 30, startW: 360, startH: 80, endX: 2030, enterAt: 90, enterDuration: 10, enterFrom: "slide-right", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 10 },
+  { id: "notification-1", title: "Notification", startX: 1530, startY: 132, startW: 360, startH: 80, endX: 2030, enterAt: 104, enterDuration: 10, enterFrom: "slide-right", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 10 },
+  { id: "notification-2", title: "Notification", startX: 1530, startY: 234, startW: 360, startH: 80, endX: 2030, enterAt: 118, enterDuration: 10, enterFrom: "slide-right", animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 10 },
+];
 
-const STICKY_ROTATIONS = [-3, 2.5, -4];
-const STICKY_POSITIONS = [
-  { left: 30, top: 20 },
-  { left: 260, top: 35 },
-  { left: 140, top: 190 },
-];
-const STICKY_MC = [
-  { left: -100, top: -180 },
-  { left: 60, top: -200 },
-  { left: -60, top: -160 },
-];
+const NOTIFICATION_COLORS: Record<string, string> = {
+  "notification-0": C.accent,
+  "notification-1": C.error,
+  "notification-2": C.warning,
+};
 
 const WINDOW_CONTENT: Record<string, React.ReactNode> = {
   spreadsheet: (
@@ -79,7 +86,27 @@ export const ChaosDesktop: React.FC = () => {
   const headlines = useHeadlines();
   const props = useVideoProps();
   const allWindows = useWindowLayout();
-  const windows = allWindows.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+
+  const windows = useMemo(() => {
+    const existingIds = new Set(allWindows.map((w) => w.id));
+    const missing = ELEMENT_DEFAULTS.filter((d) => !existingIds.has(d.id));
+    const merged = missing.length > 0 ? [...allWindows, ...missing] : allWindows;
+    return merged.filter((w) => SCENE_WINDOW_IDS.includes(w.id));
+  }, [allWindows]);
+
+  const migrated = useRef(false);
+  useEffect(() => {
+    if (migrated.current) return;
+    const existingIds = new Set(allWindows.map((w) => w.id));
+    const missing = ELEMENT_DEFAULTS.filter((d) => !existingIds.has(d.id));
+    if (missing.length > 0) {
+      migrated.current = true;
+      persistUpdate((prev) => ({
+        ...prev,
+        windowLayout: [...prev.windowLayout, ...missing],
+      }));
+    }
+  }, [allWindows]);
   const cursorPathRaw = useCursorPath();
   const cursorStyle = useCursorStyle();
   const enabledScenes = useMemo(() => props.scenes.filter((s) => s.enabled), [props.scenes]);
@@ -89,16 +116,9 @@ export const ChaosDesktop: React.FC = () => {
     return sceneEntries.length > 0 ? mapCursorPath(sceneEntries) : CURSOR_ACTIONS;
   }, [cursorPathRaw, enabledScenes, props.overlap]);
 
-  const mcStart = windows[0]?.animateAt ?? 150;
-  const mcDur = windows[0]?.animateDuration ?? 25;
-  const mcProg = interpolate(frame, [mcStart, mcStart + mcDur], [0, 1], EASE.snappy);
+  const mcStart = windows.find((w) => w.id === "spreadsheet")?.animateAt ?? 150;
 
   const getRect = (id: string) => {
-    if (id.startsWith("notification-")) {
-      const idx = parseInt(id.split("-")[1], 10);
-      const mcSlide = interpolate(mcProg, [0, 1], [0, 500], EASE.snappy);
-      return { left: 1920 - 30 - 360 + mcSlide, top: 30 + idx * 102, width: 360, height: 80 };
-    }
     const def = windows.find((d) => d.id === id);
     if (!def) return undefined;
     const pose = resolveWindowPose(def, frame);
@@ -106,48 +126,64 @@ export const ChaosDesktop: React.FC = () => {
     return { left: pose.left, top: pose.top, width: pose.width, height: pose.height };
   };
 
+  const sorted = useMemo(
+    () => [...windows].sort((a, b) => a.zIndex - b.zIndex),
+    [windows],
+  );
+
+  const notificationWindows = useMemo(
+    () => windows.filter((w) => w.id.startsWith("notification-")),
+    [windows],
+  );
+
   return (
     <ScenePush duration={DURATION} overlap={SCENE_OVERLAP} enterFrom="none" exitTo="top">
-      {/* Sticky notes */}
-      {STICKY_NOTES.map((note, i) => {
-        const enterProg = interpolate(frame, [i * 8, i * 8 + 12], [0, 1], EASE.snappy);
-        const sX = interpolate(mcProg, [0, 1], [STICKY_POSITIONS[i].left, STICKY_MC[i].left], EASE.snappy);
-        const sY = interpolate(mcProg, [0, 1], [STICKY_POSITIONS[i].top, STICKY_MC[i].top], EASE.snappy);
-        const enterScale = interpolate(enterProg, [0, 1], [0.8, 1], EASE.snappy);
-        const enterTY = interpolate(enterProg, [0, 1], [20, 0], EASE.snappy);
+      {sorted.map((def) => {
+        const pose = resolveWindowPose(def, frame);
+        if (!pose.visible) return null;
 
-        return (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              left: Math.round(sX), top: Math.round(sY),
-              opacity: enterProg,
-              transform: `scale(${enterScale}) translateY(${Math.round(enterTY)}px) translateZ(0)`,
-              transformOrigin: "top left",
-              willChange: "transform",
-            }}
-          >
+        let content: React.ReactNode;
+
+        if (def.id.startsWith("sticky-")) {
+          const idx = parseInt(def.id.split("-")[1], 10);
+          const note = STICKY_NOTES[idx];
+          if (!note) return null;
+          const rotation = def.rotation ?? 0;
+          content = (
             <div
+              data-editor-id={def.id}
+              data-editor-type="sticky-note"
               style={{
-                width: 200, height: 160,
+                width: "100%", height: "100%",
                 backgroundColor: note.color, borderRadius: 4,
                 padding: 16, fontFamily: F.sans, fontSize: 14,
                 fontWeight: 500, color: "#333", lineHeight: 1.4,
                 boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-                transform: `rotate(${STICKY_ROTATIONS[i]}deg)`,
+                transform: rotation !== 0 ? `rotate(${rotation}deg)` : undefined,
               }}
             >
               {note.text}
             </div>
-          </div>
-        );
-      })}
-
-      {/* Main windows — positions driven by windowLayout props */}
-      {windows.map((def) => {
-        const pose = resolveWindowPose(def, frame);
-        if (!pose.visible) return null;
+          );
+        } else if (def.id.startsWith("notification-")) {
+          const idx = parseInt(def.id.split("-")[1], 10);
+          const note = NOTIFICATIONS[idx];
+          if (!note) return null;
+          content = (
+            <NotificationToast
+              id={def.id}
+              title={note.title}
+              body={note.body}
+              accent={NOTIFICATION_COLORS[def.id]}
+            />
+          );
+        } else {
+          content = (
+            <Window id={def.id} title={def.title}>
+              {WINDOW_CONTENT[def.id]}
+            </Window>
+          );
+        }
 
         return (
           <div
@@ -164,36 +200,7 @@ export const ChaosDesktop: React.FC = () => {
               willChange: "transform",
             }}
           >
-            <Window id={def.id} title={def.title}>
-              {WINDOW_CONTENT[def.id]}
-            </Window>
-          </div>
-        );
-      })}
-
-      {/* Notifications — slide off right edge during MC */}
-      {NOTIFICATIONS.map((note, i) => {
-        const enterProg = interpolate(frame, [90 + i * 14, 90 + i * 14 + 10], [0, 1], EASE.snappy);
-        const mcSlide = interpolate(mcProg, [0, 1], [0, 500], EASE.snappy);
-        const enterSlide = interpolate(enterProg, [0, 1], [80, 0], EASE.snappy);
-
-        return (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              right: 30, top: 30 + i * 102,
-              opacity: enterProg,
-              transform: `translateX(${Math.round(enterSlide + mcSlide)}px) translateZ(0)`,
-              willChange: "transform",
-            }}
-          >
-            <NotificationToast
-              id={`notification-${i}`}
-              title={note.title}
-              body={note.body}
-              accent={NOTIFICATION_COLORS[i]}
-            />
+            {content}
           </div>
         );
       })}
@@ -203,9 +210,9 @@ export const ChaosDesktop: React.FC = () => {
         <Audio src={staticFile(SFX.typing.src)} volume={SFX.typing.volume} />
       </Sequence>
 
-      {/* Notification dings */}
-      {NOTIFICATIONS.map((_, i) => (
-        <Sequence key={`notif-sfx-${i}`} from={90 + i * 14} durationInFrames={SFX.notification.durationInFrames} layout="none">
+      {/* Notification dings — timing derived from windowLayout enterAt */}
+      {notificationWindows.map((w) => (
+        <Sequence key={`notif-sfx-${w.id}`} from={w.enterAt} durationInFrames={SFX.notification.durationInFrames} layout="none">
           <Audio src={staticFile(SFX.notification.src)} volume={SFX.notification.volume} />
         </Sequence>
       ))}

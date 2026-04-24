@@ -549,6 +549,7 @@ import type { WindowLayout, CursorPathEntry } from "../schema";
 | `exitAt` | int? | — | Frame to start exit fade |
 | `exitDuration` | int | 12 | Exit fade length |
 | `zIndex` | int | 1 | Stacking order |
+| `rotation` | number? | — | CSS rotation in degrees (-180 to 180) |
 
 **CursorPathEntry schema** (editable in Studio):
 
@@ -612,7 +613,7 @@ Windows added via the Element Palette (or programmatically via `windowLayout` pr
 </Sequence>
 ```
 
-Claimed IDs (hardcoded in existing scenes): `spreadsheet`, `email`, `chat`, `notification-0/1/2`, `product-window`, `top-panel`, `left-panel`, `feature-0/1/2`. Any window with an ID not in this set renders via DynamicWindows.
+Claimed IDs (hardcoded in existing scenes): `spreadsheet`, `email`, `chat`, `sticky-0/1/2`, `notification-0/1/2`, `product-window`, `top-panel`, `left-panel`, `feature-0/1/2`. Any window with an ID not in this set renders via DynamicWindows.
 
 ### Figma CLI Import
 
