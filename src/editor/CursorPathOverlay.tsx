@@ -39,6 +39,10 @@ export function resolveWaypointPosition(
     return { x: entry.toX, y: entry.toY };
   }
 
+  if (entry.positionX !== undefined && entry.positionY !== undefined) {
+    return { x: entry.positionX, y: entry.positionY };
+  }
+
   if (entry.target) {
     const win = windows.find((w) => w.id === entry.target);
     if (win) {
@@ -50,10 +54,6 @@ export function resolveWaypointPosition(
         };
       }
     }
-  }
-
-  if (entry.positionX !== undefined && entry.positionY !== undefined) {
-    return { x: entry.positionX, y: entry.positionY };
   }
 
   return null;
