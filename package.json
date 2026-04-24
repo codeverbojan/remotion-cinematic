@@ -8,6 +8,7 @@
     "cinematic-import": "./src/cli/index.ts"
   },
   "scripts": {
+    "prop-server": "npx tsx src/editor/propServer.ts",
     "studio": "npx remotion studio src/index.ts",
     "build": "npx remotion render src/index.ts CinematicDemo",
     "test": "vitest run",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }

@@ -1,0 +1,195 @@
+import type { CinematicProps } from "./schema";
+
+export const DEFAULT_PROPS: CinematicProps = {
+  brand: {
+    name: "Product",
+    colors: {
+      primary: "#6366F1",
+      accent: "#22D3EE",
+      background: "#0F0F14",
+      backgroundLight: "#1A1A24",
+      surface: "#24243A",
+      text: "#F5F5FF",
+      textMuted: "#A0A0C0",
+      success: "#34D399",
+      warning: "#FBBF24",
+      error: "#F87171",
+    },
+    fontSans: "Inter",
+    fontSerif: "Fraunces",
+    fontMono: "JetBrains Mono",
+  },
+
+  headlines: {
+    pain: ["Where did that", "request go?"],
+    resolution: ["Every request.", "Tracked."],
+    closer: ["Try it free."],
+  },
+  cta: "Try it free",
+
+  productFeatures: [
+    { title: "Dashboard", description: "Live metrics and KPIs at a glance" },
+    { title: "Request Manager", description: "Track every request from submission to delivery" },
+    { title: "Smart Alerts", description: "Get notified when things need attention" },
+  ],
+
+  scenes: [
+    { id: "chaos", enabled: true, durationInFrames: 260, enterFrom: "none", exitTo: "top", background: "dark" },
+    { id: "product-reveal", enabled: true, durationInFrames: 150, enterFrom: "bottom", exitTo: "right", background: "dark" },
+    { id: "feature-showcase", enabled: true, durationInFrames: 200, enterFrom: "left", exitTo: "top", background: "dark" },
+    { id: "headline-resolution", enabled: true, durationInFrames: 120, enterFrom: "bottom", exitTo: "top", background: "gradient" },
+    { id: "closer", enabled: true, durationInFrames: 90, enterFrom: "bottom", exitTo: "none", background: "light" },
+  ],
+
+  overlap: 15,
+  easing: "snappy",
+
+  windowLayout: [
+    {
+      id: "spreadsheet", title: "Tracking Sheet",
+      startX: 500, startY: 30, startW: 1100, startH: 500,
+      endX: 1450, endY: -200,
+      enterAt: 5, enterDuration: 14, enterFrom: "scale",
+      animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 1,
+    },
+    {
+      id: "email", title: "Email — Q2 Requests",
+      startX: 20, startY: 200, startW: 1020, startH: 400,
+      endX: -680, endY: 400,
+      enterAt: 30, enterDuration: 14, enterFrom: "scale",
+      animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 2,
+    },
+    {
+      id: "chat", title: "Team Chat",
+      startX: 583, startY: 492, startW: 1147, startH: 487,
+      endX: 1332, endY: 978, endW: 1200, endH: 500,
+      enterAt: 60, enterDuration: 14, enterFrom: "scale",
+      animateAt: 150, animateDuration: 25, exitDuration: 12, zIndex: 3,
+    },
+    {
+      id: "product-window", title: "Dashboard — Overview",
+      startX: 30, startY: 30, startW: 1860, startH: 1020,
+      endX: 980, endY: 500, endW: 960, endH: 600,
+      enterAt: 0, enterDuration: 1, enterFrom: "fade",
+      animateAt: 30, animateDuration: 18, exitDuration: 12, zIndex: 1,
+    },
+    {
+      id: "top-panel", title: "Request Manager",
+      startX: 354, startY: 193, startW: 920, startH: 440,
+      enterAt: 48, enterDuration: 10, enterFrom: "slide-up",
+      animateDuration: 18, exitDuration: 12, zIndex: 2,
+    },
+    {
+      id: "left-panel", title: "Smart Alerts",
+      startX: 510, startY: 422, startW: 920, startH: 570,
+      enterAt: 53, enterDuration: 10, enterFrom: "slide-up",
+      animateDuration: 18, exitDuration: 12, zIndex: 3,
+    },
+    {
+      id: "feature-0", title: "Dashboard",
+      startX: 30, startY: 30, startW: 800, startH: 500,
+      enterAt: 0, enterDuration: 12, enterFrom: "scale",
+      animateDuration: 18, exitDuration: 12, zIndex: 1,
+    },
+    {
+      id: "feature-1", title: "Request Manager",
+      startX: 990, startY: 30, startW: 800, startH: 500,
+      enterAt: 35, enterDuration: 12, enterFrom: "scale",
+      animateDuration: 18, exitDuration: 12, zIndex: 2,
+    },
+    {
+      id: "feature-2", title: "Smart Alerts",
+      startX: 30, startY: 30, startW: 1400, startH: 700,
+      enterAt: 70, enterDuration: 12, enterFrom: "scale",
+      animateDuration: 18, exitDuration: 12, zIndex: 3,
+    },
+  ],
+
+  cursorPath: [
+    { at: 0, action: "idle", anchor: "center", positionX: 1408, positionY: 294 },
+    { at: 10, action: "moveTo", anchor: "center", target: "spreadsheet", anchorXPct: 60, anchorYPct: 40, duration: 12, curve: "arc" },
+    { at: 26, action: "click", anchor: "center", target: "spreadsheet" },
+    { at: 34, action: "moveTo", anchor: "top-bar", target: "email", duration: 12 },
+    { at: 50, action: "click", anchor: "center", target: "email" },
+    { at: 58, action: "moveTo", anchor: "center", target: "chat", anchorXPct: 40, anchorYPct: 30, duration: 12 },
+    { at: 76, action: "click", anchor: "center", target: "chat" },
+    { at: 84, action: "moveTo", anchor: "center", target: "notification-0", duration: 12 },
+    { at: 100, action: "click", anchor: "center", target: "notification-0" },
+    { at: 108, action: "moveTo", anchor: "center", target: "notification-1", duration: 10 },
+    { at: 122, action: "click", anchor: "center", target: "notification-1" },
+    { at: 245, action: "idle", anchor: "center", positionX: 199, positionY: 177 },
+    { at: 250, action: "moveTo", anchor: "corner-top-left", target: "product-window", duration: 12 },
+    { at: 265, action: "click", anchor: "corner-top-left", target: "product-window" },
+    { at: 275, action: "drag", anchor: "corner-top-left", target: "product-window", toX: 980, toY: 500, duration: 18 },
+    { at: 303, action: "moveTo", anchor: "center", target: "top-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
+    { at: 319, action: "click", anchor: "center", target: "top-panel" },
+    { at: 329, action: "moveTo", anchor: "center", target: "left-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
+    { at: 345, action: "click", anchor: "center", target: "left-panel" },
+    { at: 380, action: "idle", anchor: "center", positionX: 300, positionY: 400 },
+    { at: 388, action: "moveTo", anchor: "center", target: "feature-0", anchorXPct: 50, anchorYPct: 35, duration: 12 },
+    { at: 404, action: "click", anchor: "center", target: "feature-0" },
+    { at: 420, action: "moveTo", anchor: "center", target: "feature-1", anchorXPct: 50, anchorYPct: 35, duration: 12 },
+    { at: 436, action: "click", anchor: "center", target: "feature-1" },
+    { at: 458, action: "moveTo", anchor: "center", target: "feature-2", anchorXPct: 40, anchorYPct: 30, duration: 12 },
+    { at: 474, action: "click", anchor: "center", target: "feature-2" },
+    { at: 495, action: "moveTo", anchor: "top-bar", target: "feature-2", duration: 10 },
+    { at: 510, action: "click", anchor: "top-bar", target: "feature-2" },
+  ],
+
+  cursorScale: 1,
+  cursorRotation: 0,
+
+  appDescriptor: {
+    layout: "sidebar",
+    sidebar: {
+      width: 220,
+      items: [
+        { label: "Dashboard", icon: "📊", active: true },
+        { label: "Orders", icon: "📦", active: false, badge: "3" },
+        { label: "Analytics", icon: "📈", active: false },
+        { label: "Settings", icon: "⚙", active: false },
+      ],
+      avatar: { name: "Alex Chen" },
+    },
+    topBar: {
+      title: "Dashboard",
+      search: true,
+      searchPlaceholder: "Search...",
+      tabs: [
+        { label: "Overview", active: true },
+        { label: "Details", active: false },
+        { label: "History", active: false },
+      ],
+      actions: [{ label: "New Order", variant: "primary" }],
+    },
+    content: {
+      columnCount: 3,
+      gap: 16,
+      panels: [
+        { type: "stat", title: "Revenue", label: "Revenue", value: "$12,400", delta: "+12%", messageVariant: "chat" },
+        { type: "stat", title: "Orders", label: "Orders", value: "342", delta: "+8%", messageVariant: "chat" },
+        { type: "stat", title: "Customers", label: "Customers", value: "1,205", delta: "+3%", messageVariant: "chat" },
+        {
+          type: "table", title: "Recent Orders",
+          columns: ["Name", "Status", "Amount"],
+          rows: [["Alex Chen", "Shipped", "$2,400"], ["Jordan Lee", "Pending", "$1,800"], ["Sam Park", "Delivered", "$950"]],
+          statusColumn: 1, messageVariant: "chat",
+        },
+        {
+          type: "list", title: "Quick Actions",
+          items: [
+            { label: "API Keys", description: "Manage access tokens" },
+            { label: "Webhooks", description: "Configure event hooks", badge: "2" },
+            { label: "Billing", description: "View invoices and plans" },
+          ],
+          messageVariant: "chat",
+        },
+        { type: "placeholder", title: "Chart", messageVariant: "chat", height: 200 },
+      ],
+    },
+  },
+
+  music: { enabled: true, volume: 0.35, fadeInFrames: 45, fadeOutFrames: 90 },
+  sfxEnabled: true,
+  sfxVolume: 0.4,
+};

@@ -11,13 +11,20 @@ const CLAIMED_IDS = new Set([
   "feature-0", "feature-1", "feature-2",
 ]);
 
-export const DynamicWindows: React.FC = () => {
+interface DynamicWindowsProps {
+  sceneId: string;
+}
+
+export const DynamicWindows: React.FC<DynamicWindowsProps> = ({ sceneId }) => {
   const frame = useCurrentFrame();
   const allWindows = useWindowLayout();
 
   const extraWindows = useMemo(
-    () => allWindows.filter((w) => !CLAIMED_IDS.has(w.id)),
-    [allWindows],
+    () =>
+      allWindows.filter(
+        (w) => !CLAIMED_IDS.has(w.id) && w.sceneId === sceneId,
+      ),
+    [allWindows, sceneId],
   );
 
   if (extraWindows.length === 0) return null;

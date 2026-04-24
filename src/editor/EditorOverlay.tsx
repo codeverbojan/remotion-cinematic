@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getRemotionEnvironment, useCurrentFrame } from "remotion";
-import { updateDefaultProps } from "@remotion/studio";
 import { useVideoProps } from "../VideoPropsContext";
+import { persistUpdate } from "./updateProps";
 import { CursorInteractionProvider } from "../CursorInteractionContext";
 import { useEditorState } from "./useEditorState";
 import { SelectionBox } from "./SelectionBox";
@@ -33,10 +33,7 @@ function updateWindowProps(
   const updated = props.windowLayout.map((w) =>
     w.id === windowId ? { ...w, ...updates } : w,
   );
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({ ...props, windowLayout: updated }),
-  });
+  persistUpdate(() => ({ ...props, windowLayout: updated }));
 }
 
 const CANVAS_W = 1920;
@@ -64,7 +61,7 @@ const EditorOverlayInner: React.FC<{
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const [guides, setGuides] = useState<Guides>({ x: [], y: [] });
-  const [showCursorPath, setShowCursorPath] = useState(false);
+  const [showCursorPath, setShowCursorPath] = useState(() => props.cursorPath.length > 0);
   const handleCursorClick = useCallback(() => {
     setShowCursorPath((prev) => !prev);
   }, []);

@@ -86,6 +86,7 @@ const WindowLayoutSchema = z.object({
   exitDuration: z.number().int().min(1).default(12),
   zIndex: z.number().int().min(0).default(1),
   title: z.string().max(200).default("Window"),
+  sceneId: z.string().max(100).optional(),
 });
 
 const AnchorPreset = z.enum([

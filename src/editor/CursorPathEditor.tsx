@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { updateDefaultProps } from "@remotion/studio";
 import { resolveWindowPose, getSceneAtFrame } from "../engine";
+import { persistUpdate } from "./updateProps";
 import type { CinematicProps, CursorPathEntry, WindowLayout } from "../schema";
 
 interface CursorPathEditorProps {
@@ -26,17 +26,11 @@ const ACTION_OPTIONS: { value: ActionType; label: string; icon: string }[] = [
 const TOOLBAR_FONT = "system-ui, -apple-system, sans-serif";
 
 function updateCursorPath(props: CinematicProps, path: CursorPathEntry[]) {
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({ ...props, cursorPath: path }),
-  });
+  persistUpdate(() => ({ ...props, cursorPath: path }));
 }
 
 function updateCursorStyle(props: CinematicProps, updates: Partial<Pick<CinematicProps, "cursorScale" | "cursorRotation">>) {
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({ ...props, ...updates }),
-  });
+  persistUpdate(() => ({ ...props, ...updates }));
 }
 
 function canvasPositionFromEvent(
@@ -148,9 +142,26 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
 
   const sceneStart = sceneRange?.startFrame ?? 0;
   const sceneEnd = sceneStart + (sceneRange?.duration ?? Infinity);
+  const TIME_WINDOW = 50;
+  const windowStart = frame - TIME_WINDOW;
+  const windowEnd = frame + TIME_WINDOW;
   const scenePtCount = cursorPath.filter(
-    (e) => e.at >= sceneStart && e.at < sceneEnd,
+    (e) => e.at >= sceneStart && e.at < sceneEnd && e.at >= windowStart && e.at <= windowEnd,
   ).length;
+
+  const nearestCurveEntry = useMemo(() => {
+    let best: CursorPathEntry | null = null;
+    let bestDist = Infinity;
+    for (const e of cursorPath) {
+      if (e.action !== "moveTo" && e.action !== "drag") continue;
+      const dist = Math.abs(e.at - frame);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = e;
+      }
+    }
+    return bestDist <= 30 ? best : null;
+  }, [cursorPath, frame]);
 
   const handleClearScene = useCallback(() => {
     const current = propsRef.current;
@@ -272,13 +283,42 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
           </button>
         ))}
 
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            backgroundColor: "#444",
-          }}
-        />
+        {nearestCurveEntry && (
+          <>
+            <div style={{ width: 1, height: 20, backgroundColor: "#444" }} />
+            <span style={{ fontSize: 10, color: "#888" }}>Curve</span>
+            <select
+              value={nearestCurveEntry.curve ?? "arc"}
+              onChange={(e) => {
+                const current = propsRef.current;
+                const targetAt = nearestCurveEntry.at;
+                const targetAction = nearestCurveEntry.action;
+                const updated = current.cursorPath.map((c) =>
+                  c.at === targetAt && c.action === targetAction
+                    ? { ...c, curve: e.target.value as "arc" | "linear" | "ease" }
+                    : c,
+                );
+                updateCursorPath(current, updated);
+              }}
+              style={{
+                padding: "3px 6px",
+                fontSize: 11,
+                fontFamily: TOOLBAR_FONT,
+                backgroundColor: "#2A2A3A",
+                color: "#E0E0F0",
+                border: "1px solid #444",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
+            >
+              <option value="arc">Arc</option>
+              <option value="linear">Linear</option>
+              <option value="ease">Ease</option>
+            </select>
+          </>
+        )}
+
+        <div style={{ width: 1, height: 20, backgroundColor: "#444" }} />
 
         <span style={{ color: "#888", fontSize: 10 }}>
           {sceneRange ? `${sceneRange.id}: ${scenePtCount} pts` : `${cursorPath.length} pts`}

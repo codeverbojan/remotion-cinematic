@@ -78,7 +78,7 @@ export const CinematicDemo: React.FC<CinematicProps> = (props) => {
                 layout="none"
               >
                 <Component />
-                <DynamicWindows />
+                <DynamicWindows sceneId={scene.id} />
               </Sequence>
             );
           })}

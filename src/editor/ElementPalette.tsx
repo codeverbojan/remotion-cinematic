@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { updateDefaultProps } from "@remotion/studio";
 import { getSceneAtFrame } from "../engine";
+import { persistUpdate } from "./updateProps";
 import type { CinematicProps, WindowLayout } from "../schema";
 
 interface ElementPaletteProps {
@@ -131,6 +131,11 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
     [props.scenes],
   );
 
+  const currentScene = useMemo(
+    () => getSceneAtFrame(enabledScenes, frame, props.overlap),
+    [enabledScenes, frame, props.overlap],
+  );
+
   const handleAdd = useCallback(
     (template: WindowTemplate) => {
       const currentProps = propsRef.current;
@@ -147,13 +152,11 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
         ...template.defaults,
         id,
         enterAt: sceneRelativeFrame,
+        sceneId: sceneRange?.id,
       } as WindowLayout;
 
       const updated = [...currentProps.windowLayout, newWindow];
-      updateDefaultProps({
-        compositionId: "CinematicDemo",
-        defaultProps: () => ({ ...currentProps, windowLayout: updated }),
-      });
+      persistUpdate(() => ({ ...currentProps, windowLayout: updated }));
 
       setOpen(false);
     },
@@ -165,14 +168,11 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
       const currentProps = propsRef.current;
       const updatedWindows = currentProps.windowLayout.filter((w) => w.id !== id);
       const updatedCursor = currentProps.cursorPath.filter((e) => e.target !== id);
-      updateDefaultProps({
-        compositionId: "CinematicDemo",
-        defaultProps: () => ({
-          ...currentProps,
-          windowLayout: updatedWindows,
-          cursorPath: updatedCursor,
-        }),
-      });
+      persistUpdate(() => ({
+        ...currentProps,
+        windowLayout: updatedWindows,
+        cursorPath: updatedCursor,
+      }));
     },
     [],
   );
@@ -230,13 +230,20 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
               letterSpacing: 0.5,
             }}
           >
-            Add Window
+            Add to: {currentScene?.id ?? "—"}
           </div>
+
+          {!currentScene && (
+            <div style={{ fontSize: 11, color: "#F87171", padding: "4px 8px" }}>
+              Scrub to a scene to add windows
+            </div>
+          )}
 
           {TEMPLATES.map((t) => (
             <button
               key={t.label}
-              onClick={() => handleAdd(t)}
+              onClick={() => currentScene && handleAdd(t)}
+              disabled={!currentScene}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -246,14 +253,15 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
                 fontSize: 12,
                 fontFamily: TOOLBAR_FONT,
                 backgroundColor: "transparent",
-                color: "#E0E0F0",
+                color: currentScene ? "#E0E0F0" : "#555",
                 border: "none",
                 borderRadius: 4,
-                cursor: "pointer",
+                cursor: currentScene ? "pointer" : "default",
                 textAlign: "left",
+                opacity: currentScene ? 1 : 0.5,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "#2A2A3A";
+                if (currentScene) (e.currentTarget as HTMLElement).style.backgroundColor = "#2A2A3A";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
@@ -266,7 +274,7 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
             </button>
           ))}
 
-          {props.windowLayout.length > 0 && (
+          {props.windowLayout.some((w) => w.sceneId) && (
             <>
               <div
                 style={{
@@ -285,10 +293,10 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
                   letterSpacing: 0.5,
                 }}
               >
-                Windows ({props.windowLayout.length})
+                Added Windows ({props.windowLayout.filter((w) => w.sceneId).length})
               </div>
 
-              {props.windowLayout.map((w) => (
+              {props.windowLayout.filter((w) => w.sceneId).map((w) => (
                 <div
                   key={w.id}
                   style={{
@@ -301,8 +309,11 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
                     borderRadius: 4,
                   }}
                 >
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 110 }}>
                     {w.title || w.id}
+                  </span>
+                  <span style={{ fontSize: 9, color: "#666", flexShrink: 0 }}>
+                    {w.sceneId}
                   </span>
                   <button
                     onClick={() => handleRemove(w.id)}

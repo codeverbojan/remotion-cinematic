@@ -55,14 +55,4 @@ export function useCursorStyle() {
   return { scale: ctx.cursorScale, rotation: ctx.cursorRotation };
 }
 
-export function updateProp(
-  updater: (prev: CinematicProps) => CinematicProps,
-) {
-  try {
-    const { updateDefaultProps } = require("@remotion/studio");
-    updateDefaultProps({
-      compositionId: "CinematicDemo",
-      defaultProps: (current: Record<string, unknown>) => updater(current as CinematicProps),
-    });
-  } catch { /* not in Studio */ }
-}
+export { persistUpdate as updateProp } from "./editor/updateProps";

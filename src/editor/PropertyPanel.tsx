@@ -1,6 +1,6 @@
 import React from "react";
-import { updateDefaultProps } from "@remotion/studio";
 import type { CinematicProps, WindowLayout } from "../schema";
+import { persistUpdate } from "./updateProps";
 
 interface PropertyPanelProps {
   selectedId: string;
@@ -202,10 +202,7 @@ function updateWindowProp(
   const updated = props.windowLayout.map((w) =>
     w.id === windowId ? { ...w, ...updates } : w,
   );
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({ ...props, windowLayout: updated }),
-  });
+  persistUpdate(() => ({ ...props, windowLayout: updated }));
 }
 
 function updateHeadlineProp(
@@ -213,13 +210,10 @@ function updateHeadlineProp(
   field: "pain" | "resolution" | "closer",
   value: string[],
 ) {
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({
-      ...props,
-      headlines: { ...props.headlines, [field]: value },
-    }),
-  });
+  persistUpdate(() => ({
+    ...props,
+    headlines: { ...props.headlines, [field]: value },
+  }));
 }
 
 function updateBrandColor(
@@ -227,16 +221,13 @@ function updateBrandColor(
   colorKey: string,
   value: string,
 ) {
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: () => ({
-      ...props,
-      brand: {
-        ...props.brand,
-        colors: { ...props.brand.colors, [colorKey]: value },
-      },
-    }),
-  });
+  persistUpdate(() => ({
+    ...props,
+    brand: {
+      ...props.brand,
+      colors: { ...props.brand.colors, [colorKey]: value },
+    },
+  }));
 }
 
 // --- Window Panel ---
@@ -249,8 +240,22 @@ const ENTRANCE_OPTIONS = [
   { value: "slide-right", label: "Slide Right" },
 ];
 
+const SMALL_BTN_STYLE: React.CSSProperties = {
+  width: "100%",
+  padding: "4px 8px",
+  fontSize: 11,
+  fontFamily: PANEL_FONT,
+  backgroundColor: "#2A2A3A",
+  color: "#A0A0C0",
+  border: "1px solid #444",
+  borderRadius: 4,
+  cursor: "pointer",
+};
+
 const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ win, props }) => {
   const set = (updates: Partial<WindowLayout>) => updateWindowProp(props, win.id, updates);
+  const maxZ = Math.max(...props.windowLayout.map((w) => w.zIndex), 0);
+  const minZ = Math.min(...props.windowLayout.map((w) => w.zIndex), 0);
 
   return (
     <>
@@ -269,7 +274,7 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
       </Row>
       <Spacer />
 
-      {win.endX !== undefined && (
+      {win.endX !== undefined ? (
         <>
           <Row>
             <NumberInput label="End X" value={win.endX} onChange={(v) => set({ endX: v })} />
@@ -280,6 +285,23 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
             <NumberInput label="End W" value={win.endW ?? win.startW} onChange={(v) => set({ endW: v })} min={50} />
             <NumberInput label="End H" value={win.endH ?? win.startH} onChange={(v) => set({ endH: v })} min={50} />
           </Row>
+          <Spacer size={4} />
+          <button
+            onClick={() => set({ endX: undefined, endY: undefined, endW: undefined, endH: undefined })}
+            style={{ ...SMALL_BTN_STYLE, color: "#F87171" }}
+          >
+            Remove End Position
+          </button>
+          <Spacer />
+        </>
+      ) : (
+        <>
+          <button
+            onClick={() => set({ endX: win.startX, endY: win.startY, endW: win.startW, endH: win.startH })}
+            style={SMALL_BTN_STYLE}
+          >
+            + Add End Position
+          </button>
           <Spacer />
         </>
       )}
@@ -309,18 +331,52 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
       </Row>
       <Spacer size={4} />
 
-      {win.animateAt !== undefined && (
+      {win.animateAt !== undefined ? (
         <>
           <Row>
             <NumberInput label="Anim At" value={win.animateAt} onChange={(v) => set({ animateAt: v })} min={0} />
             <NumberInput label="Anim Dur" value={win.animateDuration} onChange={(v) => set({ animateDuration: v })} min={1} />
           </Row>
           <Spacer size={4} />
+          <button
+            onClick={() => set({ animateAt: undefined })}
+            style={{ ...SMALL_BTN_STYLE, color: "#F87171" }}
+          >
+            Remove Animation
+          </button>
+          <Spacer size={4} />
+        </>
+      ) : (
+        <>
+          <button
+            onClick={() => set({ animateAt: win.enterAt + win.enterDuration })}
+            style={SMALL_BTN_STYLE}
+          >
+            + Add Animation
+          </button>
+          <Spacer size={4} />
         </>
       )}
 
       <Row>
         <NumberInput label="Z-Index" value={win.zIndex} onChange={(v) => set({ zIndex: v })} min={0} />
+      </Row>
+      <Spacer size={4} />
+      <Row gap={4}>
+        <button
+          onClick={() => set({ zIndex: maxZ + 1 })}
+          disabled={win.zIndex >= maxZ}
+          style={{ ...SMALL_BTN_STYLE, flex: 1, opacity: win.zIndex >= maxZ ? 0.4 : 1 }}
+        >
+          Bring Front
+        </button>
+        <button
+          onClick={() => set({ zIndex: Math.max(0, minZ - 1) })}
+          disabled={win.zIndex <= minZ}
+          style={{ ...SMALL_BTN_STYLE, flex: 1, opacity: win.zIndex <= minZ ? 0.4 : 1 }}
+        >
+          Send Back
+        </button>
       </Row>
       <Spacer />
       <ColorInput
@@ -334,6 +390,25 @@ const WindowPanel: React.FC<{ win: WindowLayout; props: CinematicProps }> = ({ w
         value={props.brand.colors.background}
         onChange={(v) => updateBrandColor(props, "background", v)}
       />
+      {win.sceneId && (
+        <>
+          <Spacer />
+          <button
+            onClick={() => {
+              const updatedWindows = props.windowLayout.filter((w) => w.id !== win.id);
+              const updatedCursor = props.cursorPath.filter((e) => e.target !== win.id);
+              persistUpdate(() => ({
+                ...props,
+                windowLayout: updatedWindows,
+                cursorPath: updatedCursor,
+              }));
+            }}
+            style={{ ...SMALL_BTN_STYLE, color: "#F87171", borderColor: "#F87171" }}
+          >
+            Delete Window
+          </button>
+        </>
+      )}
     </>
   );
 };
@@ -377,13 +452,10 @@ const HeadlinePanel: React.FC<{ selectedId: string; props: CinematicProps }> = (
         label="Serif Font"
         value={props.brand.fontSerif}
         onChange={(v) => {
-          updateDefaultProps({
-            compositionId: "CinematicDemo",
-            defaultProps: () => ({
-              ...props,
-              brand: { ...props.brand, fontSerif: v },
-            }),
-          });
+          persistUpdate(() => ({
+            ...props,
+            brand: { ...props.brand, fontSerif: v },
+          }));
         }}
       />
     </>
@@ -404,10 +476,7 @@ const ButtonPanel: React.FC<{ selectedId: string; props: CinematicProps }> = ({ 
             label="CTA Label"
             value={props.cta}
             onChange={(v) => {
-              updateDefaultProps({
-                compositionId: "CinematicDemo",
-                defaultProps: () => ({ ...props, cta: v }),
-              });
+              persistUpdate(() => ({ ...props, cta: v }));
             }}
           />
           <Spacer />

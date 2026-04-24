@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
-import { updateDefaultProps } from "@remotion/studio";
 import { resolveWindowPose, getSceneAtFrame, interpolateCurve } from "../engine";
+import { persistUpdate } from "./updateProps";
 import type { CurveType } from "../engine";
 import type { CinematicProps, CursorPathEntry } from "../schema";
 import type { WindowLayout } from "../schema";
@@ -26,7 +26,7 @@ interface ResolvedWaypoint {
 export function resolveWaypointPosition(
   entry: CinematicProps["cursorPath"][0],
   windows: WindowLayout[],
-  frame: number,
+  entryFrame: number,
 ): { x: number; y: number } | null {
   if (entry.action === "idle") {
     if (entry.positionX !== undefined && entry.positionY !== undefined) {
@@ -42,7 +42,7 @@ export function resolveWaypointPosition(
   if (entry.target) {
     const win = windows.find((w) => w.id === entry.target);
     if (win) {
-      const pose = resolveWindowPose(win, frame);
+      const pose = resolveWindowPose(win, entryFrame);
       if (pose.visible) {
         return {
           x: pose.left + pose.width / 2,
@@ -129,10 +129,7 @@ const WaypointEditor: React.FC<{
       const updated = current.cursorPath.map((e, i) =>
         i === index ? { ...e, ...updates } : e,
       );
-      updateDefaultProps({
-        compositionId: "CinematicDemo",
-        defaultProps: () => ({ ...current, cursorPath: updated }),
-      });
+      persistUpdate(() => ({ ...current, cursorPath: updated }));
     },
     [index],
   );
@@ -156,10 +153,7 @@ const WaypointEditor: React.FC<{
   const remove = useCallback(() => {
     const current = propsRef.current;
     const updated = current.cursorPath.filter((_, i) => i !== index);
-    updateDefaultProps({
-      compositionId: "CinematicDemo",
-      defaultProps: () => ({ ...current, cursorPath: updated }),
-    });
+    persistUpdate(() => ({ ...current, cursorPath: updated }));
     onClose();
   }, [index, onClose]);
 
@@ -382,10 +376,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       }
       return { ...e, positionX: pos.x, positionY: pos.y };
     });
-    updateDefaultProps({
-      compositionId: "CinematicDemo",
-      defaultProps: () => ({ ...current, cursorPath: updated }),
-    });
+    persistUpdate(() => ({ ...current, cursorPath: updated }));
   }, []);
 
   useEffect(() => {
@@ -439,11 +430,61 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   const sceneEnd = sceneStart + sceneRange.duration;
   const sceneRelativeFrame = frame - sceneStart;
 
-  const waypoints: ResolvedWaypoint[] = [];
+  const TIME_WINDOW = 50;
+  const windowStart = frame - TIME_WINDOW;
+  const windowEnd = frame + TIME_WINDOW;
+
+  const sceneEntryIndices: number[] = [];
   for (let i = 0; i < cursorPath.length; i++) {
     const entry = cursorPath[i];
-    if (entry.at < sceneStart || entry.at >= sceneEnd) continue;
-    const pos = resolveWaypointPosition(entry, windowLayout, sceneRelativeFrame);
+    if (entry.at >= sceneStart && entry.at < sceneEnd) {
+      sceneEntryIndices.push(i);
+    }
+  }
+
+  const inWindowSet = new Set<number>();
+  let firstInWindow = sceneEntryIndices.length;
+  let lastInWindow = -1;
+  for (let si = 0; si < sceneEntryIndices.length; si++) {
+    const idx = sceneEntryIndices[si];
+    const entry = cursorPath[idx];
+    if (entry.at >= windowStart && entry.at <= windowEnd) {
+      inWindowSet.add(idx);
+      if (si < firstInWindow) firstInWindow = si;
+      if (si > lastInWindow) lastInWindow = si;
+    }
+  }
+
+  if (firstInWindow > 0) inWindowSet.add(sceneEntryIndices[firstInWindow - 1]);
+  if (lastInWindow >= 0 && lastInWindow < sceneEntryIndices.length - 1)
+    inWindowSet.add(sceneEntryIndices[lastInWindow + 1]);
+
+  const resolveFromDOM = (targetId: string): { x: number; y: number } | null => {
+    const overlay = overlayRef.current;
+    if (!overlay) return null;
+    const container = overlay.parentElement;
+    if (!container) return null;
+    const el = container.querySelector(`[data-cursor-target="${CSS.escape(targetId)}"]`);
+    if (!el) return null;
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const scaleX = CANVAS_W / containerRect.width;
+    const scaleY = CANVAS_H / containerRect.height;
+    return {
+      x: (elRect.left - containerRect.left + elRect.width / 2) * scaleX,
+      y: (elRect.top - containerRect.top + elRect.height / 2) * scaleY,
+    };
+  };
+
+  const waypoints: ResolvedWaypoint[] = [];
+  for (const idx of sceneEntryIndices) {
+    if (!inWindowSet.has(idx)) continue;
+    const entry = cursorPath[idx];
+    const entrySceneFrame = entry.at - sceneStart;
+    let pos = resolveWaypointPosition(entry, windowLayout, entrySceneFrame);
+    if (!pos && entry.target) {
+      pos = resolveFromDOM(entry.target);
+    }
     if (pos) {
       waypoints.push({
         x: pos.x,
@@ -451,7 +492,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
         action: entry.action,
         at: entry.at - sceneStart,
         target: entry.target,
-        index: i,
+        index: idx,
         curve: entry.curve as CurveType | undefined,
       });
     }
