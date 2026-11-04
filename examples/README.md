@@ -27,6 +27,6 @@ npm run studio
 
 The Relay screenshots live in `public/screenshots/`. Replace them with your real UI. Use separate feature details to avoid repeating a small, unreadable dashboard in every window.
 
-After a full export, `node scripts/make-preview.mjs` creates a compact finished-video GIF in `out/verification/`; review it and the PNGs before copying them into `docs/assets/`. CI uploads these outputs as an artifact.
+After a full export, `node scripts/make-preview.mjs` uses standard FFmpeg from PATH (or `FFMPEG_PATH`) to create a compact finished-video GIF in `out/verification/`; review it and the PNGs before copying them into `docs/assets/`. CI uploads these outputs as an artifact.
 
 To regenerate these JSON fixtures after changing preset code, run `npm run examples`. Re-render and review the images before updating the gallery.
