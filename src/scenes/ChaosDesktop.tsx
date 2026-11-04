@@ -1,3 +1,4 @@
+import { ContentViewport } from "../primitives/ContentViewport";
 import { SoundEffect } from "../engine/audio/SoundEffect";
 import { useSceneConfig } from "../SceneContext";
 import React, { useMemo } from "react";
@@ -141,7 +142,7 @@ export const ChaosDesktop: React.FC = () => {
         } else {
           content = (
             <Window id={def.id} title={def.title}>
-              {WINDOW_CONTENT[def.id]}
+              <ContentViewport width={pose.width} height={pose.height - 42} designWidth={def.id === "spreadsheet" ? 700 : 620}>{WINDOW_CONTENT[def.id]}</ContentViewport>
             </Window>
           );
         }

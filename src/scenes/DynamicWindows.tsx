@@ -58,7 +58,7 @@ export const DynamicWindows: React.FC<DynamicWindowsProps> = ({ sceneId }) => {
             }}
           >
             <Window id={def.id} title={def.title}>
-              <ProductContent media={def.media} id={`${def.id}-app`} />
+              <ProductContent media={def.media} id={`${def.id}-app`} width={pose.width} height={pose.height - 42} />
             </Window>
           </div>
         );

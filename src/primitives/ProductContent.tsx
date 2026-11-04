@@ -1,15 +1,16 @@
+import { ContentViewport } from "./ContentViewport";
 import { C, F } from "../tokens";
 import React from "react";
 import { Img, OffthreadVideo, staticFile } from "remotion";
 import { useVideoProps } from "../VideoPropsContext";
 import type { ProductMedia } from "../schema";
-import { AppFromDescriptor } from "./app-ui/AppFromDescriptor";
+import { AppFromDescriptor, PanelContent } from "./app-ui/AppFromDescriptor";
 
 export function mediaSource(src: string): string {
   return /^(https?:|data:|blob:)/.test(src) ? src : staticFile(src.replace(/^\//, ""));
 }
 
-export const ProductContent: React.FC<{ featureIndex?: number; media?: ProductMedia; id?: string; summaryOnly?: boolean }> = ({ featureIndex, media, id = "product-app", summaryOnly = false }) => {
+export const ProductContent: React.FC<{ featureIndex?: number; media?: ProductMedia; id?: string; summaryOnly?: boolean; width?: number; height?: number }> = ({ featureIndex, media, id = "product-app", summaryOnly = false, width = 800, height = 500 }) => {
   const props = useVideoProps();
   const source = media ?? (featureIndex === undefined ? props.productMedia : props.productFeatures[featureIndex]?.media ?? props.productMedia);
   if (source) {
@@ -22,12 +23,12 @@ export const ProductContent: React.FC<{ featureIndex?: number; media?: ProductMe
     const feature = props.productFeatures[featureIndex];
     const panels = props.appDescriptor.content.panels.filter((panel) => panel.type !== "placeholder");
     const panel = panels[featureIndex % Math.max(1, panels.length)];
-    return <div style={{padding: 28, height: "100%", boxSizing: "border-box", fontFamily: F.sans, color: C.text, background: `linear-gradient(140deg, ${C.surface}, ${C.bgLight})`}}>
+    return <ContentViewport width={width} height={height} designWidth={560} minimumDesignHeight={400}><div style={{padding: 28, height: "100%", boxSizing: "border-box", fontFamily: F.sans, color: C.text, background: `linear-gradient(140deg, ${C.surface}, ${C.bgLight})`}}>
       <div style={{fontSize: 12, textTransform: "uppercase", letterSpacing: 2, color: C.accent, marginBottom: 16}}>0{featureIndex + 1} / {props.brand.name}</div>
       <div style={{fontSize: 28, fontWeight: 600, lineHeight: 1.15, marginBottom: 12}}>{feature?.title ?? "Product details"}</div>
       <div style={{fontSize: 17, lineHeight: 1.5, color: C.textMuted, marginBottom: 22}}>{feature?.description}</div>
-      {!summaryOnly && panel && <AppFromDescriptor id={id} descriptor={{layout: "minimal", content: {columnCount: 1, gap: 16, panels: [panel]}}} />}
-    </div>;
+      {!summaryOnly && panel && <PanelContent panel={panel} index={0} prefix={`${id}-`} />}
+    </div></ContentViewport>;
   }
-  return <AppFromDescriptor id={id} descriptor={props.appDescriptor} style={{ height: "100%" }} />;
+  return <ContentViewport width={width} height={height}><AppFromDescriptor id={id} descriptor={props.appDescriptor} style={{ height: "100%" }} /></ContentViewport>;
 };

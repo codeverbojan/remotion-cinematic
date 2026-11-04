@@ -13,6 +13,8 @@ import { getSceneStartFrame, getTotalFrames } from "../engine/types";
 import { createPreset } from "../presets";
 import { resolveWindowPose } from "../engine/choreography/resolveWindowPose";
 import { panelInteractionKeyframes } from "../engine/ui-state/interactionKeyframes";
+import { layoutForOutput } from "../canvas";
+import { ContentViewport } from "../primitives/ContentViewport";
 import { contentWarnings } from "../contentChecks";
 
 let frame = 160;
@@ -109,6 +111,27 @@ describe("customized output", () => {
     const product = props.windowLayout.find((w) => w.id === "product-window")!;
     expect(product.startX + product.startW).toBeLessThanOrEqual(1080);
     expect(projectForTimeline(props).windowLayout).toEqual(props.windowLayout);
+  });
+  it.each(["landscape", "portrait", "square"] as const)("keeps product window proportions in %s", (format) => {
+    const props = createPreset("feature", {format});
+    const win = props.windowLayout.find((w) => w.id === "product-window")!;
+    expect(win.startW / (win.startH - 42)).toBeCloseTo(1.6, 1);
+    expect(win.endW! / (win.endH! - 42)).toBeCloseTo(1.6, 1);
+    expect(win.startX + win.startW).toBeLessThanOrEqual(props.layoutCanvas.width);
+    expect(win.startY + win.startH).toBeLessThanOrEqual(props.layoutCanvas.height);
+  });
+  it("preserves custom window aspect ratios when switching formats", () => {
+    const props = createPreset("feature");
+    props.windowLayout.push({...props.windowLayout[0], id: "custom", startW: 800, startH: 400});
+    props.outputFormat = "portrait";
+    const win = layoutForOutput(props).windowLayout.find((w) => w.id === "custom")!;
+    expect(win.startW / win.startH).toBe(2);
+  });
+  it("scales interface text and geometry together inside the window", () => {
+    const output = renderToStaticMarkup(<ContentViewport width={1200} height={750}><span>Readable UI</span></ContentViewport>);
+    expect(output).toContain('data-content-scale="1.5"');
+    expect(output).toContain('width:800px;height:500px');
+    expect(output).toContain('transform:scale(1.5)');
   });
   it("warns when an action or headline cannot fit its scene", () => {
     const props = CinematicSchema.parse({});

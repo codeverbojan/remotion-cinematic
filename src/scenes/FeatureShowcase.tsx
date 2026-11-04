@@ -84,7 +84,7 @@ export const FeatureShowcase: React.FC = () => {
               }}
             >
               <Window id={def.id} title={def.title}>
-                <ProductContent featureIndex={Number(def.id.split("-")[1])} id={`${def.id}-app`} />
+                <ProductContent featureIndex={Number(def.id.split("-")[1])} id={`${def.id}-app`} width={pose.width} height={pose.height - 42} />
               </Window>
             </div>
           );

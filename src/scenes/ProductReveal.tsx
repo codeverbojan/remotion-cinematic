@@ -13,16 +13,6 @@ import { applyPendingEdits, getPendingRevision } from "../editor/pendingCursorEd
 
 const SCENE_WINDOW_IDS = ["product-window", "top-panel", "left-panel"];
 
-const DashboardContent: React.FC = () => <ProductContent />;
-const TopPanelContent: React.FC = () => <Panel id="top-inner-panel" padding={0} collapsedContent={<ProductContent featureIndex={1} summaryOnly />} style={{ height: "100%", boxSizing: "border-box" }}><ProductContent featureIndex={1} id="product-details" /></Panel>;
-const LeftPanelContent: React.FC = () => <Panel id="left-inner-panel" padding={0} collapsedContent={<ProductContent featureIndex={2} summaryOnly />} style={{ height: "100%", boxSizing: "border-box" }}><ProductContent featureIndex={2} id="product-alerts" /></Panel>;
-
-const WINDOW_CONTENT: Record<string, React.ReactNode> = {
-  "product-window": <DashboardContent />,
-  "top-panel": <TopPanelContent />,
-  "left-panel": <LeftPanelContent />,
-};
-
 export const ProductReveal: React.FC = () => {
   const { durationInFrames: DURATION } = useSceneConfig();
   const frame = useCurrentFrame();
@@ -92,7 +82,12 @@ export const ProductReveal: React.FC = () => {
               }}
             >
               <Window id={def.id} title={def.title}>
-                {WINDOW_CONTENT[def.id]}
+                {def.id === "product-window" ? <ProductContent width={pose.width} height={pose.height - 42} /> : (
+                  <Panel id={def.id === "top-panel" ? "top-inner-panel" : "left-inner-panel"} padding={0} style={{height: "100%", boxSizing: "border-box"}}
+                    collapsedContent={<ProductContent featureIndex={def.id === "top-panel" ? 1 : 2} summaryOnly width={pose.width} height={pose.height - 44} />}>
+                    <ProductContent featureIndex={def.id === "top-panel" ? 1 : 2} id={`${def.id}-app`} width={pose.width} height={pose.height - 44} />
+                  </Panel>
+                )}
               </Window>
             </div>
           );

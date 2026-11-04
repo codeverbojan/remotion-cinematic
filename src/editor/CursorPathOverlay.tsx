@@ -481,7 +481,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       window.removeEventListener("mouseup", handleUp);
       didDragRef.current = false;
     };
-  }, [dragIndex, persistDrag]);
+  }, [dragIndex, persistDrag, CANVAS_W, CANVAS_H]);
 
   const enabledScenes = useMemo(
     () => props.scenes.filter((s) => s.enabled),

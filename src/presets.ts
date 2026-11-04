@@ -21,14 +21,6 @@ export function createPreset(name: PresetName, options: {format?: CinematicProps
     const factor = factors.get(defaultSceneForWindow(w.id)!)!;
     return {...w, enterAt: Math.round(w.enterAt * factor), enterDuration: Math.max(1, Math.round(w.enterDuration * factor)), animateAt: w.animateAt === undefined ? undefined : Math.round(w.animateAt * factor), animateDuration: Math.max(1, Math.round(w.animateDuration * factor)), exitAt: w.exitAt === undefined ? undefined : Math.round(w.exitAt * factor)};
   });
-  // Keep the main product view readable and the two supporting details on screen.
-  props.windowLayout = props.windowLayout.map((w) => {
-    if (w.id === "product-window") return {...w, startX: 60, startY: 60, startW: 1800, startH: 960, endX: 60, endY: 80, endW: 1160, endH: 920};
-    if (w.id === "top-panel") return {...w, startX: 1280, startY: 80, startW: 580, startH: 435};
-    if (w.id === "left-panel") return {...w, startX: 1280, startY: 555, startW: 580, startH: 445};
-    return w;
-  });
-  props.cursorPath = props.cursorPath.map((entry) => entry.action === "drag" && entry.target === "product-window" ? {...entry, toX: 60, toY: 80} : entry);
   props.productFeatures = [
     {title: "Every request, one home.", description: "See incoming work and ownership together."},
     {title: "Know what comes next.", description: "Keep priorities visible and work moving."},
@@ -50,5 +42,5 @@ export function createPreset(name: PresetName, options: {format?: CinematicProps
     props.productMedia = {type: "image", src: options.screenshots[0], fit: "contain", focusX: 50, focusY: 50, zoom: 1, startFrom: 0};
     props.productFeatures = props.productFeatures.map((feature, index) => ({...feature, media: {...props.productMedia!, src: options.screenshots![index] ?? options.screenshots![0]}}));
   }
-  return CinematicSchema.parse(layoutForOutput(props));
+  return CinematicSchema.parse(layoutForOutput(props, true));
 }

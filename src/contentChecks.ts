@@ -26,6 +26,9 @@ export function contentWarnings(props: CinematicProps): string[] {
     if (scene && entry.at + (entry.duration ?? 1) >= scene.durationInFrames) warnings.push(`${scene.id}: a cursor action extends beyond the scene. Retiming or a longer scene is needed.`);
     if (entry.target && !props.windowLayout.some((w) => w.id === entry.target)) warnings.push(`Cursor target "${entry.target}" is missing.`);
   }
+  for (const feature of props.productFeatures) {
+    if (feature.title.length > 60 || feature.description.length > 180) warnings.push(`${feature.title}: shorten feature copy so the detail card remains readable.`);
+  }
   for (const win of props.windowLayout) {
     const scene = scenes.find((s) => s.id === (win.sceneId ?? defaultSceneForWindow(win.id)));
     if (scene && win.enterAt + win.enterDuration >= scene.durationInFrames) warnings.push(`${win.title}: the window has no visible hold before the scene ends.`);

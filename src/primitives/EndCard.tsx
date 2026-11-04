@@ -71,9 +71,14 @@ export const EndCard: React.FC<EndCardProps> = ({
     fontFamily: F.serif,
     letterSpacing: "-0.02em",
     textAlign: "center",
+    maxWidth: "80%",
   };
 
   const ctaStyle: React.CSSProperties = {
+    maxWidth: "80%",
+    boxSizing: "border-box",
+    overflowWrap: "anywhere",
+    textAlign: "center",
     marginTop: 12,
     padding: "16px 48px",
     borderRadius: 12,

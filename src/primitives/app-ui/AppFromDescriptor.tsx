@@ -21,7 +21,7 @@ export interface AppFromDescriptorProps {
   style?: React.CSSProperties;
 }
 
-const PanelContent: React.FC<{ panel: ContentPanel; index: number; prefix: string }> = ({ panel, index, prefix }) => {
+export const PanelContent: React.FC<{ panel: ContentPanel; index: number; prefix: string }> = ({ panel, index, prefix }) => {
   const panelId = `${prefix}panel-${index}`;
 
   switch (panel.type) {

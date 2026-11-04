@@ -30,7 +30,7 @@ Use `brand.colors` for the palette throughout the composition. `brand.logoUrl` a
 
 `headlines.pain`, `resolution` and `closer` are arrays of lines. `cta` controls the separate end-card button. Font size overrides are upper bounds: headlines fit down to the canvas. Content warnings suggest shorter copy or longer scenes, but do not replace checking the exported frames.
 
-`outputFormat` chooses landscape (1920×1080), portrait (1080×1920), or square (1080×1080). Built-in product windows reflow for portrait and square. Custom windows scale from `layoutCanvas`; inspect them and save adjustments after a format change. Repeated format switches preserve the current layout rather than restoring an earlier layout. For a fresh layout, generate a new preset in the desired format.
+`outputFormat` chooses landscape (1920×1080), portrait (1080×1920), or square (1080×1080). Built-in product windows reflow for portrait and square. Custom window sizes scale uniformly from `layoutCanvas` to preserve their aspect ratio; positions adapt to the new canvas. Descriptor interfaces and typography scale together inside each window; inspect them and save adjustments after a format change. Repeated format switches preserve the current layout rather than restoring an earlier layout. For a fresh layout, generate a new preset in the desired format.
 
 ## Motion and sound
 
