@@ -1,3 +1,5 @@
+import { EASE } from "../../tokens";
+import type { EasingPresetKey } from "../../tokens";
 import type { WindowLayout } from "../../schema";
 
 export interface WindowPose {
@@ -37,7 +39,8 @@ function entranceOffsets(style: WindowLayout["enterFrom"]): { scale: number; tx:
   }
 }
 
-export function resolveWindowPose(def: WindowLayout, frame: number): WindowPose {
+export function resolveWindowPose(def: WindowLayout, frame: number, preset?: EasingPresetKey): WindowPose {
+  const easing = (t: number) => t <= 0 ? 0 : t >= 1 ? 1 : preset ? EASE[preset].easing(t) : easeOut(t);
   if (frame < def.enterAt) return HIDDEN;
 
   if (def.exitAt !== undefined && frame >= def.exitAt + def.exitDuration) {
@@ -52,7 +55,7 @@ export function resolveWindowPose(def: WindowLayout, frame: number): WindowPose 
   if (def.endX !== undefined || def.endY !== undefined || def.endW !== undefined || def.endH !== undefined) {
     const animStart = Math.max(def.animateAt ?? def.enterAt + def.enterDuration, def.enterAt);
     const animEnd = animStart + def.animateDuration;
-    const animT = easeOut((frame - animStart) / Math.max(1, animEnd - animStart));
+    const animT = easing((frame - animStart) / Math.max(1, animEnd - animStart));
     if (def.endX !== undefined) x = lerp(def.startX, def.endX, animT);
     if (def.endY !== undefined) y = lerp(def.startY, def.endY, animT);
     if (def.endW !== undefined) w = lerp(def.startW, def.endW, animT);
@@ -60,10 +63,10 @@ export function resolveWindowPose(def: WindowLayout, frame: number): WindowPose 
   }
 
   const enterEnd = def.enterAt + def.enterDuration;
-  const enterT = easeOut((frame - def.enterAt) / Math.max(1, def.enterDuration));
+  const enterT = easing((frame - def.enterAt) / Math.max(1, def.enterDuration));
   const offsets = entranceOffsets(def.enterFrom);
 
-  let opacity = enterT;
+  let opacity = Math.max(0, Math.min(1, enterT));
   let scale = lerp(offsets.scale, 1, enterT);
   let translateX = lerp(offsets.tx, 0, enterT);
   let translateY = lerp(offsets.ty, 0, enterT);
@@ -76,8 +79,8 @@ export function resolveWindowPose(def: WindowLayout, frame: number): WindowPose 
   }
 
   if (def.exitAt !== undefined && frame >= def.exitAt) {
-    const exitT = easeOut((frame - def.exitAt) / Math.max(1, def.exitDuration));
-    opacity = Math.min(opacity, 1 - exitT);
+    const exitT = easing((frame - def.exitAt) / Math.max(1, def.exitDuration));
+    opacity = Math.max(0, Math.min(opacity, 1 - exitT));
   }
 
   return {

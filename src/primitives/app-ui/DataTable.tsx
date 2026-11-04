@@ -59,7 +59,7 @@ export const DataTable: React.FC<DataTableProps> = ({
         }}
       >
         {columns.map((col) => (
-          <div key={col} style={{ flex: 1, fontWeight: 700, color: C.textMuted }}>
+          <div key={col} style={{ flex: 1, minWidth: 0, paddingRight: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 700, color: C.textMuted }}>
             {col}
           </div>
         ))}
@@ -72,8 +72,8 @@ export const DataTable: React.FC<DataTableProps> = ({
             style={{
               display: "flex",
               padding: cellPad,
-              borderBottom: `1px solid ${C.border}22`,
-              backgroundColor: isSelected ? `${C.brand}18` : "transparent",
+              borderBottom: `1px solid color-mix(in srgb, ${C.border} 13%, transparent)`,
+              backgroundColor: isSelected ? `color-mix(in srgb, ${C.brand} 9%, transparent)` : "transparent",
               borderRadius: isSelected ? 4 : 0,
             }}
           >
@@ -87,12 +87,17 @@ export const DataTable: React.FC<DataTableProps> = ({
                   key={ci}
                   style={{
                     flex: 1,
+                    minWidth: 0,
+                    paddingRight: 8,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                     color:
                       ci === statusColumn
                         ? colors[cell] ?? C.textMuted
                         : C.text,
                     outline: isCellHighlighted
-                      ? `1px solid ${C.brand}88`
+                      ? `1px solid color-mix(in srgb, ${C.brand} 53%, transparent)`
                       : undefined,
                     borderRadius: isCellHighlighted ? 3 : undefined,
                     padding: isCellHighlighted ? "0 4px" : undefined,

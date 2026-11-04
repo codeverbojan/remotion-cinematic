@@ -1,3 +1,4 @@
+import { FONT_NAMES } from "../schema";
 import React from "react";
 import type { CinematicProps, WindowLayout } from "../schema";
 import { persistUpdate } from "./updateProps";
@@ -449,16 +450,14 @@ const HeadlinePanel: React.FC<{ selectedId: string; props: CinematicProps }> = (
         onChange={(v) => updateBrandColor(props, "text", v)}
       />
       <Spacer />
-      <TextInput
-        label="Serif Font"
-        value={props.brand.fontSerif}
-        onChange={(v) => {
-          persistUpdate((prev) => ({
-            ...prev,
-            brand: { ...prev.brand, fontSerif: v },
-          }));
-        }}
-      />
+      <label style={{ display: "block", fontSize: 12 }}>Serif Font
+        <select value={props.brand.fontSerif} onChange={(event) => {
+          const fontSerif = event.target.value as typeof props.brand.fontSerif;
+          persistUpdate((prev) => ({ ...prev, brand: { ...prev.brand, fontSerif } }));
+        }} style={{ width: "100%", marginTop: 4 }}>
+          {FONT_NAMES.map((font) => <option key={font} value={font}>{font}</option>)}
+        </select>
+      </label>
     </>
   );
 };

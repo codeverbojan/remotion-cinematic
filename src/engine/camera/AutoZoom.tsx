@@ -1,3 +1,4 @@
+import { useCanvas, useEasing } from "../../VideoPropsContext";
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { CANVAS, EASE } from "../../tokens";
@@ -20,15 +21,18 @@ const CENTER_Y = CANVAS.height / 2;
 function resolveOrigin(
   kf: ZoomKeyframe,
   getRect: AutoZoomProps["getRect"],
+  canvas: {width: number; height: number},
 ): { x: number; y: number } {
-  if (!kf.target) return { x: CENTER_X, y: CENTER_Y };
+  if (!kf.target) return { x: canvas.width / 2, y: canvas.height / 2 };
   const rect = getRect(kf.target);
-  if (!rect) return { x: CENTER_X, y: CENTER_Y };
+  if (!rect) return { x: canvas.width / 2, y: canvas.height / 2 };
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
 export const AutoZoom: React.FC<AutoZoomProps> = ({ keyframes, getRect, children }) => {
   const frame = useCurrentFrame();
+  const easing = useEasing();
+  const canvas = useCanvas();
 
   if (keyframes.length === 0) {
     return <AbsoluteFill>{children}</AbsoluteFill>;
@@ -43,8 +47,8 @@ export const AutoZoom: React.FC<AutoZoomProps> = ({ keyframes, getRect, children
   const fromKf = keyframes[fromIdx];
   const toKf = keyframes[toIdx];
 
-  const fromOrigin = resolveOrigin(fromKf, getRect);
-  const toOrigin = resolveOrigin(toKf, getRect);
+  const fromOrigin = resolveOrigin(fromKf, getRect, canvas);
+  const toOrigin = resolveOrigin(toKf, getRect, canvas);
 
   if (fromIdx === toIdx || fromKf.at === toKf.at) {
     if (fromKf.scale === 1) {
@@ -63,9 +67,9 @@ export const AutoZoom: React.FC<AutoZoomProps> = ({ keyframes, getRect, children
     );
   }
 
-  const scale = interpolate(frame, [fromKf.at, toKf.at], [fromKf.scale, toKf.scale], EASE.snappy);
-  const originX = interpolate(frame, [fromKf.at, toKf.at], [fromOrigin.x, toOrigin.x], EASE.snappy);
-  const originY = interpolate(frame, [fromKf.at, toKf.at], [fromOrigin.y, toOrigin.y], EASE.snappy);
+  const scale = interpolate(frame, [fromKf.at, toKf.at], [fromKf.scale, toKf.scale], easing);
+  const originX = interpolate(frame, [fromKf.at, toKf.at], [fromOrigin.x, toOrigin.x], easing);
+  const originY = interpolate(frame, [fromKf.at, toKf.at], [fromOrigin.y, toOrigin.y], easing);
 
   if (scale === 1) {
     return <AbsoluteFill>{children}</AbsoluteFill>;

@@ -1,10 +1,10 @@
+import { Img } from "remotion";
+import { mediaSource } from "../primitives/ProductContent";
 import React from "react";
-import { EndCard, ScenePush } from "../primitives";
-import { SCENE_OVERLAP, TRANSITION_SFX } from "../content";
+import { EndCard } from "../primitives";
 import { F } from "../tokens";
 import { useBrand, useHeadlines, useVideoProps } from "../VideoPropsContext";
 
-const DURATION = 90;
 
 const DemoLogo: React.FC = () => {
   const brand = useBrand();
@@ -50,17 +50,19 @@ export const Closer: React.FC = () => {
   const { cta, brand } = props;
 
   return (
-    <ScenePush duration={DURATION} overlap={SCENE_OVERLAP} enterFrom="bottom" exitTo="none" enterSfx={TRANSITION_SFX} background="light">
+    <>
       <EndCard
         tagline={brand.name}
-        cta={headlines.closer[0] ?? cta}
+        cta={cta}
+        headline={headlines.closer.join(" ")}
+        headlineFontSize={headlines.closerFontSize}
         entranceDelay={5}
         entranceDuration={18}
-        logo={<DemoLogo />}
-        backgroundColor={brand.colors.backgroundLight}
+        logo={brand.logoUrl ? <Img src={mediaSource(brand.logoUrl)} style={{ maxWidth: 280, maxHeight: 120, objectFit: "contain" }} /> : <DemoLogo />}
+        backgroundColor="transparent"
         textColor={brand.colors.text}
         accentColor={brand.colors.primary}
       />
-    </ScenePush>
+    </>
   );
 };

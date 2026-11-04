@@ -1,5 +1,7 @@
+import { useCanvas, useEasing } from "../../VideoPropsContext";
+import { SoundEffect } from "../audio/SoundEffect";
 import React, { useCallback, useRef } from "react";
-import { Audio, Easing, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { Easing, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { computeClickPulse, computeCursorRotation, interpolateCurve } from "./arc";
 import { CursorSprite, getCursorShape } from "./CursorSprite";
 import type { CursorShape } from "./CursorSprite";
@@ -198,7 +200,7 @@ export const Cursor: React.FC<CursorProps> = ({
   actions,
   getRect: getRectProp,
   sfx,
-  canvas = { width: 1920, height: 1080 },
+  canvas: canvasProp,
   size = 52,
   color = "#FFFFFF",
   visible = true,
@@ -207,6 +209,9 @@ export const Cursor: React.FC<CursorProps> = ({
   baseRotation = 0,
 }) => {
   const frame = useCurrentFrame();
+  const canvasSize = useCanvas();
+  const canvas = canvasProp ?? canvasSize;
+  const easing = useEasing();
   const { onCursorClick } = useCursorInteraction();
   const getRectRef = useRef(getRectProp);
   getRectRef.current = getRectProp;
@@ -240,7 +245,7 @@ export const Cursor: React.FC<CursorProps> = ({
   const clamped = Math.max(0, Math.min(1, rawProgress));
   const useArcEasing = !seg.curve || seg.curve === "arc";
   const progress = useArcEasing
-    ? interpolate(clamped, [0, 1], [0, 1], { easing: Easing.bezier(0.22, 0.61, 0.36, 1) })
+    ? interpolate(clamped, [0, 1], [0, 1], easing)
     : clamped;
 
   const pos = interpolateCurve(seg.from, seg.to, progress, seg.curve, { canvas });
@@ -275,7 +280,7 @@ export const Cursor: React.FC<CursorProps> = ({
             durationInFrames={entry.durationInFrames ?? 30}
             layout="none"
           >
-            <Audio src={staticFile(entry.src)} volume={entry.volume ?? 0.5} />
+            <SoundEffect src={staticFile(entry.src)} volume={entry.volume ?? 0.5} />
           </Sequence>
         );
       })}

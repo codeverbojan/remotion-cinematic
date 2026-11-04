@@ -1,7 +1,11 @@
+import { Theme } from "./Theme";
+import { SceneProvider } from "./SceneContext";
+import { ScenePush } from "./primitives/ScenePush";
+import { TRANSITION_SFX } from "./content";
 import React, { useMemo } from "react";
 import { AbsoluteFill, Sequence } from "remotion";
 import { CameraRig, AudioManager, getSceneStartFrame } from "./engine";
-import type { SceneTiming } from "./engine";
+import type { SceneConfig } from "./schema";
 import type { AudioCue } from "./engine";
 import { CAMERA_TIMELINE, SFX_TIMELINE } from "./content";
 import { Wallpaper } from "./primitives";
@@ -27,11 +31,11 @@ const SCENE_COMPONENTS: Record<string, React.FC> = {
 };
 
 export const CinematicDemo: React.FC<CinematicProps> = (props) => {
-  const enabledScenes: SceneTiming[] = useMemo(
+  const enabledScenes: SceneConfig[] = useMemo(
     () =>
       props.scenes
         .filter((s) => s.enabled)
-        .map((s) => ({ id: s.id, durationInFrames: s.durationInFrames })),
+        ,
     [props.scenes],
   );
 
@@ -58,11 +62,13 @@ export const CinematicDemo: React.FC<CinematicProps> = (props) => {
 
   return (
     <VideoPropsProvider value={props}>
+      <Theme brand={props.brand}>
       <EditorOverlay>
       <AbsoluteFill>
         <Wallpaper variant="dark" />
         <CameraRig
           timeline={CAMERA_TIMELINE}
+          easing={props.easing}
           scenes={enabledScenes}
           overlap={props.overlap}
         >
@@ -77,26 +83,28 @@ export const CinematicDemo: React.FC<CinematicProps> = (props) => {
                 durationInFrames={scene.durationInFrames}
                 layout="none"
               >
-                <Component />
-                <DynamicWindows sceneId={scene.id} />
+                <SceneProvider value={scene}>
+                  <ScenePush duration={scene.durationInFrames} overlap={props.overlap} enterFrom={scene.enterFrom} exitTo={scene.exitTo} background={scene.background} enterSfx={scene.enterFrom === "none" ? undefined : TRANSITION_SFX}>
+                    <Component />
+                    <DynamicWindows sceneId={scene.id} />
+                  </ScenePush>
+                </SceneProvider>
               </Sequence>
             );
           })}
         </CameraRig>
-        {musicConfig && (
+        {(
           <AudioManager
             music={musicConfig}
             sfxTimeline={sfxTimeline}
             scenes={enabledScenes}
             overlap={props.overlap}
-            duckMusicDuring={[
-              { startFrame: 150, endFrame: 260, duckedVolume: 0.12 },
-              { startFrame: 565, endFrame: 685, duckedVolume: 0.12 },
-            ]}
+            duckMusicDuring={enabledScenes.filter((s) => s.id === "headline-resolution").map((s) => ({ startFrame: getSceneStartFrame(enabledScenes, s.id, props.overlap), endFrame: getSceneStartFrame(enabledScenes, s.id, props.overlap) + s.durationInFrames, duckedVolume: props.music.volume * 0.35 }))}
           />
         )}
       </AbsoluteFill>
       </EditorOverlay>
+      </Theme>
     </VideoPropsProvider>
   );
 };

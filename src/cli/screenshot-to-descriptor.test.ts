@@ -104,7 +104,7 @@ describe("screenshotToDescriptor", () => {
 
     await expect(
       screenshotToDescriptor("/test/app.png", "sk-test"),
-    ).rejects.toThrow("Failed to parse");
+    ).rejects.toThrow("Invalid layout descriptor");
   });
 
   it("throws when response has empty content array", async () => {

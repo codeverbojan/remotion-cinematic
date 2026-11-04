@@ -108,10 +108,10 @@ describe("resolveWaypointPosition", () => {
     expect(resolveWaypointPosition(entry, windows, 20)).toBeNull();
   });
 
-  it("returns null for click targeting invisible window", () => {
+  it("keeps a future click target editable before its entrance", () => {
     const hiddenWindows = [makeWindow({ id: "hidden", enterAt: 100 })];
     const entry = { at: 5, action: "click", target: "hidden", anchor: "center" } as CursorPathEntry;
-    expect(resolveWaypointPosition(entry, hiddenWindows, 0)).toBeNull();
+    expect(resolveWaypointPosition(entry, hiddenWindows, 0)).toEqual({ x: 300, y: 250 });
   });
 
   it("returns null for moveTo without target", () => {

@@ -1,18 +1,19 @@
+import { useCanvas, useEasing } from "../VideoPropsContext";
+import { SoundEffect } from "../engine/audio/SoundEffect";
 import React from "react";
-import { AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import type { SFXEntry } from "../engine/types";
 import { Wallpaper } from "./Wallpaper";
-import { CANVAS, EASE } from "../tokens";
 
 export type PushDirection = "top" | "bottom" | "left" | "right";
 
-function getDirectionOffset(direction: PushDirection): { x: number; y: number } {
+function getDirectionOffset(direction: PushDirection, canvas: {width: number; height: number}): { x: number; y: number } {
   const buf = 120;
   switch (direction) {
-    case "top":    return { x: 0, y: -(CANVAS.height + buf) };
-    case "bottom": return { x: 0, y:  (CANVAS.height + buf) };
-    case "left":   return { x: -(CANVAS.width + buf), y: 0 };
-    case "right":  return { x:  (CANVAS.width + buf), y: 0 };
+    case "top":    return { x: 0, y: -(canvas.height + buf) };
+    case "bottom": return { x: 0, y:  (canvas.height + buf) };
+    case "left":   return { x: -(canvas.width + buf), y: 0 };
+    case "right":  return { x:  (canvas.width + buf), y: 0 };
   }
 }
 
@@ -36,20 +37,22 @@ export const ScenePush: React.FC<ScenePushProps> = ({
   children,
 }) => {
   const frame = useCurrentFrame();
+  const easing = useEasing();
+  const canvas = useCanvas();
 
   let tx = 0;
   let ty = 0;
 
-  if (enterFrom !== "none") {
-    const prog = interpolate(frame, [0, overlap], [0, 1], EASE.snappy);
-    const off = getDirectionOffset(enterFrom);
+  if (enterFrom !== "none" && overlap > 0) {
+    const prog = frame >= overlap ? 1 : frame <= 0 ? 0 : interpolate(frame, [0, overlap], [0, 1], easing);
+    const off = getDirectionOffset(enterFrom, canvas);
     tx += off.x * (1 - prog);
     ty += off.y * (1 - prog);
   }
 
-  if (exitTo !== "none") {
-    const prog = interpolate(frame, [duration - overlap, duration], [0, 1], EASE.snappy);
-    const off = getDirectionOffset(exitTo);
+  if (exitTo !== "none" && overlap > 0) {
+    const prog = frame <= duration - overlap ? 0 : frame >= duration ? 1 : interpolate(frame, [duration - overlap, duration], [0, 1], easing);
+    const off = getDirectionOffset(exitTo, canvas);
     tx += off.x * prog;
     ty += off.y * prog;
   }
@@ -66,7 +69,7 @@ export const ScenePush: React.FC<ScenePushProps> = ({
       {background !== "none" && <Wallpaper variant={background} />}
       {enterSfx && (
         <Sequence from={0} durationInFrames={enterSfx.durationInFrames ?? 30} layout="none">
-          <Audio src={staticFile(enterSfx.src)} volume={enterSfx.volume ?? 0.5} />
+          <SoundEffect src={staticFile(enterSfx.src)} volume={enterSfx.volume ?? 0.5} />
         </Sequence>
       )}
       {children}

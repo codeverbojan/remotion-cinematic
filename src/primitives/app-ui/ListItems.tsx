@@ -28,7 +28,7 @@ export const ListItems: React.FC<ListItemsProps> = ({
           alignItems: "center",
           gap: 10,
           padding: "10px 0",
-          borderBottom: i < items.length - 1 ? `1px solid ${C.border}22` : undefined,
+          borderBottom: i < items.length - 1 ? `1px solid color-mix(in srgb, ${C.border} 13%, transparent)` : undefined,
         }}
       >
         <div style={{ flex: 1 }}>

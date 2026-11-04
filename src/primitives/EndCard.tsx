@@ -1,3 +1,5 @@
+import { fitTextSize } from "../contentChecks";
+import { useCanvas } from "../VideoPropsContext";
 import React, { useCallback, useMemo } from "react";
 import { AbsoluteFill, getRemotionEnvironment, interpolate, useCurrentFrame } from "remotion";
 import { C, EASE, F } from "../tokens";
@@ -8,6 +10,8 @@ interface EndCardProps {
   logo?: React.ReactNode;
   tagline?: string;
   cta?: string;
+  headline?: string;
+  headlineFontSize?: number;
   entranceDelay?: number;
   entranceDuration?: number;
   backgroundColor?: string;
@@ -19,6 +23,8 @@ export const EndCard: React.FC<EndCardProps> = ({
   logo,
   tagline = "Your product name",
   cta = "Try it free",
+  headline,
+  headlineFontSize = 64,
   entranceDelay = 0,
   entranceDuration = 20,
   backgroundColor = C.bg,
@@ -26,6 +32,7 @@ export const EndCard: React.FC<EndCardProps> = ({
   accentColor = C.brand,
 }) => {
   const frame = useCurrentFrame();
+  const canvas = useCanvas();
   const rel = frame - entranceDelay;
 
   const isStudio = useMemo(() => {
@@ -50,14 +57,15 @@ export const EndCard: React.FC<EndCardProps> = ({
     (value: string) => {
       updateProp((prev) => ({
         ...prev,
-        headlines: { ...prev.headlines, closer: [value] },
+        cta: value,
       }));
     },
     [],
   );
 
   const taglineStyle: React.CSSProperties = {
-    fontSize: 64,
+    fontSize: fitTextSize([tagline], 64, canvas.width * 0.8, canvas.height * 0.2),
+    overflowWrap: "anywhere",
     fontWeight: 600,
     color: textColor,
     fontFamily: F.serif,
@@ -97,6 +105,7 @@ export const EndCard: React.FC<EndCardProps> = ({
         }}
       >
         {logo && <div style={{ marginBottom: 16 }}>{logo}</div>}
+        {headline && <div style={{ fontSize: fitTextSize([headline], headlineFontSize, canvas.width * 0.85, canvas.height * 0.25), overflowWrap: "anywhere", fontFamily: F.serif, color: textColor, textAlign: "center", maxWidth: "85%" }}>{headline}</div>}
         {isStudio ? (
           <InlineEdit value={tagline} onChange={onTaglineChange} style={taglineStyle}>
             {taglineContent}

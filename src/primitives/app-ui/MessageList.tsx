@@ -67,7 +67,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               style={{
                 marginBottom: 10,
                 padding: "8px 0",
-                borderBottom: `1px solid ${C.border}22`,
+                borderBottom: `1px solid color-mix(in srgb, ${C.border} 13%, transparent)`,
                 opacity: entranceOpacity,
                 transform: entranceTY !== 0 ? `translateY(${Math.round(entranceTY)}px)` : undefined,
               }}

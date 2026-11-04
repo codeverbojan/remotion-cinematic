@@ -1,3 +1,4 @@
+import { outputSize } from "../canvas";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSceneAtFrame } from "../engine";
 import { persistUpdate } from "./updateProps";
@@ -148,8 +149,13 @@ export const ElementPalette: React.FC<ElementPaletteProps> = ({
       const sceneRelativeFrame = sceneRange
         ? Math.max(0, frame - sceneRange.startFrame)
         : 0;
+      const size = outputSize(currentProps.outputFormat);
       const newWindow: WindowLayout = {
         ...template.defaults,
+        startX: Math.round(template.defaults.startX * size.width / 1920),
+        startY: Math.round(template.defaults.startY * size.height / 1080),
+        startW: Math.round(template.defaults.startW * size.width / 1920),
+        startH: Math.round(template.defaults.startH * size.height / 1080),
         id,
         enterAt: sceneRelativeFrame,
         sceneId: sceneRange?.id,

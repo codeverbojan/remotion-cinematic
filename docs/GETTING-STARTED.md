@@ -1,116 +1,72 @@
-# Getting Started
+# Your first customized export
 
-Get a cinematic product demo video running in 5 minutes.
-
-## Prerequisites
-
-- Node.js 18+
-- npm 9+
-
-## 1. Clone and install
+Use Node.js 20+ and npm. This Remotion version expects macOS 15+ for its bundled rendering tools; Linux is used for CI. On older macOS, preview/frame rendering may work while audio/video export fails. Start from the repository's locked dependencies:
 
 ```bash
-npx degit codeverbojan/remotion-cinematic my-video
+git clone https://github.com/codeverbojan/remotion-cinematic.git my-video
 cd my-video
-npm install
-```
-
-## 2. Preview in Remotion Studio
-
-```bash
+npm ci
+npm run project -- --load=examples/feature.json
 npm run studio
 ```
 
-Opens a browser at `http://localhost:3000` with the 25-second demo video. Scrub the timeline, play, and inspect individual frames.
+Reuse an already running Studio for this project. Open the URL printed in the terminal; there is no separate prop server.
 
-## 3. Set your brand
+## 1. Make the example yours
 
-Edit `src/tokens.ts`, or use the **Studio props panel** (right sidebar) to change colors live:
+In Studio's props panel, change `brand.name`, `brand.colors.primary`, `headlines.closer` and `cta`. They control separate parts of the final card. Scrub near the end to see the result. Double-clicking titles and CTA text also saves edits. The overlay shows saving, saved, or an error.
 
-```ts
-export const C = {
-  bg: "#0F0F14",        // your background color
-  brand: "#6366F1",     // your primary brand color
-  brandLight: "#818CF8",
-  accent: "#22D3EE",    // your accent color
-  // ... rest of colors
-} as const;
+Settings live in the inline `defaultProps` object in `src/Root.tsx`. Keep it as an object: Remotion's native save writer requires this form. `src/schema.ts` supplies defaults for new projects, not a second saved project.
+
+## 2. Add your own screenshots
+
+Put three images in `public/screenshots/`, then stop Studio and run:
+
+```bash
+npm run init-video -- --preset=feature --format=portrait --name="Acme" --screenshots=screenshots/dashboard.png,screenshots/details.png,screenshots/activity.png --out=video.json
+npm run project -- --load=video.json
+npm run studio
 ```
 
-Save and see changes live in the studio.
+Use paths relative to `public/`. One image also works; it is reused where separate feature media is absent. Use separate detail crops to keep small windows readable. `productMedia.fit=contain` preserves the full screenshot; `cover`, `focusX`, `focusY` and `zoom` let you emphasize a detail.
 
-## 4. Edit content
+`init-video` creates a new file without overwriting existing work. `project --load` validates before writing and saves the previous Root file as `src/Root.tsx.bak`. This backup is replaced by the next load; use Git or export JSON to keep multiple versions.
 
-Headlines and scene config are managed through the **schema props system**, not `content.ts`.
+## 3. Check the story
 
-**Option A — Studio props panel (no code):**
-Open Remotion Studio, expand the props panel on the right, and edit `headlines.pain`, `headlines.resolution`, `headlines.closer`, plus `cta`, `brand`, and `scenes` directly. Changes preview instantly.
+Scrub through every scene and transition. Read the headline aloud, confirm each cursor target exists, and check the first and last frame. Content warnings flag actions extending beyond a scene and insufficient reading time. They are estimates, so inspect the actual video too.
 
-**Option B — Edit defaults in code:**
-Change the defaults in `src/schema.ts` under `HeadlinesSchema`:
+Scene durations and window timings are in frames: 30 frames is one second. Cursor entries with `sceneId` use time relative to that scene. Changing scene order preserves those local actions; shortening a scene may require retiming them.
 
-```ts
-const HeadlinesSchema = z.object({
-  pain: z.array(z.string().max(200)).default(["Where did that", "request go?"]),
-  resolution: z.array(z.string().max(200)).default(["Every request.", "Tracked."]),
-  closer: z.array(z.string().max(200)).default(["Try it free."]),
-  // ...
-});
-```
+## 4. Export the edits you saw
 
-**Option C — Visual editor:**
-Studio includes a visual editor overlay. Click any headline, window, or CTA directly in the preview to select it, then edit text and properties in the floating panel. Drag to move or resize windows.
-
-## 5. Add your product screenshots
-
-Drop PNG files into `public/screenshots/`:
-
-```
-public/screenshots/
-  dashboard.png
-  feature-catalog.png
-  settings.png
-```
-
-Use them in scenes:
-
-```tsx
-import { Img, staticFile } from "remotion";
-<Img src={staticFile("screenshots/dashboard.png")} />
-```
-
-## 6. Adjust timing and scene order
-
-Scene configuration (enabled, duration, enter/exit directions) lives in `src/schema.ts` as `DEFAULT_SCENES`, and is editable in the Studio props panel under `scenes`:
-
-```ts
-{ id: "chaos", enabled: true, durationInFrames: 260, enterFrom: "none", exitTo: "top" },
-{ id: "product-reveal", enabled: true, durationInFrames: 150, enterFrom: "bottom", exitTo: "right" },
-// ... toggle enabled, change durations, set enter/exit directions
-```
-
-`content.ts` also has a `SCENES` array, but it only holds camera timeline timing (`SceneTiming` with `id` + `durationInFrames`). Keep both in sync when changing durations.
-
-Frames = seconds x 30.
-
-## 7. Render
+Stop Studio with Ctrl+C, then:
 
 ```bash
 npm run build
+npm run project -- --export=my-edited-video.json
 ```
 
-Outputs an MP4 in the `out/` directory.
+The MP4 is `out/video.mp4`; the JSON stores saved settings for reuse. The build command overwrites the prior MP4. Export refuses to overwrite an existing JSON file.
 
-## Using with Claude
+For a direct, reproducible export without editing Studio settings:
 
-Open the project in Claude Code. The included `.claude/CLAUDE.md` skill teaches Claude the full API. Try:
+```bash
+npm run build -- --props=examples/before-after.json
+```
 
-- *"Add a new scene showing my billing page screenshot"*
-- *"Change the brand colors to match our website"*
-- *"Add cursor animation that clicks through three tabs"*
+Avoid launching Studio with `--props` when you want to edit: those overrides take precedence over saved default props. Load the file with `npm run project -- --load=...` instead.
 
-## Next steps
+## Troubleshooting
 
-- [Engine API](ENGINE.md) — layout, cursor, camera, audio reference
-- [Scenes](SCENES.md) — how to create and customize scenes
-- [Customization](CUSTOMIZATION.md) — fonts, screenshots, music
+| Symptom | Check |
+|---|---|
+| Edit disappears | Remove `--props` from Studio; use `project --load`, then check the save status |
+| Screenshot fails | Verify the file exists below `public/` and the path is relative to that directory |
+| Import seems invisible | Clear `productMedia` or per-feature `media` to see the reconstructed descriptor |
+| Wrong cursor time after edits | Set `sceneId` and use scene-local `at`; legacy entries without it use absolute time |
+| Render stalls at font/browser loading | Allow the initial Chrome download and Google Fonts network requests |
+| Video takes too much memory | Keep the default single worker; close duplicate Studio/browser instances |
+| Blank output | Enable a known scene (`product-reveal`, `chaos`, `feature-showcase`, `headline-resolution`, `closer`) |
+
+[Ask for help](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=help.yml) with your Node version, command, error text and a small sanitized JSON project.

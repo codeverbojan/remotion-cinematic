@@ -1,3 +1,4 @@
+import { LayoutDescriptorSchema } from "../schema";
 import * as fs from "fs";
 import * as path from "path";
 import type { ConvertedDescriptor } from "./figma-to-descriptor";
@@ -78,7 +79,7 @@ export async function screenshotToDescriptor(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-20250514",
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [
@@ -130,10 +131,10 @@ export async function screenshotToDescriptor(
   }
 
   try {
-    return JSON.parse(cleaned) as ConvertedDescriptor;
+    return LayoutDescriptorSchema.parse(JSON.parse(cleaned));
   } catch {
     throw new Error(
-      `Failed to parse Claude response as JSON. Response: ${cleaned.slice(0, 200)}`,
+      `Invalid layout descriptor returned by Claude. Response: ${cleaned.slice(0, 200)}`,
     );
   }
 }

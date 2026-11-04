@@ -1,6 +1,6 @@
 import type { SceneTiming } from "../types";
 
-export type EasingPreset = "cinematic" | "snappy" | "linear";
+export type EasingPreset = "cinematic" | "snappy" | "linear" | "smooth" | "elastic" | "bounce" | "spring";
 
 export interface CameraKeyframe {
   scene: string;

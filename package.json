@@ -1,19 +1,24 @@
 {
   "name": "remotion-cinematic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
-  "description": "A Remotion template for cinematic product demo videos with smart layout, geometry-aware cursor, and scene-relative camera.",
+  "description": "Create product demo videos from screenshots, recordings or app data with editable Remotion presets for landscape, portrait and square.",
   "license": "MIT",
   "bin": {
-    "cinematic-import": "./src/cli/index.ts"
+    "cinematic-import": "./scripts/cinematic-import.mjs"
   },
   "scripts": {
-    "prop-server": "npx tsx src/editor/propServer.ts",
-    "studio": "npx remotion studio src/index.ts",
-    "build": "npx remotion render src/index.ts CinematicDemo",
-    "test": "vitest run",
+    "studio": "remotion studio src/index.ts",
+    "build": "remotion render src/index.ts CinematicDemo out/video.mp4 --concurrency=1",
+    "test": "vitest run --maxWorkers=1 --minWorkers=1 --no-file-parallelism",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "init-video": "tsx src/cli/create-video.ts",
+    "import": "tsx src/cli/index.ts",
+    "check": "npm run typecheck && npm test",
+    "verify:render": "node --import tsx scripts/verify-render.mjs",
+    "project": "tsx src/cli/project.ts",
+    "examples": "tsx scripts/create-examples.ts"
   },
   "dependencies": {
     "@remotion/cli": "4.0.451",
@@ -30,6 +35,27 @@
     "@types/react-dom": "^19.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
-  }
+    "vitest": "^3.2.4",
+    "@remotion/renderer": "4.0.451",
+    "@remotion/bundler": "4.0.451"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codeverbojan/remotion-cinematic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/codeverbojan/remotion-cinematic/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "remotion",
+    "product-demo",
+    "video-template",
+    "react",
+    "typescript",
+    "screenshots",
+    "video-generation"
+  ]
 }

@@ -1,3 +1,4 @@
+import { LayoutDescriptorSchema } from "../schema";
 import * as fs from "fs";
 import * as path from "path";
 import type { ConvertedDescriptor } from "./figma-to-descriptor";
@@ -12,7 +13,7 @@ export function injectDescriptor(
   rootTsxContent: string,
   descriptor: ConvertedDescriptor,
 ): string {
-  const descriptorJson = JSON.stringify(descriptor);
+  const descriptorJson = JSON.stringify(LayoutDescriptorSchema.parse(descriptor));
 
   const pattern = /"appDescriptor"\s*:\s*\{/;
   const match = rootTsxContent.match(pattern);

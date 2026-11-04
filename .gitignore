@@ -5,3 +5,5 @@ out/
 *.tsbuildinfo
 .DS_Store
 *.mp4
+src/Root.tsx.bak
+video.json
