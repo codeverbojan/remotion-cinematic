@@ -1,6 +1,6 @@
 # Reliability and adoption milestones
 
-Goal: close the November 2026 audit findings and make the first customized export dependable. Implementation and review materials are ready in [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1).
+Goal: close the November 2026 audit findings and make the first customized export dependable. [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1) delivers these changes in [v0.2.0](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0).
 
 | Milestone | Tasks | Acceptance evidence | Status |
 |---|---|---|---|
@@ -9,7 +9,7 @@ Goal: close the November 2026 audit findings and make the first customized expor
 | M3 — Consistent controls | Shared scene configuration; scene-relative cursor actions; linked UI responses; theme/fonts/logo/CTA/easing; global SFX policy | Retiming/removal/control regressions and rendered frames | Verified with regressions and frame renders |
 | M4 — Useful outputs | Feature announcement, walkthrough, before/after presets; landscape/portrait/square layouts; text fit and content warnings | Three exported examples, representative format frames | Verified after sizing correction |
 | M5 — Verified first-use workflow | Save/reload/render tests; resolve failing waypoint expectation; single-worker CI; clean-install and render smoke checks | Passing checks and recorded visual review | Clean install, regression suite and full exports passed |
-| M6 — Discovery and release | Outcome-led README; exact quickstart; tutorials; showcase/help forms; demo assets; changelog; release and GitHub metadata preparation | Links and instructions checked; concrete publication bundle | Ready for review and publication |
+| M6 — Discovery and release | Outcome-led README; exact quickstart; tutorials; showcase/help forms; demo assets; changelog; release and GitHub metadata | Links and instructions checked; downloadable videos and project settings | Delivered in v0.2.0 |
 
 Process discipline: one project stack and one automation browser maximum; preserve unrelated services; close owned processes after each verification. Publication follows a concrete, verified local release.
 
@@ -32,6 +32,7 @@ Process discipline: one project stack and one automation browser maximum; preser
 - The README now uses a finished 15-second demo GIF (about 1 MB, previously 8 MB); the gallery matches the corrected exports. Quickstart, project load/export, and offline JSON import were exercised from a clean temporary install.
 - Tests cover the native Remotion save writer and rendered components; these are not a browser-driven Studio click/drag test. Real Figma/Anthropic requests were not made; their clients and response validation have mocked API coverage.
 - Temporary renderer browsers and servers were closed; unrelated services remain untouched.
+- [The final implementation CI run](https://github.com/codeverbojan/remotion-cinematic/actions/runs/41852182623) passed typechecking, all 554 tests, three full MP4 exports with audio, a recording-input frame and GIF generation. Release assets come from this run; subsequent publication edits only update documentation.
 
 ## Next feature work (outside this reliability release)
 
@@ -50,6 +51,6 @@ Track weekly GitHub traffic and referring sites (where permissions allow), clone
 
 The release's success is a user loading a preset, adding their product, saving edits, and exporting a useful video without reading engine code. The tutorials, samples and regression checks support that path.
 
-## Publication boundary
+## Release
 
-The code and review bundle are prepared on `fix/reliable-product-video-workflow`. Main has not been merged, a version tag/release has not been published, and live homepage/template settings have not been changed. `docs/RELEASE-0.2.md` contains the exact proposed metadata, release text and order of operations. These publication steps follow review of the concrete PR and exported videos.
+[v0.2.0](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0) includes the verified videos, matching JSON settings, preview images and checksums. The repository offers GitHub's template workflow and links to the example gallery from its homepage. See [the release notes](docs/RELEASE-0.2.md) for verification and migration details.

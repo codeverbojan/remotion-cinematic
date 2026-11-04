@@ -2,11 +2,13 @@
 
 These examples use fictional products and sample data. Each JSON includes the full saved settings, so the export can be reproduced without an API key.
 
-| Project | Format | Length | Content |
-|---|---|---:|---|
-| [Orbit feature announcement](feature.json) | Landscape | 15s | Editable dashboard and focused feature cards |
-| [Tandem walkthrough](walkthrough.json) | Portrait | 30s | Problem, reveal, features, resolution and CTA |
-| [Relay before/after](before-after.json) | Square | 20s | Scattered work followed by actual SVG screenshot inputs |
+| Project settings | Video download | Format | Length | Content |
+|---|---|---|---:|---|
+| [Orbit feature announcement](feature.json) | [MP4](https://github.com/codeverbojan/remotion-cinematic/releases/download/v0.2.0/feature.mp4) | Landscape | 15s | Editable dashboard and focused feature cards |
+| [Tandem walkthrough](walkthrough.json) | [MP4](https://github.com/codeverbojan/remotion-cinematic/releases/download/v0.2.0/walkthrough.mp4) | Portrait | 30s | Problem, reveal, features, resolution and CTA |
+| [Relay before/after](before-after.json) | [MP4](https://github.com/codeverbojan/remotion-cinematic/releases/download/v0.2.0/before-after.mp4) | Square | 20s | Scattered work followed by actual SVG screenshot inputs |
+
+The [v0.2.0 release](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0) includes these videos, matching JSON settings, preview images and SHA256 checksums. Downloaded videos use two-thirds resolution; rendering the project normally produces the full configured resolution.
 
 ![Orbit feature announcement](../docs/assets/feature-landscape.png)
 

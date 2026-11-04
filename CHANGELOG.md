@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — Unreleased
+## 0.2.0 — 2026-11-04
 
 A reliable path from a preset and real product content to a saved, customized export.
 

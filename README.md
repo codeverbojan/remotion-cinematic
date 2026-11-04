@@ -6,7 +6,7 @@
 
 ![A finished product demo showing Orbit's dashboard and feature details](docs/assets/demo-preview.gif)
 
-[See the examples and settings](examples/README.md) · [First video tutorial](docs/GETTING-STARTED.md) · [Get help](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=help.yml)
+[See the examples and settings](examples/README.md) · [Download the example videos](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0) · [First video tutorial](docs/GETTING-STARTED.md) · [Get help](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=help.yml)
 
 ## Make your first video
 

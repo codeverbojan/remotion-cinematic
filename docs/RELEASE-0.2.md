@@ -1,38 +1,42 @@
-# 0.2.0 release preparation
+# v0.2.0 — Reliable product video exports
 
-The release fixes the first customized export: preserved Studio edits, actual product media and descriptor content, connected controls, three presets and three output formats. See [CHANGELOG.md](../CHANGELOG.md) for migration notes and [ROADMAP.md](../ROADMAP.md) for verification evidence.
+Released November 4, 2026. [Download v0.2.0](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0).
 
-## Verified review bundle
+Make a product demo from screenshots, recordings or app data, starting with a 15-second feature announcement, a 30-second walkthrough, or a 20-second before/after story.
 
-The regression suite, typecheck, all three full MP4s with audio, and actual recording input passed in [the sizing verification run](https://github.com/codeverbojan/remotion-cinematic/actions/runs/41849106892). The draft [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1) holds the complete changes. CI generates the same preview assets alongside its example artifacts.
+## What changed
 
-The prepared local bundle is `out/release-v0.2.0/`: three MP4s, matching JSON projects, release notes and SHA256 checksums. Example exports use two-thirds scale for review; normal project rendering uses full configured resolution. No external API credentials were needed for these examples.
+- Studio saves preserve consecutive edits and report save errors.
+- Imported descriptors, screenshots and recordings appear in the product scenes; customization controls affect the export.
+- Landscape, portrait and square layouts preserve window proportions and scale the content with the windows.
+- Validated project commands, complete examples and tutorials make the first customized export reproducible.
 
-## Publication order
+See [CHANGELOG.md](../CHANGELOG.md) for the complete changes and [ROADMAP.md](../ROADMAP.md) for the audit findings and verification evidence.
 
-1. Review the change set and the CI-rendered videos; require a passing CI run.
-2. Merge the reviewed implementation to main.
-3. Tag `v0.2.0` and create a GitHub release using the description below, attaching the three MP4s and JSON examples.
-4. Enable the repository's template setting and use the gallery as the homepage after it is on main.
+## Try an example
 
-Template repositories expose GitHub's “Use this template” workflow; this is an admin repository setting ([GitHub documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)).
+```bash
+npm ci
+npm run project -- --load=examples/feature.json
+npm run studio
+```
 
-Proposed repository description:
+Edit the product and brand, stop Studio, then run `npm run build`. See [the first video tutorial](GETTING-STARTED.md) for setup requirements and the complete workflow.
 
-> Create product demo videos from screenshots, recordings or app data. Editable Remotion presets for landscape, portrait and square.
+## Downloads and verification
 
-Homepage after merge: `https://github.com/codeverbojan/remotion-cinematic/tree/main/examples`
+The release includes three MP4s, matching JSON projects, preview images, a GIF and SHA256 checksums. Browse the [example gallery](../examples/README.md) for direct video downloads. Example brands and data are fictional; no API credentials are needed.
 
-Topics: `remotion`, `product-demo`, `video-template`, `video-generation`, `screenshots`, `react`, `typescript`, `saas`.
+The downloadable videos use two-thirds resolution: 1280×720, 720×1280 and 720×720. Normal rendering uses the full configured resolution: 1920×1080, 1080×1920 and 1080×1080.
 
-## Release description
+Assets come from [CI run 41852182623](https://github.com/codeverbojan/remotion-cinematic/actions/runs/41852182623), which passed typechecking, all 554 tests, three full video exports with audio, actual recording input and GIF generation. Publication edits after that run only update documentation. The implementation is in [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1).
 
-Make a useful product demo from your own screenshots or recordings, with a 15s feature announcement, a 30s walkthrough, or a 20s before/after story.
+## Existing projects
 
-This release fixes saved edits being reset, connects imported app content and customization controls, and adds landscape, portrait and square layouts. Included examples show the actual exported output. Start with `npm ci`, load an example with `npm run project -- --load=examples/feature.json`, then run `npm run studio`.
+Load a JSON project before editing; launching Studio with `--props` can override saved changes. Saves update Root's inline default props. New cursor entries use scene-local timing; older entries without `sceneId` retain absolute timing. Available fonts are explicit choices; add custom fonts to the schema and loader together.
 
-Changes save into Root's inline default props. Load a JSON project before editing; launching Studio with `--props` can override saved edits. New cursor entries use scene-local timing. Older macOS versions may fail in Remotion's bundled audio/video tools; use a supported rendering environment.
+Older macOS versions may fail in Remotion's bundled audio/video tools. Full exports were verified on Linux; use a supported rendering environment.
 
-## After release
+## Share your results
 
-Use the showcase and help issue forms to collect completed videos, setup friction, and time to first export. Check GitHub traffic, referrals and clones weekly alongside those outcomes. Revisit copy and tutorials using that evidence. Do not treat stars or unchanged forks as proof of active use.
+Use the [showcase form](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=showcase.yml) to share a finished video, or the [help form](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=help.yml) if setup or export fails. The next adoption review will consider completed videos and first-export friction alongside GitHub traffic and clones.
