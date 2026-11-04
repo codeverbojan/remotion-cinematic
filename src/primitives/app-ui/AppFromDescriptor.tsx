@@ -21,7 +21,7 @@ export interface AppFromDescriptorProps {
   style?: React.CSSProperties;
 }
 
-const PanelContent: React.FC<{ panel: ContentPanel; index: number; prefix: string }> = ({ panel, index, prefix }) => {
+export const PanelContent: React.FC<{ panel: ContentPanel; index: number; prefix: string }> = ({ panel, index, prefix }) => {
   const panelId = `${prefix}panel-${index}`;
 
   switch (panel.type) {
@@ -113,7 +113,7 @@ export const AppFromDescriptor: React.FC<AppFromDescriptorProps> = ({
 
   const sidebarNode = sidebar ? (
     <SidebarNav
-      id="sidebar"
+      id={`${prefix}sidebar`}
       items={sidebar.items.map((item) => ({
         label: item.label,
         icon: item.icon,
@@ -126,9 +126,9 @@ export const AppFromDescriptor: React.FC<AppFromDescriptorProps> = ({
 
   const topBarRight = (
     <>
-      {topBar?.search && <SearchBar id="search" placeholder={topBar.searchPlaceholder} />}
+      {topBar?.search && <SearchBar id={`${prefix}search`} placeholder={topBar.searchPlaceholder} />}
       {topBar?.actions.map((action, i) => (
-        <Button key={i} id={`action-${i}`} label={action.label} variant={action.variant} />
+        <Button key={i} id={`${prefix}action-${i}`} label={action.label} variant={action.variant} />
       ))}
     </>
   );
@@ -142,7 +142,7 @@ export const AppFromDescriptor: React.FC<AppFromDescriptorProps> = ({
               {topBar.title}
             </span>
           )}
-          {topBar.tabs.length > 0 && <TabBar id="tabs" tabs={topBar.tabs} />}
+          {topBar.tabs.length > 0 && <TabBar id={`${prefix}tabs`} tabs={topBar.tabs} />}
         </>
       }
       right={topBarRight}

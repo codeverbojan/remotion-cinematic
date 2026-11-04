@@ -1,181 +1,85 @@
 # remotion-cinematic
 
-A Remotion template for building cinematic product demo videos. Prop-driven choreography, visual editor, geometry-aware cursor, scene-relative camera — all wired up and ready to customize.
+**Turn product screenshots, recordings, or structured app data into a product demo video.** Start with a 15-second feature announcement, a 30-second walkthrough, or a 20-second before/after story. Customize in Remotion Studio and export an MP4 in landscape, portrait, or square format.
 
-Built by [Bojan Josifoski](https://bojanjosifoski.com) while building [SampleHQ](https://samplehq.io). Instead of outsourcing product demo videos, this framework produces them programmatically with React and Remotion — full creative control, version-controlled, infinitely iterable.
+[![CI](https://github.com/codeverbojan/remotion-cinematic/actions/workflows/ci.yml/badge.svg)](https://github.com/codeverbojan/remotion-cinematic/actions/workflows/ci.yml)
 
-Clone it, drop in your product screenshots, and use Claude to build your video.
+![A finished product demo showing Orbit's dashboard and feature details](docs/assets/demo-preview.gif)
 
-![Demo preview](docs/assets/demo-preview.gif)
+[See the examples and settings](examples/README.md) · [Download the example videos](https://github.com/codeverbojan/remotion-cinematic/releases/tag/v0.2.0) · [First video tutorial](docs/GETTING-STARTED.md) · [Get help](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=help.yml)
 
-## What you get
+## Make your first video
 
-- **Prop-driven choreography** — window positions, sizes, rotation, entrances, and animations are Studio-editable props, not hardcoded values
-- **Visual editor** — drag-to-move, drag-to-resize, snap guides, floating property panels, inline text editing — all inside Remotion Studio
-- **Self-wiring editing** — Window titles, headlines, and CTA text are inline-editable in Studio automatically. New scenes get editing for free
-- **Geometry-aware cursor** — targets real elements by ID, arc/linear/ease curve interpolation, click/drag/resize with smart shape switching
-- **Visual cursor path editor** — SVG preview of cursor paths, curve selector, scale/rotation sliders, debounced live editing in Studio
-- **Scene-relative camera** — keyframes reference scene names, not absolute frame numbers
-- **Audio manager** — music bed with auto-fade, SFX cues with volume ducking
-- **Push transitions** — continuous scene-to-scene slides, no fades or cuts
-- **Per-scene zoom** — AutoZoom targets elements by ID for smooth, subtle focus shifts
-- **UI state system** — frame-based interaction layer drives panel expand/collapse, button presses, message reveals
-- **App UI from JSON** — render full app interfaces from a JSON descriptor (sidebar, topbar, tables, stats, chat)
-- **Dynamic windows** — add windows via Element Palette at any frame, rendered across all scenes automatically
-- **Figma CLI import** — `cinematic-import` CLI converts Figma frames or screenshots into app descriptors
-- **Editable scene elements** — sticky notes, notifications, and all window types are WindowLayout entries, fully editable in Studio (position, timing, rotation, z-index)
-- **5 example scenes** — chaos desktop, product reveal, feature showcase, headline, end card
-- **509 tests** — engine, primitives, editor, CLI, schema, and end-to-end wiring
-- **Claude skill** — `.claude/CLAUDE.md` teaches Claude how to build scenes with this template
-
-## Quickstart
+Requires Node.js 20+ and npm; use macOS 15+ or a supported Linux/Windows rendering environment. No API key is needed for the included examples or your own screenshots.
 
 ```bash
-npx degit codeverbojan/remotion-cinematic my-video
+git clone https://github.com/codeverbojan/remotion-cinematic.git my-video
 cd my-video
-npm install
+npm ci
+npm run project -- --load=examples/feature.json
 npm run studio
 ```
 
-Open `http://localhost:3000` and scrub through the demo video.
+Open the address printed by Studio. Edit the brand, headline and CTA in the props panel; double-click text or drag windows in the preview. Changes save to `src/Root.tsx`. Stop Studio when finished, then render those saved edits:
 
-## Customize
-
-### Studio props (no code required)
-
-Open Remotion Studio and edit directly in the right panel:
-
-- **Brand** — name, 10 color fields, fonts, logo URL
-- **Headlines** — pain, resolution, closer text + font sizes + color
-- **CTA** — call-to-action button text
-- **Product features** — title + description array
-- **Scenes** — enable/disable, duration, enter/exit directions, backgrounds
-- **Window layout** — position, size, rotation, entrance style, animation timing, z-index for every window
-- **Cursor path** — waypoint-based cursor choreography with per-segment curve type
-- **Cursor style** — global cursor scale and rotation
-- **App descriptor** — full JSON-driven app UI (sidebar items, topbar, content panels)
-- **Music** — enabled, volume, fade in/out
-- **Easing** — cinematic, snappy, smooth, elastic, bounce, spring
-
-### Visual editor (in Studio)
-
-Click any window to select it. Drag to reposition, use handles to resize. Snap guides appear when aligned with other windows or canvas center. Double-click text (headlines, window titles, CTA) to edit inline with a formatting toolbar.
-
-The editor is frame-aware: when scrubbed past a window's animation start, edits target the end position instead of the start.
-
-**Cursor path editor:** Visual SVG overlay showing cursor movement paths. Select waypoints to edit target, anchor, timing, and curve type (arc, linear, ease). Scale and rotation sliders adjust the cursor appearance.
-
-**Element palette:** Click "+ Elements" to add windows from templates (window, small card, full width, left/right panel). Windows appear at the current frame position and render across all scenes.
-
-### Code customization
-
-1. **Brand colors + fonts** — edit `src/tokens.ts`
-2. **Scene content** — edit `src/content.ts` (demo data, SFX config)
-3. **Add scenes** — create files in `src/scenes/`, wire in `CinematicDemo.tsx`
-4. **Product screenshots** — drop PNGs in `public/screenshots/`
-5. **Music + SFX** — drop audio in `public/music/` and `public/sfx/`
-
-## Project structure
-
-```
-src/
-  engine/              Smart motion engine
-    choreography/      Prop-driven window positioning (resolveWindowPose)
-    cursor/            Geometry-aware cursor with smart shapes
-    camera/            CameraRig (global) + AutoZoom (per-scene)
-    audio/             Music + SFX manager
-    layout/            Zone-based layout system
-    ui-state/          Frame-based interaction layer (UIKeyframes)
-  primitives/          Reusable visual components
-    app-ui/            App UI building blocks (17 components)
-    Window.tsx         macOS-style window with self-wiring title edit
-    Headline.tsx       Serif headline with word-stream + self-wiring edit
-    EndCard.tsx        Logo + CTA end card with self-wiring edit
-    ScenePush.tsx      Push transition wrapper
-  scenes/              5 example scenes
-  editor/              Visual editor overlay
-    EditorOverlay.tsx  Selection, drag, resize, keyboard shortcuts
-    CursorPathEditor   Cursor path waypoint editing panel
-    CursorPathOverlay  SVG cursor path visualization
-    ElementPalette     Window template palette (add/remove windows)
-    InlineEdit.tsx     Double-click-to-edit text wrapper
-    TextToolbar.tsx    Floating font size/weight/color toolbar
-    PropertyPanel.tsx  Context-aware floating property panel
-    SelectionBox.tsx   Blue bounding box + 8 resize handles
-    SnapGuides.tsx     Alignment snap computation + visual guides
-  cli/                 Figma/screenshot import CLI
-    figma-client.ts    Figma REST API client
-    figma-to-descriptor Figma node → app descriptor converter
-    screenshot-to-descriptor Claude vision → descriptor
-    inject.ts          Write descriptor into Root.tsx defaultProps
-  schema.ts            Zod schema for all input props
-  VideoPropsContext.tsx React context + hooks + updateProp helper
-  content.ts           Static demo data, SFX config
-  tokens.ts            Colors, fonts, easing presets
-  CinematicDemo.tsx    Main composition
-  Root.tsx             Composition registration
-public/
-  music/               Background music
-  sfx/                 Sound effects (ui/, transitions/)
-  screenshots/         Product screenshots
+```bash
+npm run build
 ```
 
-## Using with Claude
+Your video is at `out/video.mp4`. The first render may download Chrome; bundled Google fonts need network access. Render jobs use one worker by default.
 
-This template includes a Claude skill at `.claude/CLAUDE.md`. When you open the project with Claude Code, Claude knows the full API and can:
+To use your product, place images in `public/screenshots/`, then create and load a project:
 
-- Add new scenes from a description
-- Wire up cursor choreography and camera keyframes
-- Build app UI components from screenshots
-- Adjust timing, transitions, and easing
-- Integrate your product screenshots
+```bash
+npm run init-video -- --preset=feature --format=portrait --name="Acme" --screenshots=screenshots/dashboard.png,screenshots/details.png,screenshots/activity.png --out=video.json
+npm run project -- --load=video.json
+npm run studio
+```
 
-Example: *"Add a feature showcase scene that walks through three screenshots of my billing page"*
+Loading a project backs up the previous settings to `src/Root.tsx.bak`. `init-video` refuses to overwrite an existing JSON file. See [recordings, cropping, logos and imports](docs/CUSTOMIZATION.md).
+
+## Choose a starting point
+
+| Preset | Duration | Example | Use it for |
+|---|---:|---|---|
+| `feature` | 15 seconds | [Orbit · landscape](examples/feature.json) | A product or feature announcement |
+| `walkthrough` | 30 seconds | [Tandem · portrait](examples/walkthrough.json) | Problem, product, features and CTA |
+| `before-after` | 20 seconds | [Relay · square](examples/before-after.json) | A scattered workflow becoming organized |
+
+Every preset supports 1920×1080, 1080×1920 and 1080×1080 at 30 fps. Portrait and square presets rearrange product windows. Example brands and data are fictional.
+
+## What you can customize
+
+- **Product content:** screenshots and muted screen recordings, or editable React UI from a validated JSON descriptor. Feature windows can use separate media.
+- **Motion:** scene order, duration, overlap, directions, backgrounds, window geometry and cursor paths. Cursor actions stay attached to their scenes when reordered.
+- **Brand:** colors, bundled/system fonts, logo, headlines and CTA. Text fitting and content warnings help catch overly long copy and clipped actions.
+- **Sound:** independent music and SFX controls. The SFX master covers cursor clicks, window entrances and transitions.
+- **Editing:** drag and resize windows, edit text inline, adjust cursor waypoints, and add windows to the current scene. Save errors remain visible.
+
+Screenshots and recordings preserve your real UI. Descriptor imports reconstruct supported components; they are not pixel-perfect design converters. Generic cursor clicks provide press feedback; custom tab changes or workflows need explicit UI state keyframes. See [scene authoring](docs/SCENES.md).
 
 ## Commands
 
-```bash
-npm run studio     # Preview in Remotion Studio
-npm run build      # Render final MP4
-npm test           # Run tests (509 tests)
-npm run typecheck  # TypeScript check
-```
+| Command | Result |
+|---|---|
+| `npm run studio` | Edit the current saved project |
+| `npm run build` | Export current saved edits to `out/video.mp4` |
+| `npm run build -- --props=examples/feature.json` | Render a JSON project directly |
+| `npm run init-video -- --help` | Create a customized preset |
+| `npm run project -- --export=my-edits.json` | Export saved Studio settings |
+| `npm run import -- --json=descriptor.json --inject` | Validate and load an app descriptor |
+| `npm run check` | Typecheck and run regression tests |
+| `npm run verify:render` | Render a frame from each example |
+| `npm run verify:render -- --videos` | Export all three examples to `out/verification/` |
 
-### Figma/Screenshot Import
+Use `project --load` before editing. The `--props` flag is useful for direct rendering, but its overrides can hide changes saved in Studio.
 
-```bash
-# Import from Figma (requires FIGMA_TOKEN env var or --token flag)
-npx tsx src/cli/index.ts --figma-url="https://figma.com/design/abc/App?node-id=1-2"
+## Learn and contribute
 
-# Import from screenshot (requires ANTHROPIC_API_KEY env var)
-npx tsx src/cli/index.ts --screenshot=./dashboard.png
+[Getting started](docs/GETTING-STARTED.md) · [Customization](docs/CUSTOMIZATION.md) · [Scenes](docs/SCENES.md) · [Engine reference](docs/ENGINE.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-# Inject directly into Root.tsx defaultProps
-npx tsx src/cli/index.ts --figma-url="..." --inject
+[Share a video you made](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=showcase.yml), [report a bug](https://github.com/codeverbojan/remotion-cinematic/issues/new?template=bug_report.md), or read [the contribution guide](CONTRIBUTING.md). AI coding tools can use the project notes in `.claude/CLAUDE.md`; they are optional for making a video.
 
-# Output to file
-npx tsx src/cli/index.ts --screenshot=./app.png --out=descriptor.json
-```
+Built by [Bojan Josifoski](https://bojanjosifoski.com) while building [SampleHQ](https://samplehq.io).
 
-## Docs
-
-- [Getting Started](docs/GETTING-STARTED.md) — 5-minute setup guide
-- [Engine API](docs/ENGINE.md) — layout, cursor, camera, audio reference
-- [Scenes](docs/SCENES.md) — how to create and customize scenes
-- [Customization](docs/CUSTOMIZATION.md) — tokens, fonts, screenshots, music
-
-## Tech stack
-
-- [Remotion](https://remotion.dev) 4.x — React-based video framework
-- React 19 + TypeScript 5.9
-- Zod for input prop validation
-- 1920x1080 @ 30fps
-- Vitest for testing
-
-## Author
-
-Made by [Bojan Josifoski](https://bojanjosifoski.com) while building [SampleHQ](https://samplehq.io).
-
-## License
-
-MIT
+MIT for this repository. Remotion has [its own licensing terms](https://www.remotion.dev/license).

@@ -9,6 +9,7 @@ export interface PanelProps {
   padding?: number;
   id?: string;
   children?: React.ReactNode;
+  collapsedContent?: React.ReactNode;
   style?: React.CSSProperties;
 }
 
@@ -25,6 +26,7 @@ export const Panel: React.FC<PanelProps> = ({
   padding = 16,
   id,
   children,
+  collapsedContent,
   style,
 }) => {
   const { expanded } = useUIState(id ?? "", DEFAULT_STATE);
@@ -69,7 +71,7 @@ export const Panel: React.FC<PanelProps> = ({
           {subtitle}
         </div>
       )}
-      {expanded && children}
+      {expanded ? children : collapsedContent}
     </div>
   );
 };

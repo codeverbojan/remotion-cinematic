@@ -1,4 +1,4 @@
-export const C = {
+export const BASE_COLORS = {
   bg: "#0F0F14",
   bgLight: "#1A1A24",
   surface: "#24243A",
@@ -27,10 +27,12 @@ export const C = {
   trafficGreen: "#28C840",
 } as const;
 
+export const C = Object.fromEntries(Object.entries(BASE_COLORS).map(([key, value]) => [key, `var(--cinematic-${key}, ${value})`])) as Record<keyof typeof BASE_COLORS, string>;
+
 export const F = {
-  sans: "'Inter', system-ui, sans-serif",
-  serif: "'Fraunces', Georgia, serif",
-  mono: "'JetBrains Mono', monospace",
+  sans: "var(--cinematic-sans, Inter), system-ui, sans-serif",
+  serif: "var(--cinematic-serif, Fraunces), Georgia, serif",
+  mono: "var(--cinematic-mono, JetBrains Mono), monospace",
 } as const;
 
 export const CANVAS = { width: 1920, height: 1080 } as const;

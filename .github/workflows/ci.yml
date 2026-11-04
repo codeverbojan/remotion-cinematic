@@ -5,16 +5,39 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm run check
+      - name: Render all example formats, including audio
+        run: npm run verify:render -- --videos
+      - name: Install standard FFmpeg for GIF filters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Create the finished README preview
+        run: node scripts/make-preview.mjs
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: example-verification
+          path: out/verification/
+          if-no-files-found: ignore
+          retention-days: 7

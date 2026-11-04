@@ -5,7 +5,7 @@ Thanks for your interest in contributing to remotion-cinematic!
 ## Getting Started
 
 1. Fork the repo and clone your fork
-2. Install dependencies: `npm install`
+2. Install dependencies: `npm ci`
 3. Start the dev environment: `npm run studio`
 4. Run tests: `npm test`
 5. Run type checks: `npm run typecheck`
@@ -29,7 +29,7 @@ Thanks for your interest in contributing to remotion-cinematic!
 
 - TypeScript strict mode
 - No `Math.random()` — Remotion requires deterministic rendering
-- Use `EASE.snappy` from `tokens.ts` for animations (not raw `Easing` imports)
+- Use `useEasing()` for configurable motion and `useCanvas()` for output dimensions
 - Guard against zero-duration: `Math.max(1, duration)`
 - Keep scenes under ~200 lines; extract reusable pieces into `primitives/`
 
@@ -44,6 +44,12 @@ Thanks for your interest in contributing to remotion-cinematic!
 ## Testing
 
 Run the full suite with `npm test`. Tests live next to their source files as `*.test.ts` / `*.test.tsx`.
+
+## Resource use
+
+Check existing services before starting Studio. Reuse the project instance, use one render worker, and close temporary browsers and servers after verification.
+
+For visible changes, run `npm run verify:render` and inspect the generated frames. Timing/audio changes also need a full video export. Unit and wiring tests do not establish visual quality.
 
 ## Questions?
 

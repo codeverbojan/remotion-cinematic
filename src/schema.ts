@@ -1,3 +1,4 @@
+import { DEFAULT_SCENES } from "./sceneDefaults";
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
 
@@ -16,12 +17,13 @@ const BrandColorsSchema = z.object({
 
 const BRAND_COLORS_DEFAULTS = BrandColorsSchema.parse({});
 
+export const FONT_NAMES = ["Inter", "Fraunces", "JetBrains Mono", "Arial", "Georgia", "Verdana", "Courier New", "system-ui"] as const;
 const BrandSchema = z.object({
   name: z.string().max(100).default("Product"),
-  colors: BrandColorsSchema.default(BRAND_COLORS_DEFAULTS),
-  fontSans: z.string().max(100).default("Inter"),
-  fontSerif: z.string().max(100).default("Fraunces"),
-  fontMono: z.string().max(100).default("JetBrains Mono"),
+  colors: BrandColorsSchema.default(() => structuredClone(BRAND_COLORS_DEFAULTS)),
+  fontSans: z.enum(FONT_NAMES).default("Inter"),
+  fontSerif: z.enum(FONT_NAMES).default("Fraunces"),
+  fontMono: z.enum(FONT_NAMES).default("JetBrains Mono"),
   logoUrl: z.string().max(500).optional(),
 });
 
@@ -39,9 +41,21 @@ const HeadlinesSchema = z.object({
 
 const HEADLINES_DEFAULTS = HeadlinesSchema.parse({});
 
+export const MediaSchema = z.object({
+  type: z.enum(["image", "video"]),
+  src: z.string().min(1).max(2000),
+  fit: z.enum(["contain", "cover"]).default("contain"),
+  focusX: z.number().min(0).max(100).default(50),
+  focusY: z.number().min(0).max(100).default(50),
+  zoom: z.number().min(1).max(4).default(1),
+  startFrom: z.number().int().min(0).default(0),
+});
+export type ProductMedia = z.infer<typeof MediaSchema>;
+
 const ProductFeatureSchema = z.object({
   title: z.string().max(100),
   description: z.string().max(500),
+  media: MediaSchema.optional(),
 });
 
 const SceneDirection = z.enum(["top", "bottom", "left", "right", "none"]);
@@ -88,6 +102,7 @@ const WindowLayoutSchema = z.object({
   rotation: z.number().min(-180).max(180).optional(),
   title: z.string().max(200).default("Window"),
   sceneId: z.string().max(100).optional(),
+  media: MediaSchema.optional(),
 });
 
 const AnchorPreset = z.enum([
@@ -102,6 +117,7 @@ const AnchorPreset = z.enum([
 const CurveType = z.enum(["arc", "linear", "ease"]);
 
 const CursorPathEntrySchema = z.object({
+  sceneId: z.string().max(100).optional(),
   at: z.number().int().min(0),
   action: z.enum(["idle", "moveTo", "click", "drag"]),
   target: z.string().max(100).optional(),
@@ -196,21 +212,21 @@ const DEFAULT_WINDOW_LAYOUT = z.array(WindowLayoutSchema).parse([
   },
   {
     id: "product-window", title: "Dashboard — Overview",
-    startX: 30, startY: 30, startW: 1860, startH: 1020,
-    endX: 980, endY: 500, endW: 960, endH: 600,
+    startX: 192, startY: 40, startW: 1536, startH: 1000,
+    endX: 72, endY: 160, endW: 1152, endH: 762,
     enterAt: 0, enterDuration: 1, enterFrom: "fade",
     animateAt: 30, animateDuration: 18,
     zIndex: 1,
   },
   {
     id: "top-panel", title: "Request Manager",
-    startX: 30, startY: 30, startW: 920, startH: 440,
+    startX: 1290, startY: 80, startW: 560, startH: 440,
     enterAt: 48, enterDuration: 10, enterFrom: "slide-up",
     zIndex: 2,
   },
   {
     id: "left-panel", title: "Smart Alerts",
-    startX: 30, startY: 500, startW: 920, startH: 570,
+    startX: 1290, startY: 560, startW: 560, startH: 440,
     enterAt: 53, enterDuration: 10, enterFrom: "slide-up",
     zIndex: 3,
   },
@@ -252,7 +268,7 @@ const DEFAULT_CURSOR_PATH = z.array(CursorPathEntrySchema).parse([
   { at: 245, action: "idle", positionX: 200, positionY: 180 },
   { at: 250, action: "moveTo", target: "product-window", anchor: "corner-top-left", duration: 12 },
   { at: 265, action: "click", target: "product-window", anchor: "corner-top-left" },
-  { at: 275, action: "drag", target: "product-window", anchor: "corner-top-left", toX: 980, toY: 500, duration: 18 },
+  { at: 275, action: "drag", target: "product-window", anchor: "corner-top-left", toX: 72, toY: 160, duration: 18 },
   { at: 303, action: "moveTo", target: "top-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
   { at: 319, action: "click", target: "top-panel" },
   { at: 329, action: "moveTo", target: "left-panel", anchorXPct: 50, anchorYPct: 40, duration: 12 },
@@ -267,7 +283,10 @@ const DEFAULT_CURSOR_PATH = z.array(CursorPathEntrySchema).parse([
   { at: 474, action: "click", target: "feature-2" },
   { at: 495, action: "moveTo", target: "feature-2", anchor: "top-bar", duration: 10 },
   { at: 510, action: "click", target: "feature-2", anchor: "top-bar" },
-]);
+].map((entry) => {
+  const offset = entry.at >= 380 ? 380 : entry.at >= 245 ? 245 : 0;
+  return { ...entry, sceneId: offset === 380 ? "feature-showcase" : offset === 245 ? "product-reveal" : "chaos", at: entry.at - offset };
+}));
 
 // --- Layout Descriptor (Figma Bridge) ---
 
@@ -346,7 +365,7 @@ const ContentPanelSchema = z.object({
   }
 });
 
-const LayoutDescriptorSchema = z.object({
+export const LayoutDescriptorSchema = z.object({
   layout: z.enum(["sidebar", "topbar", "minimal"]).default("sidebar"),
   sidebar: SidebarSchema.optional(),
   topBar: TopBarSchema.optional(),
@@ -404,7 +423,7 @@ const DEFAULT_DESCRIPTOR = LayoutDescriptorSchema.parse({
           { label: "Billing", description: "View invoices and plans" },
         ],
       },
-      { type: "placeholder", title: "Chart", height: 200 },
+      { type: "list", title: "Activity", items: [{label: "Order approved", description: "Alex · Just now"}, {label: "Invoice sent", description: "Sam · 5 minutes ago"}] },
     ],
   },
 });
@@ -418,13 +437,6 @@ const MusicSchema = z.object({
 
 const MUSIC_DEFAULTS = MusicSchema.parse({});
 
-const DEFAULT_SCENES: z.infer<typeof SceneConfigSchema>[] = [
-  { id: "chaos", enabled: true, durationInFrames: 260, enterFrom: "none", exitTo: "top", background: "dark" },
-  { id: "product-reveal", enabled: true, durationInFrames: 150, enterFrom: "bottom", exitTo: "right", background: "dark" },
-  { id: "feature-showcase", enabled: true, durationInFrames: 200, enterFrom: "left", exitTo: "top", background: "dark" },
-  { id: "headline-resolution", enabled: true, durationInFrames: 120, enterFrom: "bottom", exitTo: "top", background: "gradient" },
-  { id: "closer", enabled: true, durationInFrames: 90, enterFrom: "bottom", exitTo: "none", background: "light" },
-];
 
 const DEFAULT_FEATURES = [
   { title: "Dashboard", description: "Live metrics and KPIs at a glance" },
@@ -433,31 +445,34 @@ const DEFAULT_FEATURES = [
 ];
 
 export const CinematicSchema = z.object({
-  brand: BrandSchema.default(BRAND_DEFAULTS),
+  outputFormat: z.enum(["landscape", "portrait", "square"]).default("landscape"),
+  layoutCanvas: z.object({ width: z.number().int().min(1), height: z.number().int().min(1) }).default({ width: 1920, height: 1080 }),
+  brand: BrandSchema.default(() => structuredClone(BRAND_DEFAULTS)),
 
-  headlines: HeadlinesSchema.default(HEADLINES_DEFAULTS),
+  headlines: HeadlinesSchema.default(() => structuredClone(HEADLINES_DEFAULTS)),
   cta: z.string().max(100).default("Try it free"),
 
-  productFeatures: z.array(ProductFeatureSchema).min(1).default(DEFAULT_FEATURES),
+  productFeatures: z.array(ProductFeatureSchema).min(1).default(() => structuredClone(DEFAULT_FEATURES)),
 
   scenes: z.array(SceneConfigSchema).min(1)
     .refine(
       (scenes) => new Set(scenes.map((s) => s.id)).size === scenes.length,
       { message: "Scene IDs must be unique" },
     )
-    .default(DEFAULT_SCENES),
+    .default(() => structuredClone([...DEFAULT_SCENES])),
 
   overlap: z.number().int().min(0).max(30).default(15),
   easing: EasingPreset.default("snappy"),
 
-  windowLayout: z.array(WindowLayoutSchema).default(DEFAULT_WINDOW_LAYOUT),
-  cursorPath: z.array(CursorPathEntrySchema).default(DEFAULT_CURSOR_PATH),
+  windowLayout: z.array(WindowLayoutSchema).default(() => structuredClone(DEFAULT_WINDOW_LAYOUT)),
+  cursorPath: z.array(CursorPathEntrySchema).default(() => structuredClone(DEFAULT_CURSOR_PATH)),
   cursorScale: z.number().min(0.5).max(3).default(1),
   cursorRotation: z.number().min(-180).max(180).default(0),
 
-  appDescriptor: LayoutDescriptorSchema.default(DEFAULT_DESCRIPTOR),
+  appDescriptor: LayoutDescriptorSchema.default(() => structuredClone(DEFAULT_DESCRIPTOR)),
+  productMedia: MediaSchema.optional(),
 
-  music: MusicSchema.default(MUSIC_DEFAULTS),
+  music: MusicSchema.default(() => structuredClone(MUSIC_DEFAULTS)),
   sfxEnabled: z.boolean().default(true),
   sfxVolume: z.number().min(0).max(1).default(0.4),
 });

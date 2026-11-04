@@ -2,6 +2,14 @@
 
 You are working on **remotion-cinematic**, a Remotion template for building cinematic product demo videos. The template provides a smart motion engine (layout, cursor, camera, audio) and reusable primitives. Users customize scenes, drop in screenshots, and render polished videos.
 
+## Current workflow (0.2)
+
+Use `npm run init-video` to generate a preset and `npm run project -- --load=video.json` to load it for editing. `src/Root.tsx` holds saved props as a literal inline object required by Remotion's writer. Do not wrap it in a function call or restore a second defaults file/prop server. Export saved edits with `npm run build` or `npm run project -- --export=edited.json`.
+
+Transitions are owned by `CinematicDemo.tsx`; scene components must not wrap themselves in another ScenePush. Use `useSceneConfig()` and `useCanvas()` for timing/dimensions. New cursor entries use sceneId and scene-local frames in storage. Use `SoundEffect` so master controls apply. Brand colors/fonts flow through Theme's CSS variables.
+
+ProductContent renders media or the imported app descriptor. Follow `docs/GETTING-STARTED.md`, `docs/CUSTOMIZATION.md`, and `docs/SCENES.md` for the current integration rules; the lower-level examples below illustrate engine APIs and may use fixed demonstration sizes. Check existing processes and reuse services; run one render worker and clean up owned processes after verification.
+
 ## Project structure
 
 ```
@@ -70,7 +78,7 @@ public/
 
 ## Constraints
 
-- Canvas: **1920x1080 @ 30fps**
+- Canvas: use `useCanvas()`; landscape 1920×1080, portrait 1080×1920, square 1080×1080, at 30fps
 - No `Math.random()` — causes Remotion render jitter. Use deterministic values
 - Guard against zero-duration interpolation: always `Math.max(1, duration)`
 - User-editable text (headlines, CTA, features) flows through input props via `useVideoProps()` context hooks

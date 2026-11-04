@@ -1,3 +1,5 @@
+import { fitTextSize } from "../contentChecks";
+import { useCanvas } from "../VideoPropsContext";
 import React, { useCallback, useMemo } from "react";
 import { AbsoluteFill, getRemotionEnvironment, interpolate, useCurrentFrame } from "remotion";
 import { C, EASE, F } from "../tokens";
@@ -93,6 +95,8 @@ export const Headline: React.FC<HeadlineProps> = ({
   headlineKey,
 }) => {
   const frame = useCurrentFrame();
+  const canvas = useCanvas();
+  const fittedSize = fitTextSize(lines, fontSize, canvas.width * 0.84, canvas.height * 0.7);
   const wordStagger = wordStream?.stagger ?? 3;
   const wordDuration = wordStream?.duration ?? 7;
   const wordYRise = wordStream?.yRise ?? 14;
@@ -167,7 +171,8 @@ export const Headline: React.FC<HeadlineProps> = ({
           });
           const lineStart = getLineStartFrame(i, entranceDuration, lineDelay);
           const commonStyle: React.CSSProperties = {
-            fontSize,
+            fontSize: fittedSize,
+            overflowWrap: "anywhere",
             fontWeight: 500,
             color,
             lineHeight: 1.15,
@@ -212,6 +217,8 @@ export const Headline: React.FC<HeadlineProps> = ({
                       <span
                         style={{
                           display: "inline-block",
+                          maxWidth: "100%",
+                          overflowWrap: "anywhere",
                           opacity: wOpacity,
                           transform: `translateY(${Math.round(wTy)}px) translateZ(0)`,
                           willChange: "transform",

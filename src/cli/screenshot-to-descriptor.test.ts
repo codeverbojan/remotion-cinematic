@@ -104,7 +104,17 @@ describe("screenshotToDescriptor", () => {
 
     await expect(
       screenshotToDescriptor("/test/app.png", "sk-test"),
-    ).rejects.toThrow("Failed to parse");
+    ).rejects.toThrow("Invalid layout descriptor");
+  });
+
+  it("rejects syntactically valid JSON with invalid descriptor content", async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from("fakepng"));
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({content: [{type: "text", text: JSON.stringify({layout: "sidebar", content: {panels: [{type: "stat"}]}})}]}),
+    });
+    await expect(screenshotToDescriptor("/test/app.png", "sk-test")).rejects.toThrow("Invalid layout descriptor");
   });
 
   it("throws when response has empty content array", async () => {

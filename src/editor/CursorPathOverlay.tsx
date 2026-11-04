@@ -1,3 +1,4 @@
+import { useCanvas } from "../VideoPropsContext";
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { resolveWindowPose, resolveAnchorFromRect, getSceneAtFrame, interpolateCurve } from "../engine";
 import { persistUpdate } from "./updateProps";
@@ -6,8 +7,6 @@ import type { AnchorPoint, CurveType } from "../engine";
 import type { CinematicProps, CursorPathEntry } from "../schema";
 import type { WindowLayout } from "../schema";
 
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
 
 interface CursorPathOverlayProps {
   props: CinematicProps;
@@ -57,6 +56,7 @@ export function resolveWaypointPosition(
     if (win) {
       const anchor = resolveEntryAnchor(entry);
       const pose = resolveWindowPose(win, entryFrame);
+      // Keep future targets editable when scrubbing before their entrance.
       const rect = pose.visible
         ? { left: pose.left, top: pose.top, width: pose.width, height: pose.height }
         : { left: win.startX, top: win.startY, width: win.startW, height: win.startH };
@@ -369,6 +369,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
   frame,
   interactive = true,
 }) => {
+  const { width: CANVAS_W, height: CANVAS_H } = useCanvas();
   const { cursorPath, windowLayout = [] } = props;
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -480,7 +481,7 @@ export const CursorPathOverlay: React.FC<CursorPathOverlayProps> = ({
       window.removeEventListener("mouseup", handleUp);
       didDragRef.current = false;
     };
-  }, [dragIndex, persistDrag]);
+  }, [dragIndex, persistDrag, CANVAS_W, CANVAS_H]);
 
   const enabledScenes = useMemo(
     () => props.scenes.filter((s) => s.enabled),

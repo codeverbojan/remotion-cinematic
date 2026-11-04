@@ -1,3 +1,5 @@
+import { defaultSceneForWindow } from "../sceneDefaults";
+import { useCanvas } from "../VideoPropsContext";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { resolveWindowPose, getSceneAtFrame } from "../engine";
 import { persistUpdate } from "./updateProps";
@@ -13,8 +15,6 @@ interface CursorPathEditorProps {
 
 type ActionType = CursorPathEntry["action"];
 
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
 
 const ACTION_OPTIONS: { value: ActionType; label: string; icon: string }[] = [
   { value: "moveTo", label: "Move", icon: "→" },
@@ -36,10 +36,12 @@ function updateCursorStyle(_props: CinematicProps, updates: Partial<Pick<Cinemat
 function canvasPositionFromEvent(
   e: React.MouseEvent,
   containerRef: React.RefObject<HTMLDivElement | null>,
+  canvas: {width: number; height: number},
 ): { x: number; y: number } | null {
   const container = containerRef.current;
   if (!container) return null;
   const rect = container.getBoundingClientRect();
+  const {width: CANVAS_W, height: CANVAS_H} = canvas;
   const scale = rect.width / CANVAS_W;
   const x = Math.max(0, Math.min(CANVAS_W, Math.round((e.clientX - rect.left) / scale)));
   const y = Math.max(0, Math.min(CANVAS_H, Math.round((e.clientY - rect.top) / scale)));
@@ -75,6 +77,7 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
   showCursorPath,
   onTogglePath,
 }) => {
+  const { width: CANVAS_W, height: CANVAS_H } = useCanvas();
   const [drawMode, setDrawMode] = useState(false);
   const [actionType, setActionType] = useState<ActionType>("moveTo");
   const [localScale, setLocalScale] = useState<number | null>(null);
@@ -88,19 +91,21 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
       e.stopPropagation();
       e.preventDefault();
 
-      const pos = canvasPositionFromEvent(e, containerRef);
+      const pos = canvasPositionFromEvent(e, containerRef, {width: CANVAS_W, height: CANVAS_H});
       if (!pos) return;
 
       const currentProps = propsRef.current;
+      const active = getSceneAtFrame(currentProps.scenes.filter((s) => s.enabled), frame, currentProps.overlap);
       const hitWindow = findWindowAtPosition(
         pos.x,
         pos.y,
-        currentProps.windowLayout,
-        frame,
+        currentProps.windowLayout.filter((w) => (w.sceneId ?? defaultSceneForWindow(w.id)) === active?.id),
+        frame - (active?.startFrame ?? 0),
       );
 
       const newEntry: Partial<CursorPathEntry> & { at: number; action: ActionType; anchor: "center" } = {
         at: frame,
+        sceneId: active?.id,
         action: actionType,
         anchor: "center",
         positionX: pos.x,
@@ -126,7 +131,7 @@ export const CursorPathEditor: React.FC<CursorPathEditorProps> = ({
       );
       updateCursorPath(currentProps, updated);
     },
-    [drawMode, actionType, frame, containerRef],
+    [drawMode, actionType, frame, containerRef, CANVAS_W, CANVAS_H],
   );
 
   const enabledScenes = useMemo(

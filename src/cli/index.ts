@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { LayoutDescriptorSchema } from "../schema";
 
 import { parseFigmaUrl, fetchFigmaNode, FigmaApiError } from "./figma-client";
 import { convertFigmaToDescriptor } from "./figma-to-descriptor";
@@ -11,6 +12,7 @@ import * as path from "path";
 interface CliArgs {
   figmaUrl?: string;
   screenshot?: string;
+  json?: string;
   token?: string;
   out?: string;
   inject: boolean;
@@ -23,6 +25,7 @@ Usage: cinematic-import <source> [options]
 Sources (pick one):
   --figma-url=<url>       Figma frame URL
   --screenshot=<path>     Local screenshot image (PNG/JPG)
+  --json=<path>           Local descriptor JSON (no API key)
 
 Options:
   --token=<token>         Figma token (or FIGMA_TOKEN env var)
@@ -46,6 +49,8 @@ export function parseArgs(argv: string[]): CliArgs {
       args.figmaUrl = arg.slice("--figma-url=".length);
     } else if (arg.startsWith("--screenshot=")) {
       args.screenshot = arg.slice("--screenshot=".length);
+    } else if (arg.startsWith("--json=")) {
+      args.json = arg.slice("--json=".length);
     } else if (arg.startsWith("--token=")) {
       args.token = arg.slice("--token=".length);
     } else if (arg.startsWith("--out=")) {
@@ -55,6 +60,8 @@ export function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--help" || arg === "-h") {
       printUsage();
       process.exit(0);
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
     }
   }
 
@@ -100,6 +107,7 @@ function outputDescriptor(
   descriptor: ConvertedDescriptor,
   args: CliArgs,
 ): void {
+  descriptor = LayoutDescriptorSchema.parse(descriptor);
   const json = JSON.stringify(descriptor, null, 2);
 
   if (args.inject) {
@@ -119,23 +127,25 @@ function outputDescriptor(
 }
 
 async function main(): Promise<void> {
+  try {
   const args = parseArgs(process.argv);
 
-  if (!args.figmaUrl && !args.screenshot) {
-    console.error("Error: provide --figma-url or --screenshot\n");
+  if (!args.figmaUrl && !args.screenshot && !args.json) {
+    console.error("Error: provide --figma-url, --screenshot, or --json\n");
     printUsage();
     process.exit(1);
   }
 
-  if (args.figmaUrl && args.screenshot) {
-    console.error("Error: use --figma-url or --screenshot, not both");
+  if ([args.figmaUrl, args.screenshot, args.json].filter(Boolean).length > 1) {
+    console.error("Error: choose exactly one source");
     process.exit(1);
   }
 
-  try {
     let descriptor: ConvertedDescriptor;
 
-    if (args.figmaUrl) {
+    if (args.json) {
+      descriptor = LayoutDescriptorSchema.parse(JSON.parse(fs.readFileSync(args.json, "utf8")));
+    } else if (args.figmaUrl) {
       const token = args.token ?? process.env.FIGMA_TOKEN;
       if (!token) {
         console.error("Error: Figma token required (--token or FIGMA_TOKEN env var)");

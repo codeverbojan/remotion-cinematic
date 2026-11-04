@@ -1,70 +1,60 @@
-import type { CinematicProps } from "../schema";
+import { layoutForOutput } from "../canvas";
+import { projectForStorage, projectForTimeline } from "../project";
+import { saveDefaultProps } from "@remotion/studio";
 import { CinematicSchema } from "../schema";
+import type { CinematicProps } from "../schema";
 
-const PROP_SERVER_URL = "http://localhost:3099";
-const DEBOUNCE_MS = 3000;
-
-const SCHEMA_DEFAULTS = CinematicSchema.parse({});
-
-let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-let latestProps: CinematicProps | null = null;
-
-function backupToServer(props: CinematicProps) {
-  fetch(`${PROP_SERVER_URL}/save-props`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(props),
-  }).catch(() => {
-    // Prop server not running — silent fallback
-  });
+export type SaveStatus = { state: "saved" | "saving" | "error"; message: string };
+let status: SaveStatus = { state: "saved", message: "All changes saved" };
+const listeners = new Set<() => void>();
+export const getSaveStatus = () => status;
+export function subscribeToSaveStatus(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+function report(next: SaveStatus) {
+  status = next;
+  listeners.forEach((listener) => listener());
 }
 
-function scheduleBackup(props: CinematicProps) {
-  latestProps = props;
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    if (latestProps) {
-      backupToServer(latestProps);
-      latestProps = null;
+/** Remotion passes a wrapper to the reducer, not the props themselves. */
+export function updateSavedProps(savedDefaultProps: unknown, updater: (prev: CinematicProps) => CinematicProps): CinematicProps {
+  const saved = layoutForOutput(CinematicSchema.parse(savedDefaultProps));
+  return CinematicSchema.parse(projectForStorage(updater(projectForTimeline(saved)), saved));
+}
+
+let queue = Promise.resolve();
+let pending = 0;
+let queuedProps: CinematicProps | undefined;
+const staleSnapshots = new Set<string>();
+
+export function persistUpdate(updater: (prev: CinematicProps) => CinematicProps): Promise<void> {
+  pending++;
+  report({ state: "saving", message: "Saving…" });
+  queue = queue.then(async () => {
+    try {
+      let updated: CinematicProps | undefined;
+      await saveDefaultProps({
+        compositionId: "CinematicDemo",
+        defaultProps: ({ savedDefaultProps }) => {
+          const snapshot = JSON.stringify(savedDefaultProps);
+          if (!staleSnapshots.has(snapshot) || (queuedProps && snapshot === JSON.stringify(queuedProps))) {
+            queuedProps = undefined;
+            staleSnapshots.clear();
+          }
+          staleSnapshots.add(snapshot);
+          updated = updateSavedProps(queuedProps ?? savedDefaultProps, updater);
+          return updated;
+        },
+      });
+      queuedProps = updated;
+      if (updated) staleSnapshots.add(JSON.stringify(updated));
+      if (pending === 1) report({ state: "saved", message: "All changes saved" });
+    } catch (error) {
+      report({ state: "error", message: `Could not save: ${error instanceof Error ? error.message : String(error)}` });
+    } finally {
+      pending--;
     }
-  }, DEBOUNCE_MS);
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", () => {
-    if (latestProps) {
-      const body = JSON.stringify(latestProps);
-      navigator.sendBeacon(
-        `${PROP_SERVER_URL}/save-props`,
-        new Blob([body], { type: "application/json" }),
-      );
-    }
   });
-}
-
-export function persistUpdate(
-  updater: (prev: CinematicProps) => CinematicProps,
-) {
-  let updateDefaultProps: (opts: unknown) => Promise<void>;
-  try {
-    updateDefaultProps = require("@remotion/studio").updateDefaultProps;
-  } catch {
-    return;
-  }
-  updateDefaultProps({
-    compositionId: "CinematicDemo",
-    defaultProps: (current: Record<string, unknown>) => {
-      const prev = { ...SCHEMA_DEFAULTS, ...current } as CinematicProps;
-      if (!Array.isArray(prev.windowLayout)) prev.windowLayout = SCHEMA_DEFAULTS.windowLayout;
-      if (!Array.isArray(prev.cursorPath)) prev.cursorPath = SCHEMA_DEFAULTS.cursorPath;
-      if (!Array.isArray(prev.scenes)) prev.scenes = SCHEMA_DEFAULTS.scenes;
-      const updated = updater(prev);
-      delete (updated as Record<string, unknown>).savedDefaultProps;
-      delete (updated as Record<string, unknown>).unsavedDefaultProps;
-      delete (updated as Record<string, unknown>).schema;
-      return updated;
-    },
-  }).catch((err: unknown) => {
-    console.error("[persistUpdate] updateDefaultProps failed:", err);
-  });
+  return queue;
 }

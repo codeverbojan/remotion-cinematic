@@ -89,5 +89,6 @@ export function mapCursorPath(entries: readonly CursorPathEntry[]): CursorAction
     }
   }
 
-  return actions;
+  // Editing a waypoint time must not depend on its position in the props array.
+  return actions.sort((a, b) => a.at - b.at);
 }

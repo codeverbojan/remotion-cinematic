@@ -7,6 +7,10 @@ const EASING_MAP: Record<EasingPreset, EasingFn> = {
   cinematic: Easing.bezier(0.22, 0.61, 0.36, 1),
   snappy: Easing.bezier(0.16, 1, 0.3, 1),
   linear: (t: number) => t,
+  smooth: Easing.inOut(Easing.cubic),
+  elastic: Easing.elastic(1),
+  bounce: Easing.bounce,
+  spring: Easing.bezier(0.34, 1.56, 0.64, 1),
 };
 
 export function getEasing(preset: EasingPreset): EasingFn {

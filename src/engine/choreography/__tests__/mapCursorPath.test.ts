@@ -9,6 +9,16 @@ function makeEntry(overrides: Partial<CursorPathEntry> & { at: number; action: C
   } as CursorPathEntry;
 }
 
+it("keeps playback chronological after retiming without reordering stored entries", () => {
+  const entries = [
+    {at: 90, action: "click", target: "product-window", anchor: "center"},
+    {at: 10, action: "moveTo", target: "product-window", anchor: "center", duration: 20},
+  ] as CursorPathEntry[];
+  const actions = mapCursorPath(entries);
+  expect(actions.map((action) => action.at)).toEqual([10, 90]);
+  expect(entries.map((entry) => entry.at)).toEqual([90, 10]);
+});
+
 describe("mapCursorPath", () => {
   it("returns empty array for empty input", () => {
     expect(mapCursorPath([])).toEqual([]);

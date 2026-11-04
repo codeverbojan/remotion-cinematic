@@ -258,13 +258,13 @@ describe("Default appDescriptor in CinematicSchema", () => {
     expect(result.appDescriptor.content.panels).toHaveLength(6);
   });
 
-  it("default panels cover stat, table, list, and placeholder types", () => {
+  it("default panels show useful content without placeholders", () => {
     const result = CinematicSchema.parse({});
     const types = result.appDescriptor.content.panels.map((p) => p.type);
     expect(types).toContain("stat");
     expect(types).toContain("table");
     expect(types).toContain("list");
-    expect(types).toContain("placeholder");
+    expect(types).not.toContain("placeholder");
   });
 
   it("default topBar has search enabled and 3 tabs", () => {

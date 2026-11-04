@@ -1,0 +1,580 @@
+{
+  "outputFormat": "square",
+  "layoutCanvas": {
+    "width": 1080,
+    "height": 1080
+  },
+  "brand": {
+    "name": "Relay",
+    "colors": {
+      "primary": "#4EA87B",
+      "accent": "#8DD8B0",
+      "background": "#101917",
+      "backgroundLight": "#1A1A24",
+      "surface": "#21332F",
+      "text": "#F5F5FF",
+      "textMuted": "#A0A0C0",
+      "success": "#34D399",
+      "warning": "#FBBF24",
+      "error": "#F87171"
+    },
+    "fontSans": "Inter",
+    "fontSerif": "Fraunces",
+    "fontMono": "JetBrains Mono"
+  },
+  "headlines": {
+    "pain": [
+      "Before: scattered.",
+      "And hard to follow."
+    ],
+    "resolution": [
+      "After: connected.",
+      "And easy to act on."
+    ],
+    "closer": [
+      "From scattered to sorted."
+    ]
+  },
+  "cta": "Explore Relay",
+  "productFeatures": [
+    {
+      "title": "Every request, one home.",
+      "description": "See incoming work and ownership together.",
+      "media": {
+        "type": "image",
+        "src": "screenshots/orbit-dashboard.svg",
+        "fit": "contain",
+        "focusX": 50,
+        "focusY": 50,
+        "zoom": 1,
+        "startFrom": 0
+      }
+    },
+    {
+      "title": "Know what comes next.",
+      "description": "Keep priorities visible and work moving.",
+      "media": {
+        "type": "image",
+        "src": "screenshots/relay-priorities.svg",
+        "fit": "contain",
+        "focusX": 50,
+        "focusY": 50,
+        "zoom": 1,
+        "startFrom": 0
+      }
+    },
+    {
+      "title": "Close the loop.",
+      "description": "Follow progress from first request to done.",
+      "media": {
+        "type": "image",
+        "src": "screenshots/relay-activity.svg",
+        "fit": "contain",
+        "focusX": 50,
+        "focusY": 50,
+        "zoom": 1,
+        "startFrom": 0
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "chaos",
+      "enabled": true,
+      "durationInFrames": 240,
+      "enterFrom": "none",
+      "exitTo": "top",
+      "background": "dark"
+    },
+    {
+      "id": "product-reveal",
+      "enabled": true,
+      "durationInFrames": 240,
+      "enterFrom": "bottom",
+      "exitTo": "top",
+      "background": "dark"
+    },
+    {
+      "id": "closer",
+      "enabled": true,
+      "durationInFrames": 150,
+      "enterFrom": "bottom",
+      "exitTo": "none",
+      "background": "light"
+    }
+  ],
+  "overlap": 15,
+  "easing": "snappy",
+  "windowLayout": [
+    {
+      "id": "spreadsheet",
+      "startX": 281,
+      "startY": 30,
+      "startW": 619,
+      "startH": 281,
+      "endX": 816,
+      "endY": -200,
+      "enterAt": 5,
+      "enterDuration": 13,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 1,
+      "title": "Tracking Sheet"
+    },
+    {
+      "id": "email",
+      "startX": 11,
+      "startY": 200,
+      "startW": 574,
+      "startH": 225,
+      "endX": -382,
+      "endY": 400,
+      "enterAt": 28,
+      "enterDuration": 13,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 2,
+      "title": "Email — Q2 Requests"
+    },
+    {
+      "id": "chat",
+      "startX": 113,
+      "startY": 350,
+      "startW": 675,
+      "startH": 281,
+      "endX": 506,
+      "endY": 850,
+      "enterAt": 55,
+      "enterDuration": 13,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 3,
+      "title": "Team Chat"
+    },
+    {
+      "id": "sticky-0",
+      "startX": 17,
+      "startY": 20,
+      "startW": 113,
+      "startH": 90,
+      "endX": -56,
+      "endY": -180,
+      "enterAt": 0,
+      "enterDuration": 11,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": -3,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "sticky-1",
+      "startX": 146,
+      "startY": 35,
+      "startW": 113,
+      "startH": 90,
+      "endX": 34,
+      "endY": -200,
+      "enterAt": 7,
+      "enterDuration": 11,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": 2.5,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "sticky-2",
+      "startX": 79,
+      "startY": 190,
+      "startW": 113,
+      "startH": 90,
+      "endX": -34,
+      "endY": -160,
+      "enterAt": 15,
+      "enterDuration": 11,
+      "enterFrom": "scale",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": -4,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "notification-0",
+      "startX": 861,
+      "startY": 30,
+      "startW": 203,
+      "startH": 45,
+      "endX": 1142,
+      "enterAt": 83,
+      "enterDuration": 9,
+      "enterFrom": "slide-right",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "notification-1",
+      "startX": 861,
+      "startY": 132,
+      "startW": 203,
+      "startH": 45,
+      "endX": 1142,
+      "enterAt": 96,
+      "enterDuration": 9,
+      "enterFrom": "slide-right",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "notification-2",
+      "startX": 861,
+      "startY": 234,
+      "startW": 203,
+      "startH": 45,
+      "endX": 1142,
+      "enterAt": 109,
+      "enterDuration": 9,
+      "enterFrom": "slide-right",
+      "animateAt": 138,
+      "animateDuration": 23,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "product-window",
+      "startX": 54,
+      "startY": 215,
+      "startW": 972,
+      "startH": 650,
+      "endX": 124,
+      "endY": 40,
+      "endW": 832,
+      "endH": 562,
+      "enterAt": 0,
+      "enterDuration": 2,
+      "enterFrom": "fade",
+      "animateAt": 48,
+      "animateDuration": 29,
+      "exitDuration": 12,
+      "zIndex": 1,
+      "title": "Dashboard — Overview"
+    },
+    {
+      "id": "top-panel",
+      "startX": 54,
+      "startY": 640,
+      "startW": 460,
+      "startH": 400,
+      "enterAt": 77,
+      "enterDuration": 16,
+      "enterFrom": "slide-up",
+      "animateDuration": 29,
+      "exitDuration": 12,
+      "zIndex": 2,
+      "title": "Request Manager"
+    },
+    {
+      "id": "left-panel",
+      "startX": 566,
+      "startY": 640,
+      "startW": 460,
+      "startH": 400,
+      "enterAt": 85,
+      "enterDuration": 16,
+      "enterFrom": "slide-up",
+      "animateDuration": 29,
+      "exitDuration": 12,
+      "zIndex": 3,
+      "title": "Smart Alerts"
+    }
+  ],
+  "cursorPath": [
+    {
+      "sceneId": "chaos",
+      "at": 0,
+      "action": "idle",
+      "positionX": 787.5,
+      "positionY": 300,
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 9,
+      "action": "moveTo",
+      "target": "spreadsheet",
+      "anchor": "center",
+      "anchorXPct": 60,
+      "anchorYPct": 40,
+      "duration": 11
+    },
+    {
+      "sceneId": "chaos",
+      "at": 24,
+      "action": "click",
+      "target": "spreadsheet",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 31,
+      "action": "moveTo",
+      "target": "email",
+      "anchor": "top-bar",
+      "duration": 11
+    },
+    {
+      "sceneId": "chaos",
+      "at": 46,
+      "action": "click",
+      "target": "email",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 54,
+      "action": "moveTo",
+      "target": "chat",
+      "anchor": "center",
+      "anchorXPct": 40,
+      "anchorYPct": 30,
+      "duration": 11
+    },
+    {
+      "sceneId": "chaos",
+      "at": 70,
+      "action": "click",
+      "target": "chat",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 78,
+      "action": "moveTo",
+      "target": "notification-0",
+      "anchor": "center",
+      "duration": 11
+    },
+    {
+      "sceneId": "chaos",
+      "at": 92,
+      "action": "click",
+      "target": "notification-0",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 100,
+      "action": "moveTo",
+      "target": "notification-1",
+      "anchor": "center",
+      "duration": 9
+    },
+    {
+      "sceneId": "chaos",
+      "at": 113,
+      "action": "click",
+      "target": "notification-1",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 0,
+      "action": "idle",
+      "positionX": 112.5,
+      "positionY": 180,
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 8,
+      "action": "moveTo",
+      "target": "product-window",
+      "anchor": "corner-top-left",
+      "duration": 19
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 32,
+      "action": "click",
+      "target": "product-window",
+      "anchor": "corner-top-left"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 48,
+      "action": "drag",
+      "target": "product-window",
+      "anchor": "corner-top-left",
+      "toX": 124,
+      "toY": 40,
+      "duration": 29
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 93,
+      "action": "moveTo",
+      "target": "top-panel",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 40,
+      "duration": 19
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 118,
+      "action": "click",
+      "target": "top-panel",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 134,
+      "action": "moveTo",
+      "target": "left-panel",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 40,
+      "duration": 19
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 160,
+      "action": "click",
+      "target": "left-panel",
+      "anchor": "center"
+    }
+  ],
+  "cursorScale": 1,
+  "cursorRotation": 0,
+  "appDescriptor": {
+    "layout": "sidebar",
+    "sidebar": {
+      "width": 180,
+      "items": [
+        {
+          "label": "Overview",
+          "active": true
+        },
+        {
+          "label": "Requests",
+          "active": false,
+          "badge": "24"
+        },
+        {
+          "label": "Activity",
+          "active": false
+        }
+      ],
+      "avatar": {
+        "name": "Alex Chen"
+      }
+    },
+    "topBar": {
+      "title": "Relay / Overview",
+      "search": false,
+      "searchPlaceholder": "Search...",
+      "tabs": [],
+      "actions": [
+        {
+          "label": "New request",
+          "variant": "primary"
+        }
+      ]
+    },
+    "content": {
+      "columnCount": 2,
+      "gap": 20,
+      "panels": [
+        {
+          "type": "stat",
+          "label": "Requests completed",
+          "value": "128",
+          "delta": "+24 this week",
+          "messageVariant": "chat"
+        },
+        {
+          "type": "stat",
+          "label": "Ready for review",
+          "value": "08",
+          "delta": "All assigned",
+          "messageVariant": "chat"
+        },
+        {
+          "type": "list",
+          "title": "Up next",
+          "items": [
+            {
+              "label": "Website refresh",
+              "description": "Design review · Today",
+              "badge": "Ready"
+            },
+            {
+              "label": "Customer onboarding",
+              "description": "Alex · Tomorrow",
+              "badge": "In progress"
+            },
+            {
+              "label": "Launch checklist",
+              "description": "Sam · Friday",
+              "badge": "Review"
+            }
+          ],
+          "messageVariant": "chat"
+        },
+        {
+          "type": "messages",
+          "title": "Team activity",
+          "messages": [
+            {
+              "from": "Alex",
+              "text": "Homepage is ready for review.",
+              "timestamp": "9:41"
+            },
+            {
+              "from": "Sam",
+              "text": "Feedback added. Everything is in one place.",
+              "timestamp": "9:43"
+            }
+          ],
+          "messageVariant": "chat"
+        }
+      ]
+    }
+  },
+  "productMedia": {
+    "type": "image",
+    "src": "screenshots/orbit-dashboard.svg",
+    "fit": "contain",
+    "focusX": 50,
+    "focusY": 50,
+    "zoom": 1,
+    "startFrom": 0
+  },
+  "music": {
+    "enabled": true,
+    "volume": 0.35,
+    "fadeInFrames": 45,
+    "fadeOutFrames": 90
+  },
+  "sfxEnabled": true,
+  "sfxVolume": 0.4
+}

@@ -1,8 +1,9 @@
+import { ProductContent } from "../primitives/ProductContent";
 import React, { useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 import { resolveWindowPose } from "../engine";
-import { Window, Placeholder } from "../primitives";
-import { useWindowLayout } from "../VideoPropsContext";
+import { Window } from "../primitives";
+import { useWindowLayout, useVideoProps } from "../VideoPropsContext";
 
 const CLAIMED_IDS = new Set([
   "spreadsheet", "email", "chat",
@@ -18,6 +19,7 @@ interface DynamicWindowsProps {
 
 export const DynamicWindows: React.FC<DynamicWindowsProps> = ({ sceneId }) => {
   const frame = useCurrentFrame();
+  const props = useVideoProps();
   const allWindows = useWindowLayout();
 
   const extraWindows = useMemo(
@@ -35,7 +37,7 @@ export const DynamicWindows: React.FC<DynamicWindowsProps> = ({ sceneId }) => {
   return (
     <>
       {sorted.map((def) => {
-        const pose = resolveWindowPose(def, frame);
+        const pose = resolveWindowPose(def, frame, props.easing);
         if (!pose.visible) return null;
 
         return (
@@ -49,14 +51,14 @@ export const DynamicWindows: React.FC<DynamicWindowsProps> = ({ sceneId }) => {
               width: pose.width,
               height: pose.height,
               opacity: pose.opacity,
-              transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) translateZ(0)`,
+              transform: `scale(${pose.scale}) translate(${pose.translateX}px, ${pose.translateY}px) rotate(${def.rotation ?? 0}deg) translateZ(0)`,
               transformOrigin: "top left",
               zIndex: def.zIndex,
               willChange: "transform",
             }}
           >
             <Window id={def.id} title={def.title}>
-              <Placeholder label={def.title} height={200} />
+              <ProductContent media={def.media} id={`${def.id}-app`} width={pose.width} height={pose.height - 42} />
             </Window>
           </div>
         );

@@ -1,3 +1,5 @@
+import { outputSize } from "./canvas";
+import { projectForTimeline } from "./project";
 import React, { createContext, useContext } from "react";
 import type { CinematicProps } from "./schema";
 import { CinematicSchema } from "./schema";
@@ -12,7 +14,7 @@ export const VideoPropsProvider: React.FC<{
   value: CinematicProps;
   children: React.ReactNode;
 }> = ({ value, children }) => (
-  <VideoPropsContext.Provider value={value}>
+  <VideoPropsContext.Provider value={projectForTimeline(value)}>
     {children}
   </VideoPropsContext.Provider>
 );
@@ -56,3 +58,5 @@ export function useCursorStyle() {
 }
 
 export { persistUpdate as updateProp } from "./editor/updateProps";
+
+export function useCanvas() { return outputSize(useVideoProps().outputFormat); }

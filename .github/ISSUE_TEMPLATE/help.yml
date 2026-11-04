@@ -1,0 +1,27 @@
+name: Help making a video
+description: Get help with setup, customization, import or rendering.
+title: "Help: "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What are you trying to make?
+      description: Include your preset and output format.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the exact command and error text, or the point where the result differs from your expectation.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Node version and operating system
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Small example
+      description: Attach sanitized project JSON or a screenshot. Remove API keys and private product/customer data.

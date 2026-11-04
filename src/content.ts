@@ -1,15 +1,10 @@
+import { DEFAULT_SCENES, DEFAULT_SCENE_OVERLAP } from "./sceneDefaults";
 import type { SceneTiming, SFXEntry } from "./engine/types";
 import type { CameraKeyframe, AudioCue, CursorSFXMap } from "./engine";
 
-export const SCENE_OVERLAP = 15;
+export const SCENE_OVERLAP = DEFAULT_SCENE_OVERLAP;
 
-export const SCENES: SceneTiming[] = [
-  { id: "chaos", durationInFrames: 260 },
-  { id: "product-reveal", durationInFrames: 150 },
-  { id: "feature-showcase", durationInFrames: 200 },
-  { id: "headline-resolution", durationInFrames: 120 },
-  { id: "closer", durationInFrames: 90 },
-];
+export const SCENES: SceneTiming[] = DEFAULT_SCENES.map(({ id, durationInFrames }) => ({ id, durationInFrames }));
 
 export const SPREADSHEET_COLUMNS = [
   "Name", "Email", "Status", "Date", "Amount",

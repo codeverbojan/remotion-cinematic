@@ -68,7 +68,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 fontSize: 13,
                 fontWeight: active ? 600 : 400,
                 color: active ? C.text : C.textMuted,
-                backgroundColor: active ? `${C.brand}22` : "transparent",
+                backgroundColor: active ? `color-mix(in srgb, ${C.brand} 13%, transparent)` : "transparent",
                 cursor: "default",
               }}
             >
@@ -78,7 +78,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                     width: 20,
                     height: 20,
                     borderRadius: 4,
-                    backgroundColor: active ? `${C.brand}44` : `${C.border}`,
+                    backgroundColor: active ? `color-mix(in srgb, ${C.brand} 27%, transparent)` : `${C.border}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",

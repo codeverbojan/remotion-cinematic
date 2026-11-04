@@ -1,0 +1,676 @@
+{
+  "outputFormat": "portrait",
+  "layoutCanvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "brand": {
+    "name": "Tandem",
+    "colors": {
+      "primary": "#E88854",
+      "accent": "#22D3EE",
+      "background": "#0F0F14",
+      "backgroundLight": "#1A1A24",
+      "surface": "#24243A",
+      "text": "#F5F5FF",
+      "textMuted": "#A0A0C0",
+      "success": "#34D399",
+      "warning": "#FBBF24",
+      "error": "#F87171"
+    },
+    "fontSans": "Inter",
+    "fontSerif": "Fraunces",
+    "fontMono": "JetBrains Mono"
+  },
+  "headlines": {
+    "pain": [
+      "Too many tabs.",
+      "Not enough clarity."
+    ],
+    "resolution": [
+      "One place.",
+      "A clear next step."
+    ],
+    "closer": [
+      "Make room for better work."
+    ]
+  },
+  "cta": "Explore Tandem",
+  "productFeatures": [
+    {
+      "title": "Every request, one home.",
+      "description": "See incoming work and ownership together."
+    },
+    {
+      "title": "Know what comes next.",
+      "description": "Keep priorities visible and work moving."
+    },
+    {
+      "title": "Close the loop.",
+      "description": "Follow progress from first request to done."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "chaos",
+      "enabled": true,
+      "durationInFrames": 180,
+      "enterFrom": "none",
+      "exitTo": "top",
+      "background": "dark"
+    },
+    {
+      "id": "product-reveal",
+      "enabled": true,
+      "durationInFrames": 300,
+      "enterFrom": "bottom",
+      "exitTo": "top",
+      "background": "dark"
+    },
+    {
+      "id": "feature-showcase",
+      "enabled": true,
+      "durationInFrames": 270,
+      "enterFrom": "bottom",
+      "exitTo": "top",
+      "background": "dark"
+    },
+    {
+      "id": "headline-resolution",
+      "enabled": true,
+      "durationInFrames": 120,
+      "enterFrom": "bottom",
+      "exitTo": "top",
+      "background": "gradient"
+    },
+    {
+      "id": "closer",
+      "enabled": true,
+      "durationInFrames": 90,
+      "enterFrom": "bottom",
+      "exitTo": "none",
+      "background": "light"
+    }
+  ],
+  "overlap": 15,
+  "easing": "snappy",
+  "windowLayout": [
+    {
+      "id": "spreadsheet",
+      "startX": 160,
+      "startY": 180,
+      "startW": 860,
+      "startH": 430,
+      "endX": 160,
+      "endY": -700,
+      "enterAt": 3,
+      "enterDuration": 10,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 1,
+      "title": "Tracking Sheet"
+    },
+    {
+      "id": "email",
+      "startX": 60,
+      "startY": 660,
+      "startW": 820,
+      "startH": 430,
+      "endX": -950,
+      "endY": 660,
+      "enterAt": 21,
+      "enterDuration": 10,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 2,
+      "title": "Email — Q2 Requests"
+    },
+    {
+      "id": "chat",
+      "startX": 200,
+      "startY": 1120,
+      "startW": 820,
+      "startH": 420,
+      "endX": 1200,
+      "endY": 1120,
+      "enterAt": 42,
+      "enterDuration": 10,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 3,
+      "title": "Team Chat"
+    },
+    {
+      "id": "sticky-0",
+      "startX": 40,
+      "startY": 70,
+      "startW": 240,
+      "startH": 180,
+      "endX": -56,
+      "endY": -300,
+      "enterAt": 0,
+      "enterDuration": 8,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": -3,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "sticky-1",
+      "startX": 260,
+      "startY": 110,
+      "startW": 240,
+      "startH": 180,
+      "endX": 34,
+      "endY": -300,
+      "enterAt": 6,
+      "enterDuration": 8,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": 2.5,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "sticky-2",
+      "startX": 480,
+      "startY": 150,
+      "startW": 240,
+      "startH": 180,
+      "endX": -34,
+      "endY": -300,
+      "enterAt": 11,
+      "enterDuration": 8,
+      "enterFrom": "scale",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 0,
+      "rotation": -4,
+      "title": "Sticky Note"
+    },
+    {
+      "id": "notification-0",
+      "startX": 500,
+      "startY": 1520,
+      "startW": 520,
+      "startH": 110,
+      "endX": 1200,
+      "enterAt": 62,
+      "enterDuration": 7,
+      "enterFrom": "slide-right",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "notification-1",
+      "startX": 500,
+      "startY": 1640,
+      "startW": 520,
+      "startH": 110,
+      "endX": 1200,
+      "enterAt": 72,
+      "enterDuration": 7,
+      "enterFrom": "slide-right",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "notification-2",
+      "startX": 500,
+      "startY": 1760,
+      "startW": 520,
+      "startH": 110,
+      "endX": 1200,
+      "enterAt": 82,
+      "enterDuration": 7,
+      "enterFrom": "slide-right",
+      "animateAt": 104,
+      "animateDuration": 17,
+      "exitDuration": 12,
+      "zIndex": 10,
+      "title": "Notification"
+    },
+    {
+      "id": "product-window",
+      "startX": 54,
+      "startY": 636,
+      "startW": 972,
+      "startH": 650,
+      "endX": 54,
+      "endY": 120,
+      "endW": 972,
+      "endH": 650,
+      "enterAt": 0,
+      "enterDuration": 2,
+      "enterFrom": "fade",
+      "animateAt": 60,
+      "animateDuration": 36,
+      "exitDuration": 12,
+      "zIndex": 1,
+      "title": "Dashboard — Overview"
+    },
+    {
+      "id": "top-panel",
+      "startX": 54,
+      "startY": 840,
+      "startW": 972,
+      "startH": 470,
+      "enterAt": 96,
+      "enterDuration": 20,
+      "enterFrom": "slide-up",
+      "animateDuration": 36,
+      "exitDuration": 12,
+      "zIndex": 2,
+      "title": "Request Manager"
+    },
+    {
+      "id": "left-panel",
+      "startX": 54,
+      "startY": 1370,
+      "startW": 972,
+      "startH": 470,
+      "enterAt": 106,
+      "enterDuration": 20,
+      "enterFrom": "slide-up",
+      "animateDuration": 36,
+      "exitDuration": 12,
+      "zIndex": 3,
+      "title": "Smart Alerts"
+    },
+    {
+      "id": "feature-0",
+      "startX": 54,
+      "startY": 100,
+      "startW": 972,
+      "startH": 530,
+      "enterAt": 0,
+      "enterDuration": 16,
+      "enterFrom": "scale",
+      "animateDuration": 24,
+      "exitDuration": 12,
+      "zIndex": 1,
+      "title": "Dashboard"
+    },
+    {
+      "id": "feature-1",
+      "startX": 54,
+      "startY": 680,
+      "startW": 972,
+      "startH": 530,
+      "enterAt": 47,
+      "enterDuration": 16,
+      "enterFrom": "scale",
+      "animateDuration": 24,
+      "exitDuration": 12,
+      "zIndex": 2,
+      "title": "Request Manager"
+    },
+    {
+      "id": "feature-2",
+      "startX": 54,
+      "startY": 1260,
+      "startW": 972,
+      "startH": 530,
+      "enterAt": 95,
+      "enterDuration": 16,
+      "enterFrom": "scale",
+      "animateDuration": 24,
+      "exitDuration": 12,
+      "zIndex": 3,
+      "title": "Smart Alerts"
+    }
+  ],
+  "cursorPath": [
+    {
+      "sceneId": "chaos",
+      "at": 0,
+      "action": "idle",
+      "positionX": 787.5,
+      "positionY": 533.3333333333333,
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 7,
+      "action": "moveTo",
+      "target": "spreadsheet",
+      "anchor": "center",
+      "anchorXPct": 60,
+      "anchorYPct": 40,
+      "duration": 8
+    },
+    {
+      "sceneId": "chaos",
+      "at": 18,
+      "action": "click",
+      "target": "spreadsheet",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 24,
+      "action": "moveTo",
+      "target": "email",
+      "anchor": "top-bar",
+      "duration": 8
+    },
+    {
+      "sceneId": "chaos",
+      "at": 35,
+      "action": "click",
+      "target": "email",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 40,
+      "action": "moveTo",
+      "target": "chat",
+      "anchor": "center",
+      "anchorXPct": 40,
+      "anchorYPct": 30,
+      "duration": 8
+    },
+    {
+      "sceneId": "chaos",
+      "at": 53,
+      "action": "click",
+      "target": "chat",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 58,
+      "action": "moveTo",
+      "target": "notification-0",
+      "anchor": "center",
+      "duration": 8
+    },
+    {
+      "sceneId": "chaos",
+      "at": 69,
+      "action": "click",
+      "target": "notification-0",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "chaos",
+      "at": 75,
+      "action": "moveTo",
+      "target": "notification-1",
+      "anchor": "center",
+      "duration": 7
+    },
+    {
+      "sceneId": "chaos",
+      "at": 84,
+      "action": "click",
+      "target": "notification-1",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 0,
+      "action": "idle",
+      "positionX": 112.5,
+      "positionY": 320,
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 10,
+      "action": "moveTo",
+      "target": "product-window",
+      "anchor": "corner-top-left",
+      "duration": 24
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 40,
+      "action": "click",
+      "target": "product-window",
+      "anchor": "corner-top-left"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 60,
+      "action": "drag",
+      "target": "product-window",
+      "anchor": "corner-top-left",
+      "toX": 54,
+      "toY": 120,
+      "duration": 36
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 116,
+      "action": "moveTo",
+      "target": "top-panel",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 40,
+      "duration": 24
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 148,
+      "action": "click",
+      "target": "top-panel",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 168,
+      "action": "moveTo",
+      "target": "left-panel",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 40,
+      "duration": 24
+    },
+    {
+      "sceneId": "product-reveal",
+      "at": 200,
+      "action": "click",
+      "target": "left-panel",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 0,
+      "action": "idle",
+      "positionX": 168.75,
+      "positionY": 711.1111111111111,
+      "anchor": "center"
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 11,
+      "action": "moveTo",
+      "target": "feature-0",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 35,
+      "duration": 16
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 32,
+      "action": "click",
+      "target": "feature-0",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 54,
+      "action": "moveTo",
+      "target": "feature-1",
+      "anchor": "center",
+      "anchorXPct": 50,
+      "anchorYPct": 35,
+      "duration": 16
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 76,
+      "action": "click",
+      "target": "feature-1",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 105,
+      "action": "moveTo",
+      "target": "feature-2",
+      "anchor": "center",
+      "anchorXPct": 40,
+      "anchorYPct": 30,
+      "duration": 16
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 127,
+      "action": "click",
+      "target": "feature-2",
+      "anchor": "center"
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 155,
+      "action": "moveTo",
+      "target": "feature-2",
+      "anchor": "top-bar",
+      "duration": 14
+    },
+    {
+      "sceneId": "feature-showcase",
+      "at": 176,
+      "action": "click",
+      "target": "feature-2",
+      "anchor": "top-bar"
+    }
+  ],
+  "cursorScale": 1,
+  "cursorRotation": 0,
+  "appDescriptor": {
+    "layout": "sidebar",
+    "sidebar": {
+      "width": 180,
+      "items": [
+        {
+          "label": "Overview",
+          "active": true
+        },
+        {
+          "label": "Requests",
+          "active": false,
+          "badge": "24"
+        },
+        {
+          "label": "Activity",
+          "active": false
+        }
+      ],
+      "avatar": {
+        "name": "Alex Chen"
+      }
+    },
+    "topBar": {
+      "title": "Tandem / Overview",
+      "search": false,
+      "searchPlaceholder": "Search...",
+      "tabs": [],
+      "actions": [
+        {
+          "label": "New request",
+          "variant": "primary"
+        }
+      ]
+    },
+    "content": {
+      "columnCount": 2,
+      "gap": 20,
+      "panels": [
+        {
+          "type": "stat",
+          "label": "Requests completed",
+          "value": "128",
+          "delta": "+24 this week",
+          "messageVariant": "chat"
+        },
+        {
+          "type": "stat",
+          "label": "Ready for review",
+          "value": "08",
+          "delta": "All assigned",
+          "messageVariant": "chat"
+        },
+        {
+          "type": "list",
+          "title": "Up next",
+          "items": [
+            {
+              "label": "Website refresh",
+              "description": "Design review · Today",
+              "badge": "Ready"
+            },
+            {
+              "label": "Customer onboarding",
+              "description": "Alex · Tomorrow",
+              "badge": "In progress"
+            },
+            {
+              "label": "Launch checklist",
+              "description": "Sam · Friday",
+              "badge": "Review"
+            }
+          ],
+          "messageVariant": "chat"
+        },
+        {
+          "type": "messages",
+          "title": "Team activity",
+          "messages": [
+            {
+              "from": "Alex",
+              "text": "Homepage is ready for review.",
+              "timestamp": "9:41"
+            },
+            {
+              "from": "Sam",
+              "text": "Feedback added. Everything is in one place.",
+              "timestamp": "9:43"
+            }
+          ],
+          "messageVariant": "chat"
+        }
+      ]
+    }
+  },
+  "music": {
+    "enabled": true,
+    "volume": 0.35,
+    "fadeInFrames": 45,
+    "fadeOutFrames": 90
+  },
+  "sfxEnabled": true,
+  "sfxVolume": 0.4
+}

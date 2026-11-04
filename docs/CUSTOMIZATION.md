@@ -1,263 +1,67 @@
-# Customization
+# Customize content and output
 
-> **Primary method: Remotion Studio props.** Most customization (colors, headlines, scenes, layout) is editable directly in Remotion Studio via the props panel. Code editing is the secondary approach for deeper changes.
+Load a project with `npm run project -- --load=examples/feature.json`, then start `npm run studio`. Edit props in Studio or export a JSON project, edit it, and load it again. The schema in `src/schema.ts` is the complete field reference.
 
-## Colors
+## Screenshots and recordings
 
-### Studio props (recommended)
+Put media below `public/`. This example uses a muted recording beginning at frame 30:
 
-Brand colors are defined in `src/schema.ts` (`BrandColorsSchema`) and editable in the Studio props panel. The schema exposes 10 color fields:
-
-| Field | Default | Usage |
-|-------|---------|-------|
-| `primary` | `#6366F1` | Buttons, accents |
-| `accent` | `#22D3EE` | Highlights, links |
-| `background` | `#0F0F14` | Primary background |
-| `backgroundLight` | `#1A1A24` | Lighter background |
-| `surface` | `#24243A` | Card/window surface |
-| `text` | `#F5F5FF` | Primary text |
-| `textMuted` | `#A0A0C0` | Secondary text |
-| `success` | `#34D399` | Success status |
-| `warning` | `#FBBF24` | Warning status |
-| `error` | `#F87171` | Error status |
-
-Components read brand colors via the `useBrand()` hook:
-
-```tsx
-const brand = useBrand(); // { name, colors: { primary, accent, ... }, fontSans, ... }
+```json
+{
+  "productMedia": {
+    "type": "video",
+    "src": "screenshots/walkthrough.mp4",
+    "fit": "contain",
+    "focusX": 50,
+    "focusY": 50,
+    "zoom": 1,
+    "startFrom": 30
+  }
+}
 ```
 
-### Code fallback
+Use `type: "image"` for screenshots. Each `productFeatures` entry and added window can have its own `media` object. The main window uses `productMedia`; features prefer their own media and fall back to it. Without media, scenes render `appDescriptor` and focused feature cards. Clear the media field when switching to descriptor content.
 
-The `C` object in `src/tokens.ts` provides the full set of design tokens, including values not exposed in the Studio (window chrome, borders, traffic-light buttons, etc.). Components fall back to `C.*` tokens when no brand override applies.
+`contain` shows the entire source. `cover` fills the window and may crop edges. `focusX`/`focusY` are percentages; `zoom` magnifies around that point. Keep text large enough to read at the intended viewing size. Images and recordings do not acquire interactive DOM controls; scripted cursor actions can point at their enclosing windows.
 
-```ts
-export const C = {
-  // Backgrounds
-  bg: "#0F0F14",           // primary background
-  bgLight: "#1A1A24",      // lighter background
-  surface: "#24243A",      // card/window surface
-  surfaceLight: "#2E2E48", // hover state surface
+## Brand and copy
 
-  // Text
-  text: "#F5F5FF",         // primary text
-  textMuted: "#A0A0C0",    // secondary text
-  textDim: "#6B6B8D",      // tertiary text
+Use `brand.colors` for the palette throughout the composition. `brand.logoUrl` accepts a public-relative path or HTTPS URL. Bundled fonts are Inter, Fraunces and JetBrains Mono, loaded only in normal style with the Latin subset and required weights. System font choices are also available. For other fonts or scripts, update `src/fonts.ts` and `FONT_NAMES` in `src/schema.ts` together.
 
-  // Brand
-  brand: "#6366F1",        // primary brand color (buttons, accents)
-  brandLight: "#818CF8",   // lighter variant
-  brandDim: "#4F46E5",     // darker variant
+`headlines.pain`, `resolution` and `closer` are arrays of lines. `cta` controls the separate end-card button. Font size overrides are upper bounds: headlines fit down to the canvas. Content warnings suggest shorter copy or longer scenes, but do not replace checking the exported frames.
 
-  // Accent
-  accent: "#22D3EE",       // secondary accent (highlights, links)
-  accentDim: "#0891B2",    // darker variant
+`outputFormat` chooses landscape (1920×1080), portrait (1080×1920), or square (1080×1080). Built-in product windows reflow for portrait and square. Custom window sizes scale uniformly from `layoutCanvas` to preserve their aspect ratio; positions adapt to the new canvas. Descriptor interfaces and typography scale together inside each window; inspect them and save adjustments after a format change. Repeated format switches preserve the current layout rather than restoring an earlier layout. For a fresh layout, generate a new preset in the desired format.
 
-  // Status
-  success: "#34D399",
-  warning: "#FBBF24",
-  error: "#F87171",
+## Motion and sound
 
-  // Window chrome
-  windowChrome: "#2A2A3E", // title bar background
-  windowBorder: "#3A3A5C", // window borders
-  border: "#3A3A5C",       // general borders
-  trafficRed: "#FF5F57",   // close button
-  trafficYellow: "#FEBC2E", // minimize button
-  trafficGreen: "#28C840", // maximize button
-} as const;
+`scenes` controls sequence order, enabled state, duration, transition directions and background. `overlap: 0` gives immediate cuts. Window entrance and movement timings are relative to their scene. Cursor entries with `sceneId` also store local time; the editor displays composition time and converts on save.
+
+The global `easing` preset drives scene pushes, window motion, cursor easing and camera movement. Components with bespoke internal animation may define their own curves. `music.enabled` and `music.volume` control the music bed. `sfxEnabled` and `sfxVolume` cover all built-in cursor, window and transition sounds independently of music. Replace `public/music/background.mp3` to use another track; SFX sources are listed in `src/content.ts`.
+
+## Import structured app content
+
+A JSON descriptor reconstructs supported UI: sidebars, navigation, stats, tables, lists and messages. It is a starting point, not a pixel-perfect Figma or screenshot conversion. For exact appearance, use the image or recording directly.
+
+```bash
+# Offline: validate an existing descriptor and load it into the current project
+npm run import -- --json=descriptor.json --inject
+
+# Figma API: supply a frame URL with node-id; FIGMA_TOKEN must be set
+npm run import -- --figma-url="https://www.figma.com/design/FILE/App?node-id=1-2" --inject
+
+# AI reconstruction: ANTHROPIC_API_KEY must be set
+npm run import -- --screenshot=./dashboard.png --out=descriptor.json
+npm run import -- --json=descriptor.json --inject
 ```
 
-## Fonts
+Exactly one source is accepted. All outputs are checked against `LayoutDescriptorSchema` before writing. `--inject` backs up Root to `src/Root.tsx.bak`. File output through `--out` replaces that file. Screenshot reconstruction sends the image to Anthropic and uses its API; set `ANTHROPIC_MODEL` to choose a model supported by your account. The default remains `claude-sonnet-4-20250514`. Charts or unsupported visuals may be represented by placeholders; replace them with real media.
 
-Three font families are loaded via `@remotion/google-fonts`:
+## Recipes
 
-| Token | Default | Usage |
-|-------|---------|-------|
-| `F.sans` | Inter | UI text, window content, labels |
-| `F.serif` | Fraunces | Headlines, taglines |
-| `F.mono` | JetBrains Mono | Code, data tables |
+**A launch post:** generate `feature` in portrait format; use one dashboard and two detail images; end with one short benefit and a concrete CTA.
 
-### Changing fonts
+**A product walkthrough:** load `examples/walkthrough.json`; replace pain and resolution copy, media, and feature titles; adjust scene durations until each interaction has time to register.
 
-1. Edit `src/fonts.ts` to load different Google Fonts:
+**A before/after story:** load `examples/before-after.json`; customize the initial scattered-work scene and use your product as the organized result. The supplied Relay screens are fictional example assets.
 
-```ts
-import { loadFont as loadMyFont } from "@remotion/google-fonts/MyFont";
-loadMyFont();
-```
-
-2. Update `src/tokens.ts`:
-
-```ts
-export const F = {
-  sans: "'MyFont', system-ui, sans-serif",
-  // ...
-} as const;
-```
-
-Available fonts: see the [@remotion/google-fonts](https://www.remotion.dev/docs/google-fonts/load-font) docs.
-
-## Screenshots
-
-Product screenshots go in `public/screenshots/`.
-
-### Requirements
-
-- **Format**: PNG (recommended) or JPEG
-- **Resolution**: 2x recommended (3840x2160 for full-screen shots, or proportional for cropped areas)
-- **Naming**: descriptive kebab-case — `dashboard.png`, `feature-catalog.png`, `settings-page.png`
-
-### Using in scenes
-
-```tsx
-import { Img, staticFile } from "remotion";
-
-<Img
-  src={staticFile("screenshots/dashboard.png")}
-  style={{ width: "100%", height: "auto", borderRadius: 6 }}
-/>
-```
-
-Place the `<Img>` inside a `<Window>` component as the content slot.
-
-## Music
-
-Background music goes in `public/music/`.
-
-### Requirements
-
-- **Format**: MP3 or WAV, 44.1kHz+
-- **Style**: loop-friendly ambient tracks work best
-- **Licensing**: include only royalty-free or properly licensed tracks
-
-### Adding music
-
-Pass the `music` prop to `AudioManager` in `src/CinematicDemo.tsx`:
-
-```tsx
-<AudioManager
-  music={{
-    src: "music/your-track.mp3",  // relative to public/
-    volume: 0.4,
-    fadeInFrames: 30,   // ~1 second fade in
-    fadeOutFrames: 60,  // ~2 second fade out
-  }}
-  sfxTimeline={SFX_TIMELINE}
-  scenes={SCENES}
-  overlap={SCENE_OVERLAP}
-/>
-```
-
-### Volume ducking
-
-If you add narration, duck the music during speech:
-
-```tsx
-<AudioManager
-  music={...}
-  duckMusicDuring={[
-    { startFrame: 100, endFrame: 250, duckedVolume: 0.15 },
-  ]}
-/>
-```
-
-## Sound effects
-
-SFX go in `public/sfx/`, organized by category:
-
-```
-public/sfx/
-  ui/                   # UI interaction sounds
-    click.mp3
-    window-open.mp3
-    window-resize.mp3
-    keyboard-clack.mp3
-    notification-pop.mp3
-  transitions/          # Scene transition sounds
-    whoosh.mp3
-    reveal.mp3
-    impact-soft.mp3
-```
-
-### Adding SFX cues
-
-Add entries to `SFX_TIMELINE` in `src/content.ts`:
-
-```ts
-export const SFX_TIMELINE: AudioCue[] = [
-  { scene: "chaos", at: 10, sfx: "sfx/ui/keyboard-clack.mp3", volume: 0.6 },
-  { scene: "chaos", at: 30, sfx: "sfx/ui/notification-pop.mp3", volume: 0.4 },
-  { scene: "product-reveal", at: 0, sfx: "sfx/transitions/reveal.mp3", volume: 0.7, durationInFrames: 45 },
-];
-```
-
-The `at` value is the frame number relative to the start of the scene.
-
-## Headlines
-
-Headlines are defined in `src/schema.ts` (`HeadlinesSchema`) and editable in the Studio props panel or inline in the video preview. Components read them via the `useHeadlines()` hook.
-
-| Field | Default | Scene |
-|-------|---------|-------|
-| `pain` | `["Where did that", "request go?"]` | ChaosDesktop |
-| `resolution` | `["Every request.", "Tracked."]` | HeadlineResolution |
-| `closer` | `["Try it free."]` | Closer |
-
-Each headline also has an optional `*FontSize` field and a shared `color` override.
-
-## Scene order and timing
-
-### Scene config (Studio props)
-
-Scene configuration — enabled/disabled, duration, enter/exit directions, and background variant — is defined in `src/schema.ts` (`DEFAULT_SCENES`) and editable in the Studio props panel. Each scene entry has:
-
-```ts
-{ id: "chaos", enabled: true, durationInFrames: 260, enterFrom: "none", exitTo: "top", background: "dark" }
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Scene identifier |
-| `enabled` | boolean | Toggle scene on/off |
-| `durationInFrames` | number | Duration in frames (30 = 1 second) |
-| `enterFrom` | direction | `"top"` / `"bottom"` / `"left"` / `"right"` / `"none"` |
-| `exitTo` | direction | Same options as `enterFrom` |
-| `background` | variant | `"dark"` / `"light"` / `"gradient"` / `"none"` |
-
-### Camera timeline (code)
-
-The `SCENES` array in `src/content.ts` provides the camera timeline timing (`SceneTiming[]` with `id` and `durationInFrames`). Keep its durations in sync with the schema config:
-
-```ts
-export const SCENES: SceneTiming[] = [
-  { id: "chaos", durationInFrames: 260 },
-  { id: "product-reveal", durationInFrames: 150 },
-  { id: "feature-showcase", durationInFrames: 200 },
-  { id: "headline-resolution", durationInFrames: 120 },
-  { id: "closer", durationInFrames: 90 },
-];
-```
-
-- Camera and SFX cues are scene-relative, so they adjust when you change durations
-
-### Removing a scene
-
-To fully remove a scene, update all locations:
-
-1. `src/schema.ts` — remove from `DEFAULT_SCENES` and optionally remove related `windowLayout` entries
-2. `src/content.ts` — remove from `SCENES` and `CAMERA_TIMELINE`
-3. `src/CinematicDemo.tsx` — remove from `SCENE_COMPONENTS`
-4. `src/scenes/index.ts` — remove the barrel export
-5. Delete the scene file from `src/scenes/`
-
-## Canvas and framerate
-
-Defined in `src/tokens.ts`:
-
-```ts
-export const CANVAS = { width: 1920, height: 1080 } as const;
-export const FPS = 30;
-```
-
-Changing these affects all layout. Scenes use `resolveWindowPose` with `windowLayout` props for positioning, so you would need to adjust the window layout entries in `schema.ts` to fit the new canvas dimensions.
+[Scene authoring](SCENES.md) explains custom interactions. [Engine reference](ENGINE.md) covers lower-level animation APIs.

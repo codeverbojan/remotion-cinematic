@@ -1,7 +1,12 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { contentWarnings } from "../contentChecks";
+import { projectForStorage } from "../project";
+import { defaultSceneForWindow } from "../sceneDefaults";
+import { getSceneStartFrame } from "../engine/types";
+import { useCanvas } from "../VideoPropsContext";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { getRemotionEnvironment, useCurrentFrame } from "remotion";
 import { useVideoProps } from "../VideoPropsContext";
-import { persistUpdate } from "./updateProps";
+import { getSaveStatus, subscribeToSaveStatus, persistUpdate } from "./updateProps";
 import { CursorInteractionProvider } from "../CursorInteractionContext";
 import { useEditorState } from "./useEditorState";
 import { SelectionBox } from "./SelectionBox";
@@ -38,11 +43,11 @@ function updateWindowProps(
   }));
 }
 
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
 const MIN_SIZE = 50;
 
-function shouldEditEnd(win: WindowLayout, frame: number): boolean {
+function shouldEditEnd(win: WindowLayout, frame: number, props: CinematicProps): boolean {
+  const id = win.sceneId ?? defaultSceneForWindow(win.id);
+  if (id) frame -= getSceneStartFrame(props.scenes.filter((s) => s.enabled), id, props.overlap);
   const hasEnd = win.endX !== undefined || win.endY !== undefined || win.endW !== undefined || win.endH !== undefined;
   if (!hasEnd) return false;
   const animStart = win.animateAt ?? (win.enterAt + win.enterDuration);
@@ -54,6 +59,9 @@ const EditorOverlayInner: React.FC<{
   containerRef: React.RefObject<HTMLDivElement | null>;
 }> = ({ children, containerRef }) => {
   const props = useVideoProps();
+  const { width: CANVAS_W, height: CANVAS_H } = useCanvas();
+  const warnings = contentWarnings(projectForStorage(props, props));
+  const saveStatus = useSyncExternalStore(subscribeToSaveStatus, getSaveStatus, getSaveStatus);
   const frame = useCurrentFrame();
   const { selection, handleClick, clearSelection, dragState, dragRef, startDrag, endDrag } = useEditorState();
   const propsRef = useRef(props);
@@ -79,7 +87,7 @@ const EditorOverlayInner: React.FC<{
     const container = containerRef.current;
     if (!container) return 1;
     return container.getBoundingClientRect().width / CANVAS_W;
-  }, [containerRef]);
+  }, [containerRef, CANVAS_W]);
 
   const handleMoveStart = useCallback(
     (e: React.MouseEvent) => {
@@ -88,7 +96,7 @@ const EditorOverlayInner: React.FC<{
       const win = propsRef.current.windowLayout.find((w) => w.id === sel.id);
       if (!win) return;
       didDragRef.current = false;
-      const editEnd = shouldEditEnd(win, frameRef.current);
+      const editEnd = shouldEditEnd(win, frameRef.current, propsRef.current);
       editingEndRef.current = editEnd;
       if (editEnd) {
         startDrag("move", win.endX ?? win.startX, win.endY ?? win.startY, win.endW ?? win.startW, win.endH ?? win.startH, e.clientX, e.clientY);
@@ -106,7 +114,7 @@ const EditorOverlayInner: React.FC<{
       const win = propsRef.current.windowLayout.find((w) => w.id === sel.id);
       if (!win) return;
       didDragRef.current = false;
-      const editEnd = shouldEditEnd(win, frameRef.current);
+      const editEnd = shouldEditEnd(win, frameRef.current, propsRef.current);
       editingEndRef.current = editEnd;
       if (editEnd) {
         startDrag("resize", win.endX ?? win.startX, win.endY ?? win.startY, win.endW ?? win.startW, win.endH ?? win.startH, e.clientX, e.clientY, dir);
@@ -138,7 +146,7 @@ const EditorOverlayInner: React.FC<{
     wrapper.style.top = `${y}px`;
     wrapper.style.width = `${w}px`;
     wrapper.style.height = `${h}px`;
-  }, [containerRef]);
+  }, [containerRef, CANVAS_W]);
 
   // After React re-renders during drag, reapply DOM override so React doesn't reset positions
   useLayoutEffect(() => {
@@ -277,7 +285,7 @@ const EditorOverlayInner: React.FC<{
       if (!win) return;
 
       const step = e.shiftKey ? 10 : 1;
-      const editEnd = shouldEditEnd(win, frameRef.current);
+      const editEnd = shouldEditEnd(win, frameRef.current, propsRef.current);
 
       if (editEnd) {
         const curX = win.endX ?? win.startX;
@@ -326,6 +334,8 @@ const EditorOverlayInner: React.FC<{
       {showCursorPath && <CursorPathOverlay props={props} frame={frame} interactive={!dragState} />}
       <CursorPathEditor props={props} frame={frame} containerRef={containerRef} showCursorPath={showCursorPath} onTogglePath={setShowCursorPath} />
       <ElementPalette props={props} frame={frame} />
+      {warnings.length > 0 && <details style={{ position: "absolute", right: 16, top: 16, zIndex: 10000, width: 320, background: "#272015", color: "#fde68a", padding: 12, borderRadius: 8, font: "14px system-ui" }}><summary>Check before export ({warnings.length})</summary><ul>{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></details>}
+      <div role="status" style={{ position: "absolute", right: 16, bottom: 16, zIndex: 10000, padding: "8px 12px", borderRadius: 8, background: saveStatus.state === "error" ? "#7f1d1d" : "#18181b", color: "white", font: "14px system-ui", pointerEvents: "none" }}>{saveStatus.message}</div>
 
       {dragState && <SnapGuides guides={guides} canvasW={CANVAS_W} canvasH={CANVAS_H} />}
 

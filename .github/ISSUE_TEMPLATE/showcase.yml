@@ -1,0 +1,21 @@
+name: Share your video
+description: Show what you made and tell us what helped or got in the way.
+title: "Showcase: "
+body:
+  - type: input
+    id: video
+    attributes:
+      label: Video link
+      description: A public link to your finished video.
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: How did you make it?
+      description: Your product, preset, format, and approximate time to the first useful export.
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What should improve?
+      description: Describe the most confusing step or the change that would improve your next video.

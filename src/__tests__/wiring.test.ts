@@ -3,7 +3,7 @@ import { defineZones, getSceneStartFrame, getTotalFrames, resolveTimeline, inter
 import { SCENES, SCENE_OVERLAP, CAMERA_TIMELINE, CURSOR_SFX, TRANSITION_SFX, SFX } from "../content";
 import { CANVAS } from "../tokens";
 
-describe("e2e: content.ts integrity", () => {
+describe("wiring: content.ts integrity", () => {
   it("every scene has a positive duration", () => {
     for (const scene of SCENES) {
       expect(scene.durationInFrames).toBeGreaterThan(0);
@@ -37,7 +37,7 @@ describe("e2e: content.ts integrity", () => {
   });
 });
 
-describe("e2e: camera timeline", () => {
+describe("wiring: camera timeline", () => {
   it("every camera keyframe references an existing scene", () => {
     const sceneIds = new Set(SCENES.map((s) => s.id));
     for (const kf of CAMERA_TIMELINE) {
@@ -68,7 +68,7 @@ describe("e2e: camera timeline", () => {
   });
 });
 
-describe("e2e: SFX configuration", () => {
+describe("wiring: SFX configuration", () => {
   it("CURSOR_SFX entries have valid src paths", () => {
     for (const [action, entry] of Object.entries(CURSOR_SFX)) {
       expect(entry!.src).toMatch(/\.mp3$/);
@@ -90,7 +90,7 @@ describe("e2e: SFX configuration", () => {
   });
 });
 
-describe("e2e: FeatureShowcase layout zones", () => {
+describe("wiring: FeatureShowcase layout zones", () => {
   const ZONES = {
     canvas: { width: CANVAS.width, height: CANVAS.height },
     slots: [
@@ -133,7 +133,7 @@ describe("e2e: FeatureShowcase layout zones", () => {
   });
 });
 
-describe("e2e: scene component wiring", () => {
+describe("wiring: scene component wiring", () => {
   it("SCENE_COMPONENTS map covers every scene in SCENES", () => {
     const componentMap: Record<string, unknown> = {
       "chaos": true,
@@ -158,7 +158,7 @@ describe("e2e: scene component wiring", () => {
   });
 });
 
-describe("e2e: app-ui primitives", () => {
+describe("wiring: app-ui primitives", () => {
   it("all 16 primitives are importable", async () => {
     const appUi = await import("../primitives/app-ui");
     const expected = [
