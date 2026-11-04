@@ -2,6 +2,12 @@
 
 The release fixes the first customized export: preserved Studio edits, actual product media and descriptor content, connected controls, three presets and three output formats. See [CHANGELOG.md](../CHANGELOG.md) for migration notes and [ROADMAP.md](../ROADMAP.md) for verification evidence.
 
+## Verified review bundle
+
+553 tests, typecheck, all three full MP4s with audio, and actual recording input passed in [the sizing verification run](https://github.com/codeverbojan/remotion-cinematic/actions/runs/41849106892). The draft [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1) holds the complete changes. CI generates the same preview assets alongside its example artifacts.
+
+The prepared local bundle is `out/release-v0.2.0/`: three MP4s, matching JSON projects, release notes and SHA256 checksums. Example exports use two-thirds scale for review; normal project rendering uses full configured resolution. No external API credentials were needed for these examples.
+
 ## Publication order
 
 1. Review the change set and the CI-rendered videos; require a passing CI run.

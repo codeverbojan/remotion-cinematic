@@ -1,6 +1,6 @@
 # Reliability and adoption milestones
 
-Active goal: close the November 2026 audit findings and make the first customized export dependable.
+Goal: close the November 2026 audit findings and make the first customized export dependable. Implementation and review materials are ready in [PR #1](https://github.com/codeverbojan/remotion-cinematic/pull/1).
 
 | Milestone | Tasks | Acceptance evidence | Status |
 |---|---|---|---|
@@ -9,7 +9,7 @@ Active goal: close the November 2026 audit findings and make the first customize
 | M3 — Consistent controls | Shared scene configuration; scene-relative cursor actions; linked UI responses; theme/fonts/logo/CTA/easing; global SFX policy | Retiming/removal/control regressions and rendered frames | Verified with regressions and frame renders |
 | M4 — Useful outputs | Feature announcement, walkthrough, before/after presets; landscape/portrait/square layouts; text fit and content warnings | Three exported examples, representative format frames | Verified after sizing correction |
 | M5 — Verified first-use workflow | Save/reload/render tests; resolve failing waypoint expectation; single-worker CI; clean-install and render smoke checks | Passing checks and recorded visual review | Clean install, 553 tests and full exports passed |
-| M6 — Discovery and release | Outcome-led README; exact quickstart; tutorials; showcase/help forms; demo assets; changelog; release and GitHub metadata preparation | Links and instructions checked; concrete publication bundle | Prepared; final preview refresh in progress |
+| M6 — Discovery and release | Outcome-led README; exact quickstart; tutorials; showcase/help forms; demo assets; changelog; release and GitHub metadata preparation | Links and instructions checked; concrete publication bundle | Ready for review and publication |
 
 Process discipline: one project stack and one automation browser maximum; preserve unrelated services; close owned processes after each verification. Publication follows a concrete, verified local release.
 
@@ -22,13 +22,15 @@ Process discipline: one project stack and one automation browser maximum; preser
 - Public CI failed; no releases, homepage, or template-repository setting.
 - README preview was a 61-second, 8 MB editor recording with placeholder content.
 
-## Evidence and remaining work
+## Verification evidence
 
 - Native Remotion file-writer integration verifies preset load, consecutive saved edits, and reload; schema validation rejects invalid projects before writing.
 - The baseline failed waypoint expectation was confirmed as the public CI failure via GitHub check annotations. Future click targets intentionally remain editable before their entrance.
 - Landscape, portrait and square frames rendered and were visually inspected; this exposed and fixed off-canvas geometry and unreadable repeated dashboards.
 - Full local exports encountered Remotion's bundled FFmpeg/macOS 12.5 incompatibility. Hosted Linux CI now renders all three videos including audio; the initial run passed at https://github.com/codeverbojan/remotion-cinematic/actions/runs/41846593463.
 - User review found stretched windows and undersized UI. Window ratios are now preserved, interface typography scales with geometry, and new aspect-ratio tests cover all three formats. Revised full exports and actual recording input passed in [CI run 41849106892](https://github.com/codeverbojan/remotion-cinematic/actions/runs/41849106892). Corrected frames were inspected for proportions, readable content and clipping.
+- The README now uses a finished 15-second demo GIF (about 1 MB, previously 8 MB); the gallery matches the corrected exports. Quickstart, project load/export, and offline JSON import were exercised from a clean temporary install.
+- Tests cover the native Remotion save writer and rendered components; these are not a browser-driven Studio click/drag test. Real Figma/Anthropic requests were not made; their clients and response validation have mocked API coverage.
 - Temporary renderer browsers and servers were closed; unrelated services remain untouched.
 
 ## Next feature work (outside this reliability release)
@@ -47,3 +49,7 @@ GitHub's reported window is October 21–November 3, 2026: 251 views from 167 un
 Track weekly GitHub traffic and referring sites (where permissions allow), clones, forks with actual project changes, first-export help requests, and submitted videos. Stars alone do not establish usage. Record time to the first useful export from showcase/help responses. No telemetry is added to users' projects.
 
 The release's success is a user loading a preset, adding their product, saving edits, and exporting a useful video without reading engine code. The tutorials, samples and regression checks support that path.
+
+## Publication boundary
+
+The code and review bundle are prepared on `fix/reliable-product-video-workflow`. Main has not been merged, a version tag/release has not been published, and live homepage/template settings have not been changed. `docs/RELEASE-0.2.md` contains the exact proposed metadata, release text and order of operations. These publication steps follow review of the concrete PR and exported videos.
